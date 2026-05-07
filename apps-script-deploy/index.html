@@ -1053,6 +1053,116 @@
     -webkit-appearance: none;
   }
   .btn-sell-one:hover { background: var(--amber-dark); color: #fff; }
+
+  /* Repetidas: grid de cards (tap = sacar 1). Reemplaza la lista vertical. */
+  .rep-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+  .rep-card {
+    background: var(--amber);
+    border: 1px solid var(--amber);
+    border-radius: var(--radius);
+    padding: 12px 6px 10px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.1s ease, opacity 0.18s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .rep-card:active {
+    transform: scale(0.92);
+    background: var(--amber-dark);
+    border-color: var(--amber-dark);
+  }
+  .rep-card.fading {
+    opacity: 0.25;
+    pointer-events: none;
+  }
+  .rep-card-num {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  .rep-card-x {
+    font-size: 11px;
+    color: #fff;
+    margin-top: 6px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-weight: 600;
+    opacity: 0.85;
+  }
+
+  /* Índice sticky compartido por las vistas Repetidas y Registrar.
+     14 chips: Intro · A · B · ... · L · Hist. Tap → scroll a la sección.
+     Auto-highlight del chip de la sección visible vía IntersectionObserver. */
+  .album-idx {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg);
+    padding: 8px 0;
+    margin: 0 0 12px;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .album-idx::-webkit-scrollbar { display: none; }
+  .album-idx-chip {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  .album-idx-chip.active {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: #fff;
+  }
+  /* En Registrar (faltgrp) el chip activo va en rojo para combinar con
+     las cards rojas de la vista. */
+  .album-idx[data-album-idx="faltgrp"] .album-idx-chip.active {
+    background: var(--danger);
+    border-color: var(--danger);
+  }
+  .album-idx-chip.empty {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .album-idx-chip .badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 5px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .album-idx-anchor {
+    /* Marca invisible que el chip usa como destino del scroll. */
+    display: block;
+    height: 0;
+    scroll-margin-top: 56px;
+  }
   /* Faltantes: chip rojo + botón "+1" — mismo formato exacto que las filas
      de Repetidas pero en rojo (--danger). Reusa .sueltas-row / .sueltas-info. */
   .falt-num {
@@ -1098,6 +1208,52 @@
   }
   .falt-row.applied .btn-have-one {
     background: var(--blue);
+  }
+
+  /* Faltantes: grid de cards rojas (tap = +1 → pasa a sueltas).
+     Mismo patrón que .rep-card pero en rojo. */
+  .falt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+  .falt-card {
+    background: var(--danger);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius);
+    padding: 14px 6px;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.1s ease, opacity 0.18s ease, background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .falt-card:active {
+    transform: scale(0.92);
+    background: #b13635;
+    border-color: #b13635;
+  }
+  /* Match: cuando el bulk-input identifica esta lámina, pulso suave. */
+  .falt-card.match {
+    animation: faltMatchPulse 1.4s ease-in-out infinite;
+    box-shadow: 0 0 0 2px rgba(226, 75, 74, 0.4);
+  }
+  /* Applied: pasa a azul rápido antes del re-render. */
+  .falt-card.applied {
+    background: var(--blue);
+    border-color: var(--blue);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .falt-card-num {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1;
+    font-family: "JetBrains Mono", Menlo, monospace;
   }
   .btn-share-repetidas {
     width: 100%;
@@ -2502,6 +2658,555 @@
     font-size: 12px;
   }
   .circle-menu-close:hover { color: var(--text); }
+
+  /* === Vista Finanzas (Fase 1) === */
+  /* Cuando body.vista-finanzas está activo, se ocultan los headers del álbum
+     para dar canvas completo a la vista financiera. */
+  body.vista-finanzas .info-box,
+  body.vista-finanzas .stats-grid,
+  body.vista-finanzas .panini-tabs,
+  body.vista-finanzas .group-selector-mobile { display: none !important; }
+
+  .fin-page { padding-top: 0; padding-bottom: 16px; }
+  .fin-back-bar { margin-bottom: 8px; }
+  .fin-back-btn {
+    background: transparent;
+    border: 0;
+    color: var(--text-2);
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 8px 4px 0;
+  }
+  .fin-back-btn:hover { color: var(--text); }
+
+  .fin-rings {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+    max-width: 460px;
+  }
+  .fin-ring-card {
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 10px 10px 8px;
+    text-align: center;
+    min-width: 180px;
+  }
+  /* Igualada a .donut-wrap del home: 220×220, stroke 14, mismo glow.
+     Todo el contenido (label + importes + sobrecosto) va adentro. */
+  .fin-ring-wrap {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    margin: 6px auto 8px;
+  }
+  .fin-ring-wrap svg { width: 100%; height: 100%; display: block; }
+  .fin-ring-track { fill: none; stroke: var(--bg-3); stroke-width: 14; }
+  .fin-ring-progress {
+    fill: none;
+    stroke: var(--green);
+    stroke-width: 14;
+    stroke-linecap: round;
+    stroke-dasharray: 534.07;
+    transform: rotate(-90deg);
+    transform-origin: 100px 100px;
+    transition: stroke-dashoffset 0.5s ease;
+    filter:
+      drop-shadow(0 0 4px rgba(0, 214, 133, 0.8))
+      drop-shadow(0 0 12px rgba(0, 214, 133, 0.45));
+  }
+  .fin-ring-pct {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 38px;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    color: var(--green);
+    line-height: 1;
+    letter-spacing: -1px;
+    text-shadow:
+      0 0 8px rgba(0, 214, 133, 0.7),
+      0 0 16px rgba(0, 214, 133, 0.5),
+      0 0 28px rgba(0, 214, 133, 0.3);
+    text-align: center;
+  }
+  .fin-ring-title {
+    display: block;
+    margin-top: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    text-shadow: none;
+    letter-spacing: 1.5px;
+  }
+  .fin-ring-amounts {
+    display: block;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    text-shadow: none;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+  .fin-ring-amounts .ra { color: var(--text); display: block; text-shadow: none; }
+  .fin-ring-amounts .rg { color: var(--green); display: block; text-shadow: 0 0 4px rgba(0,214,133,0.4); }
+  .fin-ring-amounts .div {
+    display: block;
+    font-size: 11px;
+    color: var(--text-3);
+    margin: 1px 0;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+  .fin-ring-sobrecosto {
+    display: block;
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--text-3);
+    text-shadow: none;
+    letter-spacing: 0;
+    text-transform: none;
+    font-weight: 500;
+  }
+  .fin-ring-sobrecosto b {
+    color: var(--text);
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-weight: 700;
+  }
+  /* Externos: ya no se usan (todo va adentro), pero los dejo definidos
+     por compatibilidad si en el futuro hace falta etiquetas extras. */
+  .fin-ring-label, .fin-ring-sub { display: none; }
+
+  .fin-green-glow { color: var(--green); text-shadow: 0 0 8px rgba(0,214,133,0.5), 0 0 16px rgba(0,214,133,0.25); }
+  .fin-red-glow { color: var(--danger); text-shadow: 0 0 8px rgba(226,75,74,0.7), 0 0 16px rgba(226,75,74,0.45), 0 0 28px rgba(226,75,74,0.25); }
+  .fin-amber-glow { color: var(--amber); text-shadow: 0 0 8px rgba(239,159,39,0.5), 0 0 16px rgba(239,159,39,0.25); }
+
+  .fin-panel {
+    background: var(--bg-2);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-left: 3px solid;
+    max-width: 460px;
+  }
+  .fin-panel.out { border-left-color: var(--danger); }
+  .fin-panel.in { border-left-color: var(--green); }
+  .fin-panel.pending { border-left-color: var(--amber); }
+  .fin-panel-title {
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .fin-panel-title.out { color: var(--danger); }
+  .fin-panel-title.in { color: var(--green); }
+  .fin-panel-title.pending { color: var(--amber); }
+  .fin-panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+  .fin-panel-stat .v {
+    font-size: 15px;
+    font-weight: 700;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    line-height: 1.1;
+  }
+  .fin-panel-stat .l { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+  .fin-panel-foot {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 0.5px dashed var(--border);
+    font-size: 11px;
+    color: var(--text-3);
+    line-height: 1.4;
+  }
+  .fin-panel-foot .formula {
+    margin-top: 2px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    color: var(--text-3);
+    font-size: 9px;
+  }
+
+  .fin-price-rows { margin-top: 6px; }
+  .fin-price-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 8px;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 0.5px dashed var(--border);
+    font-size: 11px;
+  }
+  .fin-price-row:last-child { border-bottom: 0; }
+  .fin-price-row .cat { color: var(--text-2); }
+  .fin-price-row .qty {
+    color: var(--text-3);
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-size: 11px;
+  }
+  .fin-price-row .amt {
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 78px;
+    text-align: right;
+  }
+  .fin-config-link {
+    background: transparent;
+    border: 0;
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .fin-fab {
+    width: 100%;
+    max-width: 460px;
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--accent);
+    color: #000;
+    border: 0;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .fin-fab.secondary {
+    background: transparent;
+    color: var(--text-2);
+    border: 0.5px solid var(--border);
+    margin-top: 8px;
+  }
+
+  /* Bottom sheet + form para los modales de Finanzas (precios + movs) */
+  .fin-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 100;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .fin-sheet-backdrop.open { display: flex; }
+  .fin-sheet {
+    background: #0a0a0a;
+    border-radius: 18px 18px 0 0;
+    border-top: 0.5px solid var(--border);
+    border-left: 0.5px solid var(--border);
+    border-right: 0.5px solid var(--border);
+    width: 100%;
+    max-width: 460px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+  }
+  .fin-sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--bg-3);
+    border-radius: 2px;
+    margin: 10px auto 0;
+    flex-shrink: 0;
+  }
+  .fin-sheet-header {
+    padding: 14px 18px 12px;
+    border-bottom: 0.5px solid var(--border);
+    flex-shrink: 0;
+  }
+  .fin-sheet-header h2 { margin: 0; font-size: 16px; font-weight: 700; }
+  .fin-sheet-header p { margin: 4px 0 0; font-size: 12px; color: var(--text-3); }
+  .fin-sheet-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 18px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .fin-sheet-footer {
+    padding: 12px 18px calc(env(safe-area-inset-bottom, 12px) + 12px);
+    border-top: 0.5px solid var(--border);
+    flex-shrink: 0;
+    background: #0a0a0a;
+  }
+  .fin-pr-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .fin-pr-row:last-child { border-bottom: 0; }
+  .fin-pr-info { min-width: 0; }
+  .fin-pr-cat { font-size: 13px; font-weight: 600; color: var(--text); }
+  .fin-pr-qty {
+    font-size: 11px;
+    color: var(--text-3);
+    margin-top: 2px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  .fin-pr-subtotal {
+    font-size: 11px;
+    color: var(--green);
+    margin-top: 2px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-weight: 700;
+  }
+  .fin-pr-input-wrap {
+    position: relative;
+    width: 110px;
+  }
+  .fin-pr-input-wrap::before {
+    content: "$";
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-3);
+    font-size: 13px;
+    pointer-events: none;
+  }
+  .fin-pr-input {
+    width: 100%;
+    padding: 9px 10px 9px 22px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .fin-pr-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(255,140,26,0.15);
+  }
+  .fin-pr-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .fin-pr-total-label {
+    font-size: 11px;
+    color: var(--text-2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .fin-pr-total-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--amber);
+    font-family: "JetBrains Mono", Menlo, monospace;
+    text-shadow: 0 0 8px rgba(239,159,39,0.4);
+  }
+  .fin-btn-save {
+    width: 100%;
+    padding: 12px;
+    background: var(--accent);
+    color: #000;
+    border: 0;
+    border-radius: var(--radius);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .fin-btn-cancel {
+    width: 100%;
+    padding: 9px;
+    margin-top: 6px;
+    background: transparent;
+    color: var(--text-2);
+    border: 0;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  /* Modal de movimientos (Fase 2C) */
+  .fin-mov-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    background: var(--bg-2);
+    border-radius: var(--radius);
+    padding: 3px;
+    margin-bottom: 14px;
+  }
+  .fin-mov-tab {
+    background: transparent;
+    border: 0;
+    padding: 8px;
+    color: var(--text-3);
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .fin-mov-tab.active { background: var(--bg-3); color: var(--text); }
+  .fin-mov-tab.active.compra { color: var(--danger); }
+  .fin-mov-tab.active.venta { color: var(--green); }
+  .fin-mov-subs {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .fin-mov-sub {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    padding: 10px 6px;
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+  }
+  .fin-mov-sub.active {
+    background: var(--bg-3);
+    border-color: var(--accent);
+    color: var(--text);
+  }
+  .fin-mov-form { display: flex; flex-direction: column; gap: 12px; }
+  .fin-mov-row { display: flex; flex-direction: column; gap: 4px; }
+  .fin-mov-row > .label {
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .fin-mov-input {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    color: var(--text);
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    width: 100%;
+  }
+  .fin-mov-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(255,140,26,0.15);
+  }
+  .fin-mov-input.with-prefix { padding-left: 24px; }
+  .fin-mov-input-wrap { position: relative; }
+  .fin-mov-input-wrap.dollar::before {
+    content: "$";
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-3);
+    font-size: 13px;
+    pointer-events: none;
+  }
+  .fin-mov-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }
+  .fin-mov-total {
+    background: var(--bg-2);
+    border-radius: var(--radius);
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 4px;
+  }
+  .fin-mov-total .label {
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .fin-mov-total .value {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  .fin-mov-total.compra .value { color: var(--danger); }
+  .fin-mov-total.venta .value { color: var(--green); }
+  .fin-mov-list-section {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 0.5px solid var(--border);
+  }
+  .fin-mov-list-title {
+    font-size: 11px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+  .fin-mov-list-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 0.5px dashed var(--border);
+    font-size: 12px;
+  }
+  .fin-mov-list-row:last-child { border-bottom: 0; }
+  .fin-mov-list-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .fin-mov-list-icon.compra { background: rgba(226,75,74,0.18); color: var(--danger); }
+  .fin-mov-list-icon.venta { background: rgba(0,214,133,0.18); color: var(--green); }
+  .fin-mov-list-info { min-width: 0; }
+  .fin-mov-list-info b { display: block; font-weight: 600; color: var(--text); }
+  .fin-mov-list-info span { color: var(--text-3); font-size: 11px; }
+  .fin-mov-list-amt {
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-weight: 700;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .fin-mov-list-amt.compra { color: var(--danger); }
+  .fin-mov-list-amt.venta { color: var(--green); }
+  .fin-mov-list-del {
+    background: transparent;
+    border: 0;
+    color: var(--text-3);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px 6px;
+    line-height: 1;
+    font-family: inherit;
+  }
+  .fin-mov-list-del:hover { color: var(--danger); }
+  .fin-mov-list-empty {
+    text-align: center;
+    color: var(--text-3);
+    font-size: 12px;
+    padding: 18px 0;
+  }
 </style>
 </head>
 <body>
@@ -2578,11 +3283,25 @@
   <div class="more-sheet">
     <div class="more-sheet-handle"></div>
     <h3>Más opciones</h3>
+    <button class="item" data-more-act="finanzas">
+      <span class="item-icon" style="color: var(--accent);">$</span>
+      <span class="item-text">
+        Finanzas
+        <div class="item-sub">Inversión, recuperación y stock por vender</div>
+      </span>
+    </button>
     <button class="item" data-more-act="sueltas">
       <span class="item-icon" style="color: var(--blue);">●</span>
       <span class="item-text">
         Sueltas (sin pegar)
         <div class="item-sub">Las que tienes en la mano sin pegar al álbum</div>
+      </span>
+    </button>
+    <button class="item" data-more-act="sanitizar">
+      <span class="item-icon" style="color: var(--amber);">⊕</span>
+      <span class="item-text">
+        Normalizar texto
+        <div class="item-sub">Convierte una lista cruda al formato estándar del álbum</div>
       </span>
     </button>
     <button class="item" data-more-act="export">
@@ -2610,6 +3329,42 @@
   </div>
 </div>
 
+<!-- Modal de precios de venta (Finanzas) -->
+<div class="fin-sheet-backdrop" id="fin-precios-backdrop">
+  <div class="fin-sheet">
+    <div class="fin-sheet-handle"></div>
+    <div class="fin-sheet-header">
+      <h2>⚙ Precios de venta</h2>
+      <p>Ajustá según cómo se esté vendiendo en el mercado hoy</p>
+    </div>
+    <div class="fin-sheet-body" id="fin-precios-body"></div>
+    <div class="fin-sheet-footer">
+      <div class="fin-pr-total">
+        <span class="fin-pr-total-label">Valor estimado total</span>
+        <span class="fin-pr-total-value" id="fin-precios-total">$0</span>
+      </div>
+      <button class="fin-btn-save" id="fin-precios-save">Guardar precios</button>
+      <button class="fin-btn-cancel" id="fin-precios-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de movimientos (Finanzas) -->
+<div class="fin-sheet-backdrop" id="fin-mov-backdrop">
+  <div class="fin-sheet">
+    <div class="fin-sheet-handle"></div>
+    <div class="fin-sheet-header">
+      <h2>+ Registrar movimiento</h2>
+      <p>Compras y ventas que afectan tu inversión</p>
+    </div>
+    <div class="fin-sheet-body" id="fin-mov-body"></div>
+    <div class="fin-sheet-footer">
+      <button class="fin-btn-save" id="fin-mov-save">Guardar movimiento</button>
+      <button class="fin-btn-cancel" id="fin-mov-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Popover de acción rápida (long-press en stat cards del home) -->
 <div class="card-action-backdrop" id="card-action-backdrop"></div>
 <div class="card-action-menu" id="card-action-menu">
@@ -2624,6 +3379,7 @@
   const STORAGE_KEY = 'panini_mundial_2026_v5';
   const ORDER_KEY = 'panini_mundial_2026_v5_order';
   const SYNC_LAST_KEY = 'panini_sync_last_v1';
+  const STORAGE_FIN_KEY = 'panini_mundial_2026_v5_finanzas';
   // Modelo: estado COMPARTIDO. Todos editan el mismo estado. Las operaciones
   // van al backend de Apps Script que las serializa con LockService —
   // cualquiera puede sumar o restar, sin race conditions.
@@ -2721,13 +3477,6 @@
     schedulePush();
   }
 
-  const jugadoresCOL = [
-    'Camilo Vargas', 'David Ospina', 'Davinson Sánchez', 'Yerry Mina', 'Daniel Muñoz',
-    'Johan Mojica', 'Jhon Lucumí', 'Santiago Arias', 'Jefferson Lerma', 'Escudo COL',
-    'Kevin Castaño', 'Richard Ríos', 'James Rodríguez', 'Juan F. Quintero', 'Jorge Carrascal',
-    'Jhon Arias', 'Jhon Córdoba', 'Luis Suárez', 'Luis Díaz', 'Equipo COL'
-  ];
-
   function buildSections() {
     const secs = [];
     secs.push({
@@ -2738,15 +3487,12 @@
 
     equiposOrden.forEach((eq, idx) => {
       const items = [];
+      // Convención Panini Mundial 2026: 1 = Escudo, 13 = Equipo, resto = jugadores
       for (let i = 1; i <= 20; i++) {
-        let label = '';
-        if (eq.code === 'COL') {
-          label = jugadoresCOL[i-1] || ('Jugador ' + i);
-        } else {
-          if (i === 10) label = 'Escudo';
-          else if (i === 20) label = 'Equipo';
-          else label = 'Jugador ' + i;
-        }
+        let label;
+        if (i === 1) label = 'Escudo';
+        else if (i === 13) label = 'Equipo';
+        else label = 'Jugador ' + i;
         const id = eq.code + '-' + i;
         items.push({ id: id, label: label, displayNum: String(i) });
       }
@@ -3962,13 +4708,16 @@
     const textoFaltan = faltanHTML.replace(/<br>/g, '\n').replace(/<b>/g, '').replace(/<\/b>/g, '').replace(/<span[^>]*>—<\/span>/g, '—');
     const textoRep = repHTML.replace(/<br>/g, '\n').replace(/<b>/g, '').replace(/<\/b>/g, '').replace(/<span[^>]*>—<\/span>/g, '—');
 
-    // Panel grande de "Compartir" arriba — usa Web Share API en móvil
-    // (abre WhatsApp/Telegram/Mail/etc. nativos) o copia al portapapeles en PC.
+    // Panel grande con dos opciones: compartir el link de la página pública
+    // (vía Web Share API → WhatsApp/Telegram/etc) o copiar el mensaje completo
+    // con faltantes + repetidas al portapapeles.
     const sharePanel =
       '<div class="share-panel">' +
-        '<button class="btn-share-main" data-share-action="full">➤ Compartir faltantes + repetidas</button>' +
+        '<button class="btn-share-main" data-share-action="page">📲 Compartir página</button>' +
+        '<button class="btn-share-main" data-share-action="full" style="margin-top:8px;">📋 Copiar faltantes + repetidas</button>' +
         '<div class="hint" style="margin-top:8px; text-align:center;">' +
-          'Manda por WhatsApp, Telegram, Mail, etc. — incluye lo que te falta, lo que tienes repetido y el link de la app.' +
+          '<b>Compartir página</b>: el link a tu tabla pública. ' +
+          '<b>Copiar f+r</b>: el texto largo con todo para pegar en chat.' +
         '</div>' +
       '</div>';
 
@@ -4214,55 +4963,69 @@
       return '<div class="scanner-complete">▣ ¡Álbum completo! No te falta nada.</div>';
     }
 
-    // Filas idénticas a las de Repetidas — chip rojo + nombre + botón "+1 Tengo".
-    // Usamos las mismas clases (.sueltas-list / .sueltas-section / .sueltas-row /
-    // .sueltas-num / .sueltas-info) y agregamos la variante .falt-num para el rojo.
-    const renderRow = (it, secLbl) => {
+    // Cards rojas (mismo patrón que .rep-card pero en rojo). Tap = +1.
+    const renderCard = (it, secLbl) => {
       const matchClass = matchingIds.has(it.id) ? ' match' : '';
       const blob = (it.id + ' ' + it.displayNum + ' ' + (it.label || '') + ' ' + (secLbl || '')).toLowerCase().replace(/"/g, '&quot;');
       const safeLabel = (it.label || '').replace(/"/g, '&quot;');
       const safeNum = (it.displayNum || '').replace(/"/g, '&quot;');
-      return '<div class="sueltas-row falt-row' + matchClass + '" data-id="' + it.id + '"' +
+      return '<div class="falt-card' + matchClass + '" data-id="' + it.id + '"' +
         ' data-falt-id="' + it.id + '"' +
         ' data-falt-blob="' + blob + '"' +
         ' data-falt-num="' + safeNum + '"' +
-        ' data-falt-label="' + safeLabel + '">' +
-        '<div class="sueltas-num falt-num">' + it.displayNum + '</div>' +
-        '<div class="sueltas-info">' +
-          '<b>' + it.id + '</b>' +
-          '<span>' + it.label + '</span>' +
-        '</div>' +
-        '<button class="btn-have-one" data-have-id="' + it.id + '" title="La tengo — pasa a sueltas (azul)">+1</button>' +
+        ' data-falt-label="' + safeLabel + '"' +
+        ' title="' + it.id + (safeLabel ? ' · ' + safeLabel : '') + ' · toca si la tenés">' +
+        '<div class="falt-card-num">' + it.displayNum + '</div>' +
       '</div>';
     };
 
-    let html = '<div class="sueltas-list" id="falt-list">';
+    // Conteo por grupo para los badges del índice
+    const groupCounts = {};
+    if (intro.length) groupCounts.intro = intro.length;
+    if (hist.length) groupCounts.history = hist.length;
+    equiposOrden.forEach(eq => {
+      const t = byTeam[eq.code];
+      if (!t || !t.items.length) return;
+      const g = eq.grupo;
+      if (g) groupCounts[g] = (groupCounts[g] || 0) + t.items.length;
+    });
 
-    // Mismo formato de títulos que Repetidas — usamos sec.titulo (incluye
-    // número prefijo del equipo) y no agregamos badge de count.
+    let html = _renderAlbumIndex(groupCounts, 'faltgrp');
+    html += '<div class="sueltas-list" id="falt-list">';
+
     if (intro.length) {
       const secLbl = 'Intro · Logo, mascotas y anfitriones';
-      html += '<div class="sueltas-section" data-falt-sec="intro">' +
+      html += '<div class="album-idx-anchor" id="faltgrp-intro"></div>' +
+        '<div class="sueltas-section" data-falt-sec="intro">' +
         '<div class="sueltas-section-title">' + secLbl + '</div>' +
-        intro.map(it => renderRow(it, secLbl)).join('') +
-      '</div>';
+        '<div class="falt-grid">' +
+        intro.map(it => renderCard(it, secLbl)).join('') +
+        '</div></div>';
     }
+    let lastGroup = null;
     equiposOrden.forEach((eq, idx) => {
       const t = byTeam[eq.code];
       if (!t || !t.items.length) return;
-      // Usar el mismo formato que buildSections: "1. MÉXICO (MEX) · Grupo A"
+      // Anchor al cambiar de grupo
+      if (eq.grupo && eq.grupo !== lastGroup) {
+        html += '<div class="album-idx-anchor" id="faltgrp-' + eq.grupo + '"></div>';
+        lastGroup = eq.grupo;
+      }
       const secLbl = (idx+1) + '. ' + formatEquipoName(eq) + (eq.grupo ? ' · Grupo ' + eq.grupo : '');
       html += '<div class="sueltas-section" data-falt-sec="' + eq.code + '">' +
         '<div class="sueltas-section-title">' + secLbl + '</div>' +
-        t.items.map(it => renderRow(it, secLbl)).join('') +
-      '</div>';
+        '<div class="falt-grid">' +
+        t.items.map(it => renderCard(it, secLbl)).join('') +
+        '</div></div>';
     });
     if (hist.length) {
       const secLbl = 'History · Campeones de mundiales';
-      html += '<div class="sueltas-section" data-falt-sec="history">' +
+      html += '<div class="album-idx-anchor" id="faltgrp-history"></div>' +
+        '<div class="sueltas-section" data-falt-sec="history">' +
         '<div class="sueltas-section-title">' + secLbl + '</div>' +
-        hist.map(it => renderRow(it, secLbl)).join('') +
-      '</div>';
+        '<div class="falt-grid">' +
+        hist.map(it => renderCard(it, secLbl)).join('') +
+        '</div></div>';
     }
 
     html += '</div>';
@@ -4545,7 +5308,7 @@
     let lastVisibleRow = null;
     wrap.querySelectorAll('.sueltas-section').forEach(secEl => {
       let secVisible = 0;
-      secEl.querySelectorAll('.falt-row').forEach(row => {
+      secEl.querySelectorAll('.falt-card').forEach(row => {
         const blob = row.dataset.faltBlob || '';
         const match = terms.length === 0 || terms.every(t => blob.indexOf(t) !== -1);
         row.style.display = match ? '' : 'none';
@@ -4827,6 +5590,23 @@
     if (tabActiva !== 'repetidas') repetidasFiltro = '';
     if (tabActiva !== 'consulta') faltantesFiltro = '';
 
+    // Body class para que CSS oculte stats/tabs en la vista Finanzas
+    document.body.classList.toggle('vista-finanzas', tabActiva === 'finanzas');
+
+    if (tabActiva === 'finanzas') {
+      ctrls.style.display = 'none';
+      cont.innerHTML = renderFinanzas();
+      bindFinanzas();
+      return;
+    }
+
+    if (tabActiva === 'sanitizar') {
+      ctrls.style.display = 'none';
+      cont.innerHTML = renderSanitizar();
+      bindSanitizar();
+      return;
+    }
+
     if (tabActiva === 'orden') {
       ctrls.style.display = 'none';
       cont.innerHTML = renderOrden();
@@ -4875,14 +5655,9 @@
 
     cont.querySelectorAll('.sticker').forEach(el => {
       const id = el.dataset.id;
-      el.onclick = (e) => {
-        if (e.shiftKey) applyAbsolute(id, 0);
-        else applyDelta(id, +1);
-      };
-      el.oncontextmenu = (e) => {
-        e.preventDefault();
-        applyDelta(id, -1);
-      };
+      // Long-press → menú con "+ Pegar al álbum", "+1 suelta", "−1", etc.
+      // Mismo flujo que los .compact-card de los equipos. Tap simple = +1.
+      setupCircleLongPress(el, id);
     });
 
     cont.querySelectorAll('.sticker-controls button').forEach(btn => {
@@ -4947,21 +5722,24 @@
       };
     });
 
-    // Botón +1 Tengo en cada fila de faltante — pasa a suelta (azul)
-    document.querySelectorAll('button[data-have-id]').forEach(btn => {
-      btn.onclick = () => {
-        const id = btn.dataset.haveId;
+    // Índice sticky de faltantes (mismo formato que Repetidas)
+    _bindAlbumIndex('faltgrp');
+
+    // Tap en una card de faltante → +1 (pasa a sueltas, azul). Si era la
+    // última, desaparece de la lista al re-renderizar.
+    document.querySelectorAll('.falt-card[data-id]').forEach(card => {
+      card.onclick = () => {
+        if (card.classList.contains('applied')) return;
+        const id = card.dataset.id;
         if (!id) return;
         applyDelta(id, +1);
-        // Feedback visual: marcar la fila + fade-out antes de refrescar
-        const row = btn.closest('.falt-row');
-        if (row) row.classList.add('applied');
+        card.classList.add('applied');
         showScanToast('<span style="color:var(--blue);">●</span> <b>' + id + '</b> agregada como suelta. Pegala en la pestaña Sueltas.');
         setTimeout(() => {
           if (tabActiva === 'consulta') {
             refreshConsultaResult();
           }
-        }, 800);
+        }, 600);
       };
     });
 
@@ -5246,10 +6024,19 @@
     });
 
     // Botón grande "Compartir mi álbum" — usa Web Share API en móvil
+    // Copiar el mensaje completo (faltantes + repetidas) al portapapeles
     document.querySelectorAll('button[data-share-action="full"]').forEach(btn => {
       btn.onclick = () => {
         const msg = buildShareMessage();
-        shareOrCopy(msg, btn, 'Mi álbum Panini Mundial 2026');
+        copyToClipboard(msg, btn);
+      };
+    });
+    // Compartir el link de la página pública vía Web Share API (o copiar)
+    document.querySelectorAll('button[data-share-action="page"]').forEach(btn => {
+      btn.onclick = () => {
+        const url = 'https://juank4835.github.io/panini-pacho-2026/cambios/';
+        const msg = '📒 Mirá mi álbum del Mundial 2026:\n\n' + url;
+        shareOrCopy(msg, btn, 'Álbum Panini · Pacho');
       };
     });
 
@@ -5650,6 +6437,7 @@
   // ===== Sync con backend de Apps Script (estado compartido + atómico) =====
   let syncStatus = { state: 'idle', message: 'Conectando…' };
   let lastSeenVersion = 0;
+  let lastFinVersion = 0; // versión separada de finanzas (Fase 3)
   let inflightOps = 0; // contador de operaciones pendientes al server
 
   function setSyncStatus(s, m) {
@@ -5846,6 +6634,11 @@
     try {
       const r = await gsRun('pullState', lastSeenVersion);
       if (!r) return;
+      // Las finanzas tienen su propia versión separada — pulleamos
+      // independientemente del estado del álbum.
+      if (r.finVersion != null && r.finVersion > lastFinVersion) {
+        _finPullFromBackend();
+      }
       if (r.unchanged) return;
       if (r.version != null) lastSeenVersion = r.version;
 
@@ -6029,6 +6822,104 @@
   // Pestaña 🟡 Repetidas: lista TODAS las láminas con copias extras
   // (p+s >= 2) — incluye pegadas con extras Y sueltas con duplicados.
   // Es la definición "colaborativa" — todo lo que tenés para cambiar.
+  // Lista de grupos del álbum, en orden de display. Compartido por las
+  // vistas Repetidas y Registrar para el índice sticky.
+  const ALBUM_GROUPS = [
+    { key: 'intro', label: 'Intro' },
+    { key: 'A', label: 'A' }, { key: 'B', label: 'B' }, { key: 'C', label: 'C' },
+    { key: 'D', label: 'D' }, { key: 'E', label: 'E' }, { key: 'F', label: 'F' },
+    { key: 'G', label: 'G' }, { key: 'H', label: 'H' }, { key: 'I', label: 'I' },
+    { key: 'J', label: 'J' }, { key: 'K', label: 'K' }, { key: 'L', label: 'L' },
+    { key: 'history', label: 'Hist' },
+  ];
+  function _albumGroupOf(sec) {
+    if (!sec) return null;
+    if (sec.id === 'intro') return 'intro';
+    if (sec.id === 'history') return 'history';
+    if (sec.equipo && sec.equipo.grupo) return sec.equipo.grupo;
+    return null;
+  }
+  // Construye el HTML del índice sticky con conteos por grupo.
+  // `idPrefix` es 'repgrp' o 'faltgrp' según la vista.
+  function _renderAlbumIndex(groupCounts, idPrefix) {
+    let html = '<nav class="album-idx" data-album-idx="' + idPrefix + '">';
+    ALBUM_GROUPS.forEach(g => {
+      const count = groupCounts[g.key] || 0;
+      const cls = 'album-idx-chip' + (count === 0 ? ' empty' : '');
+      html += '<a class="' + cls + '" href="#' + idPrefix + '-' + g.key + '" data-grp="' + g.key + '">' +
+        g.label + (count > 0 ? ' <span class="badge">' + count + '</span>' : '') +
+      '</a>';
+    });
+    html += '</nav>';
+    return html;
+  }
+  // Wire-up del índice: scroll suave al click + auto-highlight del chip
+  // de la sección visible vía IntersectionObserver.
+  // - Se desconecta el observer anterior antes de crear uno nuevo (evita
+  //   que renders sucesivos acumulen observers compitiendo).
+  // - Durante un scroll programático (click en chip) se suspende el
+  //   observer para que no "secuestre" el chip activo elegido por el
+  //   usuario. Se usa token para que múltiples clicks rápidos no se
+  //   pisen entre sí.
+  const _albumIdxState = {};
+  let _albumIdxScrollToken = 0;
+  function _bindAlbumIndex(idPrefix) {
+    const nav = document.querySelector('.album-idx[data-album-idx="' + idPrefix + '"]');
+    if (!nav) return;
+
+    // Disconnect previous observer (sino se acumulan en re-renders)
+    if (_albumIdxState[idPrefix] && _albumIdxState[idPrefix].observer) {
+      _albumIdxState[idPrefix].observer.disconnect();
+    }
+    _albumIdxState[idPrefix] = { observer: null, suppressUntilToken: 0 };
+
+    const chipsByGrp = {};
+    nav.querySelectorAll('.album-idx-chip').forEach(c => { chipsByGrp[c.dataset.grp] = c; });
+
+    nav.querySelectorAll('.album-idx-chip').forEach(chip => {
+      chip.onclick = (e) => {
+        e.preventDefault();
+        if (chip.classList.contains('empty')) return;
+        const grp = chip.dataset.grp;
+        const target = document.getElementById(idPrefix + '-' + grp);
+        if (!target) return;
+        // Suspender el observer durante este scroll programático
+        const myToken = ++_albumIdxScrollToken;
+        _albumIdxState[idPrefix].suppressUntilToken = myToken;
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        nav.querySelectorAll('.album-idx-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        // Liberar el supress solo si ningún tap más nuevo lo reseteó
+        setTimeout(() => {
+          if (_albumIdxState[idPrefix] &&
+              _albumIdxState[idPrefix].suppressUntilToken === myToken) {
+            _albumIdxState[idPrefix].suppressUntilToken = 0;
+          }
+        }, 750);
+      };
+    });
+
+    const anchors = document.querySelectorAll('.album-idx-anchor[id^="' + idPrefix + '-"]');
+    if (!anchors.length || typeof IntersectionObserver === 'undefined') return;
+    const obs = new IntersectionObserver((entries) => {
+      // Si hay un scroll programático en curso, no overridear el active
+      if (_albumIdxState[idPrefix] && _albumIdxState[idPrefix].suppressUntilToken !== 0) return;
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const grp = entry.target.id.replace(idPrefix + '-', '');
+          const chip = chipsByGrp[grp];
+          if (chip) {
+            nav.querySelectorAll('.album-idx-chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            chip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          }
+        }
+      });
+    }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
+    anchors.forEach(a => obs.observe(a));
+    _albumIdxState[idPrefix].observer = obs;
+  }
+
   function renderRepetidas() {
     const items = [];
     secciones.forEach(sec => {
@@ -6051,6 +6942,13 @@
           });
         }
       });
+    });
+
+    // Conteo por grupo para los badges del índice
+    const groupCounts = {};
+    items.forEach(it => {
+      const g = _albumGroupOf(it.sec);
+      if (g) groupCounts[g] = (groupCounts[g] || 0) + 1;
     });
 
     const totalExtras = items.reduce((acc, it) => acc + it.extras, 0);
@@ -6102,32 +7000,39 @@
       bySec[k].items.push(it);
     });
 
+    // Índice sticky con chips de los 14 grupos del álbum
+    if (hasItems) html += _renderAlbumIndex(groupCounts, 'repgrp');
+
     html += '<div class="sueltas-list" id="rep-list">';
+    let lastGroup = null;
     for (const k in bySec) {
       const grp = bySec[k];
-      // search-blob: texto que el filtro va a comparar — código (incluye prefijo equipo),
-      // número de display (e.g. "ECU 1"), nombre del jugador y nombre del equipo
+      const groupKey = _albumGroupOf(grp.sec);
+      // Anchor invisible al cambiar de grupo — destino del scroll del chip
+      if (groupKey && groupKey !== lastGroup) {
+        html += '<div class="album-idx-anchor" id="repgrp-' + groupKey + '"></div>';
+        lastGroup = groupKey;
+      }
+      // search-blob: texto que el filtro compara — código + número + label + sección
       const secBlob = (grp.sec.titulo || '').toLowerCase();
       html += '<div class="sueltas-section" data-rep-sec="' + grp.sec.id + '" data-rep-sec-blob="' + secBlob.replace(/"/g, '&quot;') + '">' +
-        '<div class="sueltas-section-title">' + grp.sec.titulo + '</div>';
+        '<div class="sueltas-section-title">' + grp.sec.titulo + '</div>' +
+        '<div class="rep-grid">';
       grp.items.forEach(it => {
         const blob = (it.id + ' ' + it.displayNum + ' ' + it.label + ' ' + (grp.sec.titulo || '')).toLowerCase();
         const safeLabel = (it.label || '').replace(/"/g, '&quot;');
         const safeNum = (it.displayNum || '').replace(/"/g, '&quot;');
-        html += '<div class="sueltas-row" data-id="' + it.id + '"' +
+        html += '<div class="rep-card" data-id="' + it.id + '"' +
           ' data-rep-blob="' + blob.replace(/"/g, '&quot;') + '"' +
           ' data-rep-num="' + safeNum + '"' +
           ' data-rep-label="' + safeLabel + '"' +
-          ' data-rep-copies="' + it.extras + '">' +
-          '<div class="sueltas-num rep-num">' + it.displayNum + '<span class="rep-num-x">×' + it.extras + '</span></div>' +
-          '<div class="sueltas-info">' +
-            '<b>' + it.id + '</b>' +
-            '<span>' + it.label + '</span>' +
-          '</div>' +
-          '<button class="btn-sell-one" data-sell-id="' + it.id + '" title="Resta 1 copia (vendiste o cambiaste)">−1</button>' +
+          ' data-rep-copies="' + it.extras + '"' +
+          ' title="' + it.id + (safeLabel ? ' · ' + safeLabel : '') + ' · toca para sacar 1">' +
+          '<div class="rep-card-num">' + it.displayNum + '</div>' +
+          '<div class="rep-card-x">×' + it.extras + '</div>' +
         '</div>';
       });
-      html += '</div>';
+      html += '</div></div>';
     }
     html += '</div>';
     html += '<div id="rep-search-empty" class="rep-search-empty" style="display:none;">' +
@@ -6151,7 +7056,7 @@
     let lastVisibleRow = null;
     list.querySelectorAll('.sueltas-section').forEach(secEl => {
       let secVisible = 0;
-      secEl.querySelectorAll('.sueltas-row').forEach(row => {
+      secEl.querySelectorAll('.rep-card').forEach(row => {
         const blob = row.dataset.repBlob || '';
         const match = terms.length === 0 || terms.every(t => blob.indexOf(t) !== -1);
         row.style.display = match ? '' : 'none';
@@ -6218,30 +7123,105 @@
   }
 
   function bindRepetidas() {
-    document.querySelectorAll('button[data-sell-id]').forEach(btn => {
-      btn.onclick = () => {
-        const id = btn.dataset.sellId;
+    // Índice sticky: scroll suave al click + auto-highlight
+    _bindAlbumIndex('repgrp');
+    // Tap en una card de repetida → resta 1. Si era la última copia,
+    // la card desaparece de la lista al re-renderizar.
+    document.querySelectorAll('.rep-card[data-id]').forEach(card => {
+      card.onclick = () => {
+        if (card.classList.contains('fading')) return;
+        const id = card.dataset.id;
         applyDelta(id, -1);
-        // Visual feedback: fade out the row briefly
-        const row = btn.closest('.sueltas-row');
-        if (row) row.style.opacity = '0.4';
+        card.classList.add('fading');
         setTimeout(() => {
           if (tabActiva === 'repetidas') {
             const cont = document.getElementById('contenido');
             cont.innerHTML = renderRepetidas();
             bindRepetidas();
           }
-        }, 350);
+        }, 280);
       };
     });
 
     const btnShare = document.getElementById('btn-share-repetidas');
     if (btnShare) btnShare.onclick = () => shareRepetidasList(btnShare);
 
-    // (Quitamos los handlers del buscador con lupa — el bulk panel cubre el caso.)
-
     // Bulk-input: textarea + verificar + sacar varias en bloque
     bindRepetidasBulk();
+  }
+
+  // -------- Normalizar texto: pega cualquier formato → formato estándar --------
+  function renderSanitizar() {
+    return '<div class="info-box">' +
+        'Pegá una lista en cualquier formato (mensajes de chat, banderas, "tengo:", etc.) ' +
+        'y la app la convierte al <b>formato estándar</b> del álbum. ' +
+        'Después podés copiar el resultado y pegarlo en <b>Registrar</b> o en <b>Repetidas</b>.' +
+      '</div>' +
+      '<textarea id="sanit-input" class="rep-bulk-textarea" rows="6" ' +
+        'placeholder="Ej: tengo COL 5, 12 17 · BRA 7 (×2) · MEX-13 · FWC4 y la 00. me faltan ARG 3 y la FWC7" ' +
+        'autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"></textarea>' +
+      '<div class="cross-sanitized-preview" open style="display:block;">' +
+        '<summary style="display:none;"></summary>' +
+        '<div class="sanit-label" style="font-size:11px; color:var(--text-3); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">' +
+          'Resultado normalizado' +
+          '<span id="sanit-count" style="margin-left:8px; color:var(--text-2); text-transform:none; letter-spacing:0; font-weight:400;"></span>' +
+        '</div>' +
+        '<pre id="sanit-output">— Pegá texto arriba para ver el resultado —</pre>' +
+        '<div class="cross-sanitized-actions" style="margin-top:8px;">' +
+          '<button class="primary" id="sanit-copy">📋 Copiar resultado</button>' +
+          '<button id="sanit-clear">Limpiar</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function bindSanitizar() {
+    const input = document.getElementById('sanit-input');
+    const output = document.getElementById('sanit-output');
+    const countEl = document.getElementById('sanit-count');
+    const btnCopy = document.getElementById('sanit-copy');
+    const btnClear = document.getElementById('sanit-clear');
+    if (!input || !output) return;
+
+    function update() {
+      const raw = input.value || '';
+      if (!raw.trim()) {
+        output.textContent = '— Pegá texto arriba para ver el resultado —';
+        if (countEl) countEl.textContent = '';
+        return;
+      }
+      const sanitized = sanitizeFriendText(raw);
+      output.textContent = sanitized || '(no se reconoció ningún código)';
+      // Conteo: cuántas láminas distintas pudo identificar
+      if (countEl) {
+        try {
+          const codes = parseBulkInput(sanitized);
+          if (codes && codes.length > 0) {
+            const total = codes.reduce((s, c) => s + (c.requested || 1), 0);
+            countEl.textContent = '· ' + codes.length + ' láminas / ' + total + ' copias';
+          } else countEl.textContent = '';
+        } catch(e) { countEl.textContent = ''; }
+      }
+    }
+
+    let timer = null;
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(update, 180);
+    });
+    input.addEventListener('paste', () => setTimeout(update, 0));
+
+    if (btnCopy) btnCopy.onclick = () => {
+      const text = output.textContent || '';
+      if (!text || text.startsWith('—') || text.startsWith('(')) return;
+      copyToClipboard(text, btnCopy);
+    };
+    if (btnClear) btnClear.onclick = () => {
+      input.value = '';
+      update();
+      input.focus();
+    };
+
+    setTimeout(() => input.focus(), 50);
   }
 
   // -------- Bulk-input: pega varias y saca de un solo --------
@@ -6397,6 +7377,657 @@
         applyBulkRepetidasSell(eligible);
       };
     }
+  }
+
+  // === Vista Finanzas (Fase 2A: persistencia local) ================
+  // Estado financiero serializado a localStorage. Cuando no existe, se
+  // siembra con la inversión inicial real del dueño (1 álbum + 2 cajas)
+  // para que el dashboard tenga datos desde el primer load.
+  // Schema: { v, precios, movimientos[] }. Cada movimiento es
+  // { id, tipo: 'compra'|'venta', subtipo, qty, precio, fecha, nota }.
+  function _finDefaults() {
+    return {
+      v: 1,
+      precios: {
+        jugador: 1500, escudo: 5000, equipo: 5000,
+        fwc: 8000, estrella: 30000, cero: 120000,
+      },
+      movimientos: [
+        { id: 'm_seed_album', tipo: 'compra', subtipo: 'album', qty: 1, precio: 50000, fecha: '2026-04-15', nota: 'Compra inicial' },
+        { id: 'm_seed_cajas', tipo: 'compra', subtipo: 'caja', qty: 2, precio: 520000, fecha: '2026-04-20', nota: 'Compra inicial' },
+      ],
+    };
+  }
+  function _finLoad() {
+    try {
+      const saved = localStorage.getItem(STORAGE_FIN_KEY);
+      if (!saved) return _finDefaults();
+      const parsed = JSON.parse(saved);
+      if (!parsed || typeof parsed !== 'object') return _finDefaults();
+      // Merge seguro: si faltan piezas usar defaults
+      const def = _finDefaults();
+      return {
+        v: parsed.v || 1,
+        precios: Object.assign({}, def.precios, parsed.precios || {}),
+        movimientos: Array.isArray(parsed.movimientos) ? parsed.movimientos : def.movimientos,
+      };
+    } catch (e) {
+      return _finDefaults();
+    }
+  }
+  function _finSave() {
+    try { localStorage.setItem(STORAGE_FIN_KEY, JSON.stringify(finanzasState)); } catch(e) {}
+  }
+  let finanzasState = _finLoad();
+
+  // === Sync finanzas con el backend (Fase 3) ====================
+  // Estrategia: optimistic local update primero, luego push al server.
+  // En el pull periódico (pullSync) si finVersion del servidor cambió,
+  // pulleamos finanzas y reemplazamos el state local con el del server.
+  // Last-write-wins por categoría de precios; movimientos serializados
+  // por LockService en el backend (ids únicos garantizan no-duplicación).
+  async function _finPullFromBackend() {
+    try {
+      const r = await gsRun('pullFinanzas', lastFinVersion);
+      if (!r) return;
+      if (r.unchanged) {
+        if (r.finVersion != null) lastFinVersion = r.finVersion;
+        return;
+      }
+      if (r.finVersion != null) lastFinVersion = r.finVersion;
+      // Si el server tiene null (primera vez), no pisamos lo local.
+      if (r.value && typeof r.value === 'object') {
+        const def = _finDefaults();
+        finanzasState = {
+          v: r.value.v || 1,
+          precios: Object.assign({}, def.precios, r.value.precios || {}),
+          movimientos: Array.isArray(r.value.movimientos) ? r.value.movimientos : [],
+        };
+        _finSave();
+        if (tabActiva === 'finanzas') _finRefreshDashboard();
+      }
+    } catch (e) {
+      // No bloquear UI por errores de sync de finanzas.
+      console.warn('pullFinanzas failed', e);
+    }
+  }
+  async function _finPushPrecios(precios) {
+    try {
+      const r = await gsRun('setFinPrecios', precios);
+      if (r && r.finVersion != null) lastFinVersion = r.finVersion;
+    } catch (e) { console.warn('setFinPrecios failed', e); }
+  }
+  async function _finPushAddMov(mov) {
+    try {
+      const r = await gsRun('addFinMovimiento', mov);
+      if (r && r.finVersion != null) lastFinVersion = r.finVersion;
+    } catch (e) { console.warn('addFinMovimiento failed', e); }
+  }
+  async function _finPushDeleteMov(movId) {
+    try {
+      const r = await gsRun('deleteFinMovimiento', movId);
+      if (r && r.finVersion != null) lastFinVersion = r.finVersion;
+    } catch (e) { console.warn('deleteFinMovimiento failed', e); }
+  }
+
+  // Categorización por id: 00 → cero · FWC* → fwc · TEAM-1 → escudo ·
+  // TEAM-13 → equipo (foto grupal) · resto (2-12, 14-20) → jugador.
+  // Convención real del álbum Panini Mundial 2026.
+  // "Estrella" queda en 0 hasta Fase 4 (cuando se decida cómo marcar
+  // jugadores destacados).
+  function _finCategoryOf(id) {
+    if (id === '00') return 'cero';
+    if (/^FWC/.test(id)) return 'fwc';
+    const m = id.match(/^[A-Z]{3}-(\d+)$/);
+    if (!m) return 'jugador';
+    const n = parseInt(m[1], 10);
+    if (n === 1) return 'escudo';
+    if (n === 13) return 'equipo';
+    return 'jugador';
+  }
+  function _finFmt(n) {
+    const sign = n < 0 ? '-' : '';
+    const abs = Math.abs(Math.round(n));
+    return sign + '$' + abs.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+  function _finFmtCompact(n) {
+    const abs = Math.abs(n);
+    if (abs >= 1000000) return (n < 0 ? '-' : '') + '$' + (abs / 1000000).toFixed(2).replace(/\.?0+$/,'') + 'M';
+    if (abs >= 1000) return (n < 0 ? '-' : '') + '$' + Math.round(abs / 1000) + 'k';
+    return _finFmt(n);
+  }
+
+  function renderFinanzas() {
+    // Fase 2A: leer desde finanzasState (persistido en localStorage).
+    const FIN_PRECIOS = finanzasState.precios;
+    const SOBRES_POR_CAJA = 104;
+    const LAMINAS_POR_SOBRE = 7;
+
+    // Derivar inversión y ventas del array de movimientos
+    let albumQty = 0, totalAlbumInv = 0;
+    let cajasQty = 0, totalCajas = 0;
+    let sobresQty = 0, totalSobresInv = 0;
+    let laminasCompQty = 0, totalLaminasInv = 0;
+    let cajaPrecioUlt = 520000; // último precio visto, fallback default
+    let ventaLaminas = 0, ventaTotal = 0;
+    finanzasState.movimientos.forEach(m => {
+      const monto = (m.qty || 0) * (m.precio || 0);
+      if (m.tipo === 'compra') {
+        if (m.subtipo === 'album') { albumQty += m.qty; totalAlbumInv += monto; }
+        else if (m.subtipo === 'caja') { cajasQty += m.qty; totalCajas += monto; cajaPrecioUlt = m.precio; }
+        else if (m.subtipo === 'sobre') { sobresQty += m.qty; totalSobresInv += monto; }
+        else if (m.subtipo === 'lamina') { laminasCompQty += m.qty; totalLaminasInv += monto; }
+      } else if (m.tipo === 'venta') {
+        ventaLaminas += m.qty;
+        ventaTotal += monto;
+      }
+    });
+    const FIN_INVERSION = {
+      albumQty: albumQty,
+      albumPrecio: albumQty > 0 ? totalAlbumInv / albumQty : 50000,
+      cajasQty: cajasQty,
+      cajasPrecio: cajasQty > 0 ? totalCajas / cajasQty : cajaPrecioUlt,
+      sobresQty: sobresQty,
+      sobresPrecio: sobresQty > 0 ? totalSobresInv / sobresQty : 5000,
+    };
+    const FIN_VENTAS = { totalGastado: ventaTotal, laminas: ventaLaminas };
+
+    // Stats reales del álbum
+    let pegadas = 0, totalUnicas = 0, totalAlbum = 0;
+    const repCat = { jugador: 0, escudo: 0, equipo: 0, fwc: 0, estrella: 0, cero: 0 };
+    secciones.forEach(sec => sec.items.forEach(it => {
+      totalAlbum++;
+      const p = getPegada(it.id);
+      const s = getSueltas(it.id);
+      const total = p + s;
+      if (p === 1) pegadas++;
+      if (total >= 1) totalUnicas++;
+      if (total >= 2) repCat[_finCategoryOf(it.id)] += (total - 1);
+    }));
+    const totalRep = repCat.jugador + repCat.escudo + repCat.equipo + repCat.fwc + repCat.estrella + repCat.cero;
+    const pctAlbum = totalAlbum > 0 ? (pegadas / totalAlbum * 100) : 0;
+
+    // Inversión derivada
+    // Totales derivados arriba al iterar movimientos.
+    const totalInvertido = totalAlbumInv + totalCajas + totalSobresInv + totalLaminasInv;
+    const sobresTot = FIN_INVERSION.cajasQty * SOBRES_POR_CAJA + FIN_INVERSION.sobresQty;
+    const laminasBrutas = sobresTot * LAMINAS_POR_SOBRE;
+    const costoPromCaja = FIN_INVERSION.cajasQty > 0 ? totalCajas / FIN_INVERSION.cajasQty : 0;
+    const costoLamBruta = laminasBrutas > 0 ? totalCajas / laminasBrutas : 0;
+    const costoLamUnica = totalUnicas > 0 ? totalCajas / totalUnicas : 0;
+
+    // Valor por categoría
+    const valorCat = {
+      jugador: repCat.jugador * FIN_PRECIOS.jugador,
+      escudo: repCat.escudo * FIN_PRECIOS.escudo,
+      equipo: repCat.equipo * FIN_PRECIOS.equipo,
+      fwc: repCat.fwc * FIN_PRECIOS.fwc,
+      estrella: repCat.estrella * FIN_PRECIOS.estrella,
+      cero: repCat.cero * FIN_PRECIOS.cero,
+    };
+    const valorEstimado = valorCat.jugador + valorCat.escudo + valorCat.equipo + valorCat.fwc + valorCat.estrella + valorCat.cero;
+
+    // Rendimiento: cuánto te acercás al óptimo después de descontar ventas.
+    // Cuanto más vendés, más baja el "costo neto" y mayor el rendimiento.
+    // Si net <= 0 ya recuperaste todo lo invertido (rendimiento ≥ 100%).
+    const sobresOptimos = Math.ceil(totalAlbum / LAMINAS_POR_SOBRE);
+    const costoPorSobre = FIN_INVERSION.cajasPrecio / SOBRES_POR_CAJA;
+    const costoOptimo = sobresOptimos * costoPorSobre + totalAlbumInv;
+    const totalNeto = totalInvertido - ventaTotal;
+    const rendimiento = totalNeto > 0
+      ? Math.min(999, Math.round(costoOptimo / totalNeto * 100))
+      : 999;
+    const sobrecosto = totalNeto - costoOptimo;
+
+    // Recuperación
+    const laminasVendidas = FIN_VENTAS.laminas;
+    const totalRecuperado = FIN_VENTAS.totalGastado;
+    const precioPromVenta = laminasVendidas > 0 ? totalRecuperado / laminasVendidas : 0;
+
+    // Balance final hipotético
+    const balanceFinal = totalRecuperado + valorEstimado - totalInvertido;
+    const roiFinal = totalInvertido > 0 ? Math.round(balanceFinal / totalInvertido * 100) : 0;
+
+    // SVG ring offset (r=85 → circumferencia = 2π·85 ≈ 534.07; matchea
+    // el tamaño de la dona del home).
+    const CIRC = 534.07;
+    const ringOff = (pct) => CIRC * (1 - Math.max(0, Math.min(100, pct)) / 100);
+
+    let html = '<div class="fin-page">';
+
+    // Dona única: Rendimiento (la del álbum se ve en el Inicio).
+    // Todo el contenido va adentro: label + invertido (rojo) + óptimo
+    // (verde) + sobrecosto.
+    html += '<div class="fin-rings">' +
+      '<div class="fin-ring-card">' +
+        '<div class="fin-ring-wrap">' +
+          '<svg viewBox="0 0 200 200" aria-hidden="true">' +
+            '<circle class="fin-ring-track" cx="100" cy="100" r="85"/>' +
+            '<circle class="fin-ring-progress" cx="100" cy="100" r="85" stroke-dashoffset="' + ringOff(rendimiento) + '"/>' +
+          '</svg>' +
+          '<div class="fin-ring-pct">' + rendimiento + '%' +
+            '<span class="fin-ring-title">Rendimiento</span>' +
+            '<span class="fin-ring-amounts">' +
+              '<span class="ra">' + _finFmt(totalNeto) + '</span>' +
+              '<span class="div">÷</span>' +
+              '<span class="rg">' + _finFmt(costoOptimo) + '</span>' +
+            '</span>' +
+            (sobrecosto >= 0
+              ? '<span class="fin-ring-sobrecosto">Sobrecosto <b>' + _finFmt(sobrecosto) + '</b></span>'
+              : '<span class="fin-ring-sobrecosto">Ahorro <b style="color:var(--green);">' + _finFmt(Math.abs(sobrecosto)) + '</b></span>') +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+    // ▼ Inversión — resumen flexible según los subtipos registrados
+    const invParts = [];
+    if (cajasQty > 0) invParts.push(cajasQty + (cajasQty === 1 ? ' caja' : ' cajas'));
+    if (albumQty > 0) invParts.push(albumQty === 1 ? 'álbum' : albumQty + ' álbumes');
+    if (sobresQty > 0) invParts.push(sobresQty + (sobresQty === 1 ? ' sobre' : ' sobres'));
+    if (laminasCompQty > 0) invParts.push(laminasCompQty + (laminasCompQty === 1 ? ' lámina' : ' láminas'));
+    const invSummary = invParts.length > 0 ? invParts.join(' + ') : 'sin compras';
+    const subSummary = sobresTot > 0
+      ? sobresTot + ' sobres · ' + laminasBrutas + ' láminas'
+      : (laminasCompQty > 0 ? laminasCompQty + (laminasCompQty === 1 ? ' lámina suelta' : ' láminas sueltas') : '—');
+
+    let invRows = '';
+    if (albumQty > 0) {
+      invRows += '<div class="fin-price-row"><span class="cat">Álbum</span><span class="qty">' + albumQty + ' × ' + _finFmt(FIN_INVERSION.albumPrecio) + '</span><span class="amt">' + _finFmt(totalAlbumInv) + '</span></div>';
+    }
+    if (cajasQty > 0) {
+      invRows += '<div class="fin-price-row"><span class="cat">Cajas</span><span class="qty">' + cajasQty + ' × ' + _finFmt(FIN_INVERSION.cajasPrecio) + '</span><span class="amt">' + _finFmt(totalCajas) + '</span></div>';
+    }
+    if (sobresQty > 0) {
+      invRows += '<div class="fin-price-row"><span class="cat">Sobres sueltos</span><span class="qty">' + sobresQty + ' × ' + _finFmt(FIN_INVERSION.sobresPrecio) + '</span><span class="amt">' + _finFmt(totalSobresInv) + '</span></div>';
+    }
+    if (laminasCompQty > 0) {
+      const lamPrecioProm = totalLaminasInv / laminasCompQty;
+      invRows += '<div class="fin-price-row"><span class="cat">Láminas sueltas</span><span class="qty">' + laminasCompQty + ' × ' + _finFmt(lamPrecioProm) + '</span><span class="amt">' + _finFmt(totalLaminasInv) + '</span></div>';
+    }
+
+    html += '<div class="fin-panel out">' +
+      '<div class="fin-panel-title out"><span>▼ Inversión</span></div>' +
+      '<div class="fin-panel-grid">' +
+        '<div class="fin-panel-stat"><div class="v fin-red-glow">' + _finFmt(totalInvertido) + '</div><div class="l">Total invertido</div></div>' +
+        '<div class="fin-panel-stat"><div class="v">' + invSummary + '</div><div class="l">' + subSummary + '</div></div>' +
+        '<div class="fin-panel-stat"><div class="v">' + (cajasQty > 0 ? _finFmt(costoPromCaja) : '—') + '</div><div class="l">Costo prom. caja</div></div>' +
+        '<div class="fin-panel-stat"><div class="v">' + (laminasBrutas > 0 ? _finFmt(costoLamBruta) : '—') + '</div><div class="l">Costo / lámina (bruta)</div></div>' +
+      '</div>' +
+      (invRows ? '<div class="fin-price-rows" style="margin-top:12px;">' + invRows + '</div>' : '') +
+      (totalCajas > 0 && totalUnicas > 0
+        ? '<div class="fin-panel-foot">' +
+            '<div>Costo / lámina única conseguida: <b style="color:var(--text);">' + _finFmt(costoLamUnica) + '</b></div>' +
+            '<div class="formula">= ' + _finFmt(totalCajas) + ' (cajas) ÷ ' + totalUnicas + ' (únicas) = ' + _finFmt(costoLamUnica) + '</div>' +
+          '</div>'
+        : '') +
+    '</div>';
+
+    // ▲ Recuperación
+    html += '<div class="fin-panel in">' +
+      '<div class="fin-panel-title in"><span>▲ Recuperación</span></div>' +
+      '<div class="fin-panel-grid">' +
+        '<div class="fin-panel-stat"><div class="v fin-green-glow">' + _finFmt(totalRecuperado) + '</div><div class="l">Total vendido</div></div>' +
+        '<div class="fin-panel-stat"><div class="v">' + laminasVendidas + '</div><div class="l">Láminas vendidas</div></div>' +
+      '</div>' +
+      '<div class="fin-panel-foot">' +
+        '<div>Precio prom. / lámina vendida: <b style="color:var(--text);">' + _finFmt(precioPromVenta) + '</b></div>' +
+        (laminasVendidas > 0
+          ? '<div class="formula">= ' + _finFmt(totalRecuperado) + ' ÷ ' + laminasVendidas + ' = ' + _finFmt(precioPromVenta) + '</div>'
+          : '<div class="formula">Aún no registraste ventas (Fase 1).</div>') +
+      '</div>' +
+    '</div>';
+
+    // ⧗ Por vender
+    html += '<div class="fin-panel pending">' +
+      '<div class="fin-panel-title pending"><span>⧗ Por vender</span><button class="fin-config-link">⚙ Precios</button></div>' +
+      '<div class="fin-panel-grid">' +
+        '<div class="fin-panel-stat"><div class="v fin-amber-glow">' + _finFmt(valorEstimado) + '</div><div class="l">Valor estimado</div></div>' +
+        '<div class="fin-panel-stat"><div class="v">' + totalRep + '</div><div class="l">Repetidas en stock</div></div>' +
+      '</div>' +
+      '<div class="fin-price-rows">' +
+        '<div class="fin-price-row"><span class="cat">Jugadores comunes</span><span class="qty">' + repCat.jugador + ' × ' + _finFmt(FIN_PRECIOS.jugador) + '</span><span class="amt">' + _finFmt(valorCat.jugador) + '</span></div>' +
+        '<div class="fin-price-row"><span class="cat">Escudos</span><span class="qty">' + repCat.escudo + ' × ' + _finFmt(FIN_PRECIOS.escudo) + '</span><span class="amt">' + _finFmt(valorCat.escudo) + '</span></div>' +
+        '<div class="fin-price-row"><span class="cat">Equipos (foto grupal)</span><span class="qty">' + repCat.equipo + ' × ' + _finFmt(FIN_PRECIOS.equipo) + '</span><span class="amt">' + _finFmt(valorCat.equipo) + '</span></div>' +
+        '<div class="fin-price-row"><span class="cat">Intro / Historia (FWC)</span><span class="qty">' + repCat.fwc + ' × ' + _finFmt(FIN_PRECIOS.fwc) + '</span><span class="amt">' + _finFmt(valorCat.fwc) + '</span></div>' +
+        '<div class="fin-price-row"><span class="cat">Estrellas (Mbappé, Haaland…)</span><span class="qty">' + repCat.estrella + ' × ' + _finFmt(FIN_PRECIOS.estrella) + '</span><span class="amt">' + _finFmt(valorCat.estrella) + '</span></div>' +
+        '<div class="fin-price-row"><span class="cat">Lámina 00 (Logo Panini)</span><span class="qty">' + repCat.cero + ' × ' + _finFmt(FIN_PRECIOS.cero) + '</span><span class="amt">' + _finFmt(valorCat.cero) + '</span></div>' +
+      '</div>' +
+      '<div class="fin-panel-foot">' +
+        'Si vendés todas: balance final = <b style="color:' + (balanceFinal >= 0 ? 'var(--green)' : 'var(--danger)') + ';">' +
+          (balanceFinal >= 0 ? '+' : '') + _finFmt(balanceFinal) + '</b>' +
+        '<span style="color:var(--text-3);"> · ROI = ' + roiFinal + '%</span>' +
+      '</div>' +
+    '</div>';
+
+    html += '<button class="fin-fab" id="fin-add-mov">+ Registrar movimiento</button>';
+    html += _finRenderMovList();
+    html += '</div>';
+
+    return html;
+  }
+
+  function bindFinanzas() {
+    const movBtn = document.getElementById('fin-add-mov');
+    if (movBtn) movBtn.onclick = () => _finMovOpen('compra');
+    document.querySelectorAll('.fin-config-link').forEach(el => {
+      el.onclick = () => _finPreciosOpen();
+    });
+    // Borrar movimiento desde la lista del dashboard
+    document.querySelectorAll('[data-mov-del]').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.dataset.movDel;
+        if (!confirm('¿Borrar este movimiento? No se puede deshacer.')) return;
+        finanzasState.movimientos = finanzasState.movimientos.filter(m => m.id !== id);
+        _finSave();
+        _finPushDeleteMov(id); // sync al backend
+        _finRefreshDashboard();
+      };
+    });
+  }
+
+  // === Modal de precios (Fase 2B) =================================
+  const FIN_CAT_LABELS = {
+    jugador: 'Jugadores comunes',
+    escudo: 'Escudos',
+    equipo: 'Equipos (foto grupal)',
+    fwc: 'Intro / Historia (FWC)',
+    estrella: 'Estrellas (Mbappé, Haaland…)',
+    cero: 'Lámina 00 (Logo Panini)',
+  };
+  function _finComputeRepCats() {
+    const rep = { jugador: 0, escudo: 0, equipo: 0, fwc: 0, estrella: 0, cero: 0 };
+    secciones.forEach(sec => sec.items.forEach(it => {
+      const total = getPegada(it.id) + getSueltas(it.id);
+      if (total >= 2) rep[_finCategoryOf(it.id)] += (total - 1);
+    }));
+    return rep;
+  }
+  // Acepta "1500", "1.500", "1,500", " 1500 " — quita todo lo no-dígito.
+  function _finParseAmount(s) {
+    const cleaned = String(s == null ? '' : s).replace(/[^0-9]/g, '');
+    const n = parseInt(cleaned, 10);
+    return isNaN(n) ? 0 : n;
+  }
+  function _finPreciosOpen() {
+    const bd = document.getElementById('fin-precios-backdrop');
+    if (!bd) return;
+    _finPreciosRender();
+    bd.classList.add('open');
+  }
+  function _finPreciosClose() {
+    const bd = document.getElementById('fin-precios-backdrop');
+    if (bd) bd.classList.remove('open');
+  }
+  function _finPreciosRender() {
+    const body = document.getElementById('fin-precios-body');
+    if (!body) return;
+    const rep = _finComputeRepCats();
+    const cats = ['jugador','escudo','equipo','fwc','estrella','cero'];
+    body.innerHTML = cats.map(cat => {
+      const qty = rep[cat];
+      const precio = finanzasState.precios[cat] || 0;
+      const subtotal = qty * precio;
+      // Mostrar precio sin el "$" para no confundir el input.
+      const precioStr = precio.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      return '<div class="fin-pr-row" data-cat="' + cat + '">' +
+        '<div class="fin-pr-info">' +
+          '<div class="fin-pr-cat">' + FIN_CAT_LABELS[cat] + '</div>' +
+          '<div class="fin-pr-qty">' + qty + (qty === 1 ? ' repetida' : ' repetidas') + '</div>' +
+          '<div class="fin-pr-subtotal" data-sub>= ' + _finFmt(subtotal) + '</div>' +
+        '</div>' +
+        '<div class="fin-pr-input-wrap">' +
+          '<input type="text" class="fin-pr-input" data-precio data-cat="' + cat + '" inputmode="decimal" value="' + precioStr + '">' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    _finPreciosUpdateTotal();
+  }
+  function _finPreciosUpdateTotal() {
+    const rep = _finComputeRepCats();
+    let total = 0;
+    document.querySelectorAll('#fin-precios-body .fin-pr-row').forEach(row => {
+      const cat = row.dataset.cat;
+      const input = row.querySelector('input[data-precio]');
+      const precio = _finParseAmount(input ? input.value : '0');
+      const sub = (rep[cat] || 0) * precio;
+      total += sub;
+      const subEl = row.querySelector('[data-sub]');
+      if (subEl) subEl.textContent = '= ' + _finFmt(sub);
+    });
+    const totalEl = document.getElementById('fin-precios-total');
+    if (totalEl) totalEl.textContent = _finFmt(total);
+  }
+  function _finPreciosBind() {
+    const bd = document.getElementById('fin-precios-backdrop');
+    if (!bd) return;
+    bd.onclick = (e) => { if (e.target === bd) _finPreciosClose(); };
+    bd.addEventListener('input', (e) => {
+      if (e.target && e.target.matches && e.target.matches('input[data-precio]')) _finPreciosUpdateTotal();
+    });
+    const save = document.getElementById('fin-precios-save');
+    if (save) save.onclick = () => {
+      const cats = ['jugador','escudo','equipo','fwc','estrella','cero'];
+      const nuevos = {};
+      cats.forEach(cat => {
+        const input = document.querySelector('input[data-precio][data-cat="' + cat + '"]');
+        if (input) {
+          const val = _finParseAmount(input.value);
+          finanzasState.precios[cat] = val;
+          nuevos[cat] = val;
+        }
+      });
+      _finSave();
+      _finPushPrecios(nuevos); // sync al backend (no bloquea UI)
+      _finPreciosClose();
+      _finRefreshDashboard();
+    };
+    const cancel = document.getElementById('fin-precios-cancel');
+    if (cancel) cancel.onclick = () => _finPreciosClose();
+  }
+
+  // === Modal de movimientos (Fase 2C) =============================
+  let _finMovTab = 'compra';
+  let _finMovSub = 'caja';
+
+  const FIN_SUB_LABELS = {
+    album: 'Álbum',
+    caja: 'Caja',
+    sobre: 'Sobre',
+    lamina: 'Láminas',
+  };
+  const FIN_SUB_DEFAULTS = {
+    album: { qty: 1, precio: 50000 },
+    caja: { qty: 1, precio: 520000 },
+    sobre: { qty: 1, precio: 5000 },
+    lamina: { qty: 1, precio: 1500 },
+  };
+
+  function _finMovTodayISO() {
+    const d = new Date();
+    return d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+  }
+
+  function _finMovDescPlural(subtipo, qty) {
+    const labels = {
+      album: qty === 1 ? 'álbum' : 'álbumes',
+      caja: qty === 1 ? 'caja' : 'cajas',
+      sobre: qty === 1 ? 'sobre' : 'sobres',
+      lamina: qty === 1 ? 'lámina' : 'láminas',
+    };
+    return qty + ' ' + (labels[subtipo] || subtipo);
+  }
+
+  function _finMovOpen(initialTab) {
+    if (initialTab) _finMovTab = initialTab;
+    if (_finMovTab === 'venta') _finMovSub = 'lamina';
+    const bd = document.getElementById('fin-mov-backdrop');
+    if (!bd) return;
+    _finMovRender();
+    bd.classList.add('open');
+  }
+  function _finMovClose() {
+    const bd = document.getElementById('fin-mov-backdrop');
+    if (bd) bd.classList.remove('open');
+  }
+
+  function _finMovRender() {
+    const body = document.getElementById('fin-mov-body');
+    if (!body) return;
+    const isCompra = _finMovTab === 'compra';
+    const def = FIN_SUB_DEFAULTS[_finMovSub] || FIN_SUB_DEFAULTS.caja;
+
+    let html = '';
+    // Tabs Compra/Venta
+    html += '<div class="fin-mov-tabs">' +
+      '<button class="fin-mov-tab compra ' + (isCompra ? 'active' : '') + '" data-mov-tab="compra">▼ Compra</button>' +
+      '<button class="fin-mov-tab venta ' + (!isCompra ? 'active' : '') + '" data-mov-tab="venta">▲ Venta</button>' +
+    '</div>';
+
+    // Subtipo (solo en compra: álbum / caja / sobre / lámina suelta)
+    if (isCompra) {
+      html += '<div class="fin-mov-subs">';
+      ['album','caja','sobre','lamina'].forEach(sub => {
+        const label = sub === 'lamina' ? 'Lámina' : FIN_SUB_LABELS[sub];
+        html += '<button class="fin-mov-sub ' + (_finMovSub === sub ? 'active' : '') + '" data-mov-sub="' + sub + '">' + label + '</button>';
+      });
+      html += '</div>';
+    }
+
+    // Form
+    html += '<div class="fin-mov-form">' +
+      '<div class="fin-mov-grid">' +
+        '<div class="fin-mov-row">' +
+          '<span class="label">Cantidad</span>' +
+          '<input type="text" class="fin-mov-input" id="fin-mov-qty" inputmode="numeric" value="' + def.qty + '">' +
+        '</div>' +
+        '<div class="fin-mov-row">' +
+          '<span class="label">' + (isCompra ? 'Precio unitario' : 'Precio prom. de venta') + '</span>' +
+          '<div class="fin-mov-input-wrap dollar">' +
+            '<input type="text" class="fin-mov-input with-prefix" id="fin-mov-precio" inputmode="decimal" value="' + def.precio + '">' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="fin-mov-row">' +
+        '<span class="label">Fecha</span>' +
+        '<input type="date" class="fin-mov-input" id="fin-mov-fecha" value="' + _finMovTodayISO() + '">' +
+      '</div>' +
+      '<div class="fin-mov-row">' +
+        '<span class="label">Nota (opcional)</span>' +
+        '<input type="text" class="fin-mov-input" id="fin-mov-nota" placeholder="Ej: vendí a Mauricio">' +
+      '</div>' +
+      '<div class="fin-mov-total ' + (isCompra ? 'compra' : 'venta') + '">' +
+        '<span class="label">' + (isCompra ? 'Total a invertir' : 'Total a recuperar') + '</span>' +
+        '<span class="value" id="fin-mov-total">' + _finFmt(def.qty * def.precio) + '</span>' +
+      '</div>' +
+    '</div>';
+
+    body.innerHTML = html;
+    _finMovUpdateTotal();
+  }
+
+  // Helper compartido: renderiza la lista de movimientos. Se usa en el
+  // dashboard de Finanzas (Fase 2C: la lista vive ahí, no en el modal).
+  function _finRenderMovList() {
+    let html = '<div class="fin-mov-list-section">' +
+      '<div class="fin-mov-list-title">Movimientos registrados (' + finanzasState.movimientos.length + ')</div>';
+    if (finanzasState.movimientos.length === 0) {
+      html += '<div class="fin-mov-list-empty">Aún no registraste ningún movimiento. Tap en <b>+ Registrar movimiento</b> para empezar.</div>';
+    } else {
+      const sorted = finanzasState.movimientos.slice().sort((a, b) => (b.fecha || '').localeCompare(a.fecha || ''));
+      sorted.forEach(m => {
+        const isC = m.tipo === 'compra';
+        const total = (m.qty || 0) * (m.precio || 0);
+        const desc = _finMovDescPlural(m.subtipo, m.qty || 0);
+        html += '<div class="fin-mov-list-row">' +
+          '<div class="fin-mov-list-icon ' + (isC ? 'compra' : 'venta') + '">' + (isC ? '▼' : '▲') + '</div>' +
+          '<div class="fin-mov-list-info">' +
+            '<b>' + desc + '</b>' +
+            '<span>' + (m.fecha || 'sin fecha') + (m.nota ? ' · ' + m.nota : '') + '</span>' +
+          '</div>' +
+          '<div class="fin-mov-list-amt ' + (isC ? 'compra' : 'venta') + '">' +
+            (isC ? '−' : '+') + _finFmt(total) +
+          '</div>' +
+          '<button class="fin-mov-list-del" data-mov-del="' + m.id + '" title="Borrar">×</button>' +
+        '</div>';
+      });
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function _finMovUpdateTotal() {
+    const qtyEl = document.getElementById('fin-mov-qty');
+    const precioEl = document.getElementById('fin-mov-precio');
+    const qty = _finParseAmount(qtyEl ? qtyEl.value : '0');
+    const precio = _finParseAmount(precioEl ? precioEl.value : '0');
+    const totalEl = document.getElementById('fin-mov-total');
+    if (totalEl) totalEl.textContent = _finFmt(qty * precio);
+  }
+
+  function _finRefreshDashboard() {
+    if (tabActiva !== 'finanzas') return;
+    const cont = document.getElementById('contenido');
+    if (!cont) return;
+    cont.innerHTML = renderFinanzas();
+    bindFinanzas();
+  }
+
+  function _finMovBind() {
+    const bd = document.getElementById('fin-mov-backdrop');
+    if (!bd) return;
+    bd.addEventListener('click', (e) => {
+      if (e.target === bd) { _finMovClose(); return; }
+      const tab = e.target.closest && e.target.closest('[data-mov-tab]');
+      if (tab) {
+        _finMovTab = tab.dataset.movTab;
+        if (_finMovTab === 'venta') _finMovSub = 'lamina';
+        else if (_finMovSub === 'lamina') _finMovSub = 'caja';
+        _finMovRender();
+        return;
+      }
+      const sub = e.target.closest && e.target.closest('[data-mov-sub]');
+      if (sub) {
+        _finMovSub = sub.dataset.movSub;
+        // Refrescar defaults de cantidad/precio al cambiar subtipo
+        const def = FIN_SUB_DEFAULTS[_finMovSub];
+        const qtyEl = document.getElementById('fin-mov-qty');
+        const precioEl = document.getElementById('fin-mov-precio');
+        if (qtyEl) qtyEl.value = def.qty;
+        if (precioEl) precioEl.value = def.precio;
+        _finMovRender();
+        return;
+      }
+    });
+    bd.addEventListener('input', (e) => {
+      if (e.target && (e.target.id === 'fin-mov-qty' || e.target.id === 'fin-mov-precio')) {
+        _finMovUpdateTotal();
+      }
+    });
+    const save = document.getElementById('fin-mov-save');
+    if (save) save.onclick = () => {
+      const qty = _finParseAmount(document.getElementById('fin-mov-qty').value);
+      const precio = _finParseAmount(document.getElementById('fin-mov-precio').value);
+      const fecha = document.getElementById('fin-mov-fecha').value || _finMovTodayISO();
+      const nota = (document.getElementById('fin-mov-nota').value || '').trim();
+      if (qty <= 0) { alert('La cantidad debe ser mayor a 0.'); return; }
+      if (precio < 0) { alert('El precio no puede ser negativo.'); return; }
+      const subtipo = _finMovTab === 'venta' ? 'lamina' : _finMovSub;
+      const id = 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      const mov = {
+        id: id, tipo: _finMovTab, subtipo: subtipo,
+        qty: qty, precio: precio, fecha: fecha, nota: nota,
+      };
+      finanzasState.movimientos.push(mov);
+      _finSave();
+      _finPushAddMov(mov); // sync al backend
+      _finMovClose();
+      _finRefreshDashboard();
+    };
+    const cancel = document.getElementById('fin-mov-cancel');
+    if (cancel) cancel.onclick = () => _finMovClose();
   }
 
   // displayNum helper (para items que vinieron de classifyCodes sin el campo)
@@ -6561,6 +8192,8 @@
     bindBottomNav();
     bindMoreSheet();
     bindGroupSelector();
+    _finPreciosBind();
+    _finMovBind();
     updateBottomNavActive();
     updateGroupSelectorVisibility();
   }
@@ -6785,7 +8418,19 @@
         const act = btn.dataset.moreAct;
         closeMoreSheet();
         if (act === 'close') return;
-        if (act === 'sueltas') {
+        if (act === 'finanzas') {
+          tabActiva = 'finanzas';
+          renderTabs();
+          renderContenido();
+          updateBottomNavActive();
+          updateGroupSelectorVisibility();
+        } else if (act === 'sanitizar') {
+          tabActiva = 'sanitizar';
+          renderTabs();
+          renderContenido();
+          updateBottomNavActive();
+          updateGroupSelectorVisibility();
+        } else if (act === 'sueltas') {
           tabActiva = 'sueltas';
           renderTabs();
           renderContenido();
