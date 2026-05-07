@@ -3207,6 +3207,255 @@
     font-size: 12px;
     padding: 18px 0;
   }
+
+  /* === Cross v2 (Cambios → Cruzar listas) === */
+  .cx-trato {
+    background: linear-gradient(90deg, rgba(239,159,39,0.12) 0%, rgba(74,158,255,0.12) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    margin: 12px 0 10px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .cx-trato-title { font-size: 13px; font-weight: 700; color: var(--text); }
+  .cx-trato-detail { font-size: 11px; color: var(--text-3); font-family: "JetBrains Mono", Menlo, monospace; }
+  .cx-filters {
+    display: flex; gap: 5px;
+    overflow-x: auto; padding-bottom: 6px; margin-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .cx-filter-chip {
+    flex-shrink: 0;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    color: var(--text-2);
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 10px; font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+    font-family: inherit;
+  }
+  .cx-filter-chip.active {
+    background: var(--amber); border-color: var(--amber); color: #fff;
+  }
+  .cx-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .cx-col { background: var(--bg-2); border-radius: var(--radius); padding: 8px; }
+  .cx-col-head {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 4px; padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .cx-col-head .count { font-family: "JetBrains Mono", Menlo, monospace; font-weight: 400; color: var(--text-3); }
+  .cx-col.give .cx-col-head { color: var(--amber); border-bottom-color: rgba(239,159,39,0.3); }
+  .cx-col.receive .cx-col-head { color: var(--blue); border-bottom-color: rgba(74,158,255,0.3); }
+  .cx-progress {
+    font-size: 9px; color: var(--text-3);
+    margin-bottom: 6px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .cx-progress span b { color: var(--text-2); }
+  .cx-progress .ok { color: var(--green); }
+  .cx-progress .no { color: var(--danger); }
+  .cx-add { display: flex; gap: 4px; margin-bottom: 6px; }
+  .cx-add input {
+    flex: 1; min-width: 0;
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    border-radius: 4px; padding: 5px 7px;
+    color: var(--text);
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-size: 10px; outline: none;
+    -webkit-appearance: none;
+  }
+  .cx-add input::placeholder { color: var(--text-3); font-size: 9px; }
+  .cx-col.give .cx-add input:focus { border-color: var(--amber); }
+  .cx-col.receive .cx-add input:focus { border-color: var(--blue); }
+  .cx-add-btn {
+    border: 0; border-radius: 4px;
+    padding: 0 9px; font-size: 13px; font-weight: 700;
+    cursor: pointer; color: #fff; line-height: 1;
+    font-family: inherit;
+  }
+  .cx-col.give .cx-add-btn { background: var(--amber); }
+  .cx-col.receive .cx-add-btn { background: var(--blue); }
+  .cx-add-error {
+    font-size: 9px; color: var(--danger);
+    margin: -2px 0 6px; min-height: 12px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  @keyframes cxShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    50% { transform: translateX(3px); }
+    75% { transform: translateX(-2px); }
+  }
+  .cx-add input.invalid { border-color: var(--danger) !important; animation: cxShake 0.3s ease; }
+  .cx-tier {
+    font-size: 9px; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: 1px;
+    margin: 8px 0 4px; padding-left: 2px;
+  }
+  .cx-tier:first-of-type { margin-top: 0; }
+  .cx-grid { display: flex; flex-wrap: wrap; gap: 6px 4px; }
+  .cx-chip-wrap { position: relative; display: inline-block; }
+  .cx-chip {
+    border-radius: 4px; padding: 6px 8px;
+    font-size: 10px; font-weight: 700;
+    font-family: "JetBrains Mono", Menlo, monospace; line-height: 1;
+    cursor: pointer; user-select: none; -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.1s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+    display: inline-flex; align-items: center; gap: 3px;
+    position: relative;
+  }
+  .cx-chip:active { transform: scale(0.93); }
+  .cx-chip.give { background: var(--amber); color: #fff; }
+  .cx-chip.receive { background: var(--blue); color: #fff; }
+  .cx-chip.want { box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--bg-2); }
+  .cx-chip.want::before { content: '✓'; font-size: 11px; font-weight: 700; margin-right: 1px; }
+  .cx-chip.tier-escudo, .cx-chip.tier-equipo {
+    box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.4);
+  }
+  .cx-chip.want.tier-escudo, .cx-chip.want.tier-equipo {
+    box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.4), 0 0 0 2px #fff, 0 0 0 3px var(--bg-2);
+  }
+  .cx-chip.tier-fwc {
+    background: linear-gradient(135deg, var(--amber) 0%, #c47e15 100%);
+    box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.5);
+  }
+  .cx-chip.receive.tier-fwc {
+    background: linear-gradient(135deg, var(--blue) 0%, #2563EB 100%);
+  }
+  .cx-chip.tier-cero {
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.7), 0 0 6px currentColor;
+    font-size: 11px;
+  }
+  .cx-chip .x { margin-left: 2px; opacity: 0.85; font-size: 9px; }
+  .cx-chip.applied {
+    background: var(--green) !important;
+    color: #003420 !important;
+    opacity: 0.55;
+    cursor: default;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+  .cx-chip.applied::before { content: ''; }
+  .cx-chip.applied::after {
+    content: ' ✓';
+    font-size: 9px; font-weight: 700; margin-left: 2px;
+  }
+  .cx-chip.discarded {
+    opacity: 0.5;
+    text-decoration: line-through;
+    cursor: default;
+  }
+  .cx-chip.discarded:active { transform: none; }
+  .cx-discard-btn {
+    position: absolute; top: -6px; right: -6px;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    color: var(--text-3);
+    font-size: 11px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; padding: 0; z-index: 1;
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+  }
+  .cx-discard-btn:hover, .cx-discard-btn:active {
+    background: var(--danger); color: #fff; border-color: var(--danger);
+  }
+  .cx-restore-btn {
+    margin-left: 4px;
+    background: transparent; border: 0;
+    color: inherit; font-size: 11px;
+    cursor: pointer; padding: 0 2px;
+    text-decoration: none; opacity: 0.85;
+    font-family: inherit;
+  }
+  @keyframes cxFlash {
+    0% { transform: scale(0.85); box-shadow: 0 0 0 0 rgba(255,255,255,0.6); }
+    50% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(255,255,255,0.4); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+  }
+  .cx-chip.flash { animation: cxFlash 0.6s ease; }
+  .cx-descartadas {
+    background: var(--bg-2);
+    border-radius: var(--radius);
+    padding: 10px 12px; margin-top: 12px;
+    border: 0.5px dashed var(--border);
+  }
+  .cx-desc-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 8px;
+  }
+  .cx-desc-title {
+    font-size: 11px; font-weight: 700; color: var(--text-3);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .cx-restore-all {
+    background: transparent; border: 0.5px solid var(--border);
+    color: var(--text-2); padding: 4px 10px;
+    border-radius: 100px; font-size: 10px; font-weight: 600;
+    cursor: pointer; font-family: inherit;
+  }
+  .cx-actions {
+    display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;
+  }
+  .cx-btn {
+    flex: 1; min-width: 100px; padding: 11px;
+    border-radius: var(--radius);
+    font-family: inherit; font-size: 12px; font-weight: 700;
+    cursor: pointer; border: 0;
+    transition: filter 0.15s ease;
+  }
+  .cx-btn.primary { background: var(--amber); color: #fff; }
+  .cx-btn.primary[disabled] {
+    background: var(--bg-3); color: var(--text-3);
+    cursor: not-allowed; filter: none;
+  }
+  .cx-btn.primary.ready { animation: cxReadyPulse 1.6s ease-in-out infinite; }
+  @keyframes cxReadyPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,159,39,0.5); }
+    50% { box-shadow: 0 0 0 6px rgba(239,159,39,0); }
+  }
+  .cx-btn.secondary {
+    background: transparent; color: var(--text-2);
+    border: 0.5px solid var(--border);
+  }
+  .cx-apply-banner {
+    position: fixed; top: 16px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--green); color: #003420;
+    padding: 10px 18px; border-radius: 100px;
+    font-size: 13px; font-weight: 700;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    display: none; z-index: 100;
+    align-items: center; gap: 10px;
+  }
+  .cx-apply-banner.show {
+    display: inline-flex;
+    animation: cxBannerIn 0.3s ease, cxBannerOut 0.4s ease 2.6s forwards;
+  }
+  @keyframes cxBannerIn {
+    from { transform: translate(-50%, -30px); opacity: 0; }
+    to   { transform: translate(-50%, 0); opacity: 1; }
+  }
+  @keyframes cxBannerOut {
+    to { transform: translate(-50%, -30px); opacity: 0; }
+  }
+  .cx-apply-banner-detail {
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-size: 11px; font-weight: 600; opacity: 0.8;
+  }
+
 </style>
 </head>
 <body>
@@ -4638,6 +4887,356 @@
       '</div>' +
       interactHint +
       errorsBlock;
+  }
+
+  // ===== Cross v2: render + bindings =====
+  // Pesos por categoría para ordenar y calcular balance del cambio
+  const CX_WEIGHTS = { cero: 15, estrella: 8, fwc: 5, escudo: 3, equipo: 3, jugador: 1 };
+  const CX_TIER_ORDER = ['cero', 'estrella', 'fwc', 'escudo', 'equipo', 'jugador'];
+  const CX_TIER_LABELS = {
+    cero: 'Lámina 00', estrella: 'Estrellas', fwc: 'FWC (Intro / History)',
+    escudo: 'Escudos', equipo: 'Equipos', jugador: 'Comunes'
+  };
+
+  function _cxEnrich(it) {
+    const cat = _finCategoryOf(it.id);
+    const en = {};
+    for (const k in it) en[k] = it[k];
+    en.category = cat;
+    en.weight = CX_WEIGHTS[cat] || 1;
+    return en;
+  }
+  function _cxGroupByTier(items) {
+    const grouped = {};
+    CX_TIER_ORDER.forEach(t => grouped[t] = []);
+    items.forEach(it => { if (grouped[it.category]) grouped[it.category].push(it); });
+    return CX_TIER_ORDER
+      .filter(t => grouped[t].length > 0)
+      .map(t => ({ tier: t, label: CX_TIER_LABELS[t], items: grouped[t] }));
+  }
+  function _cxChipHtml(it, side, withStock) {
+    const stock = (withStock && it.stock > 1) ? '<span class="x">×' + it.stock + '</span>' : '';
+    return '<div class="cx-chip-wrap">' +
+      '<div class="cx-chip ' + side + ' tier-' + it.category + '" data-cx-side="' + side + '" data-cx-id="' + it.id + '">' +
+        it.id + stock +
+      '</div>' +
+      '<button class="cx-discard-btn" type="button">×</button>' +
+    '</div>';
+  }
+  function _cxRenderCol(items, side) {
+    const sideTitle = side === 'give' ? 'Le doy' : 'Me da';
+    const placeholder = side === 'give' ? 'Agregar (ej: COL-13)' : 'Agregar (ej: BRA-15)';
+    let html = '<div class="cx-col ' + side + '">' +
+      '<div class="cx-col-head"><span>' + sideTitle + '</span><span class="count" data-cx-count="' + side + '">' + items.length + '</span></div>' +
+      '<div class="cx-progress">' +
+        '<span><b class="ok" data-cx-want="' + side + '">0</b> ✓</span>' +
+        '<span><b class="no" data-cx-disc="' + side + '">0</b> ×</span>' +
+        '<span data-cx-pend="' + side + '">' + items.length + ' pendientes</span>' +
+      '</div>' +
+      '<div class="cx-add">' +
+        '<input type="text" data-cx-add="' + side + '" placeholder="' + placeholder + '" autocomplete="off" autocapitalize="characters" spellcheck="false">' +
+        '<button class="cx-add-btn" data-cx-add-btn="' + side + '" type="button">+</button>' +
+      '</div>' +
+      '<div class="cx-add-error" data-cx-err="' + side + '"></div>';
+    if (items.length === 0) {
+      html += '<div style="color:var(--text-3);font-size:11px;padding:6px 0;font-style:italic;">— sin matches —</div>';
+    } else {
+      const tiers = _cxGroupByTier(items);
+      const withStock = (side === 'give');
+      tiers.forEach(t => {
+        html += '<div class="cx-tier">' + t.label + '</div>' +
+          '<div class="cx-grid">' +
+          t.items.map(it => _cxChipHtml(it, side, withStock)).join('') +
+          '</div>';
+      });
+    }
+    html += '</div>';
+    return html;
+  }
+
+  function renderCrossResultV2(friendData) {
+    const cross = crossReference(friendData);
+    const giveItems = cross.myCanGive.map(_cxEnrich);
+    const receiveItems = cross.friendCanGive.map(_cxEnrich);
+    const wIn = receiveItems.reduce((s, it) => s + it.weight, 0);
+    const wOut = giveItems.reduce((s, it) => s + it.weight, 0);
+
+    let trato;
+    if (giveItems.length === 0 && receiveItems.length === 0) {
+      trato = '<div class="cx-trato"><span class="cx-trato-title">Sin matches</span><span class="cx-trato-detail">no hay láminas en común</span></div>';
+    } else {
+      const balance = (giveItems.length && receiveItems.length)
+        ? 'peso ' + wOut + ' → ' + wIn + (wIn > wOut ? ' (te conviene)' : (wIn === wOut ? ' (parejo)' : ' (desbalanceado)'))
+        : (giveItems.length ? 'solo das' : 'solo recibís');
+      trato = '<div class="cx-trato"><span class="cx-trato-title">Trato ' + giveItems.length + ' ↔ ' + receiveItems.length + '</span><span class="cx-trato-detail">' + balance + '</span></div>';
+    }
+
+    let errorsBlock = '';
+    if (friendData.errors && friendData.errors.length) {
+      const sample = friendData.errors.slice(0, 5).join(', ');
+      const more = friendData.errors.length > 5 ? ' (+' + (friendData.errors.length - 5) + ' más)' : '';
+      errorsBlock = '<div class="hint" style="color:var(--amber);margin-top:8px;">⚠ Avisos del parser: ' + sample + more + '</div>';
+    }
+
+    return trato +
+      '<div class="cx-cols">' +
+        _cxRenderCol(giveItems, 'give') +
+        _cxRenderCol(receiveItems, 'receive') +
+      '</div>' +
+      '<div class="cx-descartadas" data-cx-desc-section style="display:none;">' +
+        '<div class="cx-desc-head">' +
+          '<span class="cx-desc-title">Descartadas (<span data-cx-desc-count>0</span>)</span>' +
+          '<button class="cx-restore-all" type="button" data-cx-restore-all>↻ Restaurar todas</button>' +
+        '</div>' +
+        '<div class="cx-grid" data-cx-desc-grid></div>' +
+      '</div>' +
+      '<div class="cx-actions">' +
+        '<button class="cx-btn secondary" type="button" data-cx-reset>Reset</button>' +
+        '<button class="cx-btn primary" type="button" data-cx-confirm disabled>Confirmar cambio (0 ↔ 0)</button>' +
+      '</div>' +
+      '<div class="cx-apply-banner" data-cx-banner>' +
+        '<span>Cambio aplicado</span>' +
+        '<span class="cx-apply-banner-detail" data-cx-banner-detail></span>' +
+      '</div>' +
+      errorsBlock;
+  }
+
+  // Wire-up de todas las interacciones del cross v2 sobre el container
+  function cxBindAll(container) {
+    if (!container) return;
+    const descSection = container.querySelector('[data-cx-desc-section]');
+    const descGrid = container.querySelector('[data-cx-desc-grid]');
+    const descCountEl = container.querySelector('[data-cx-desc-count]');
+    const btnConfirm = container.querySelector('[data-cx-confirm]');
+    const btnReset = container.querySelector('[data-cx-reset]');
+    const btnRestoreAll = container.querySelector('[data-cx-restore-all]');
+    const banner = container.querySelector('[data-cx-banner]');
+    const bannerDetail = container.querySelector('[data-cx-banner-detail]');
+
+    function chipCode(chip) {
+      let txt = '';
+      chip.childNodes.forEach(n => { if (n.nodeType === 3) txt += n.textContent; });
+      return txt.trim().toUpperCase();
+    }
+    function flashChip(chip) {
+      chip.classList.remove('flash');
+      void chip.offsetWidth;
+      chip.classList.add('flash');
+      setTimeout(() => chip.classList.remove('flash'), 700);
+    }
+    function bindChip(chip) {
+      chip.onclick = () => {
+        if (chip.classList.contains('discarded') || chip.classList.contains('applied')) return;
+        chip.classList.toggle('want');
+        updateCounts();
+      };
+    }
+    function bindDiscardBtn(btn) {
+      btn.onclick = (e) => { e.stopPropagation(); discardChip(btn.parentElement); };
+    }
+    function discardChip(wrap) {
+      const chip = wrap.querySelector('.cx-chip');
+      const xBtn = wrap.querySelector('.cx-discard-btn');
+      chip.classList.remove('want');
+      chip.classList.add('discarded');
+      const restoreBtn = document.createElement('button');
+      restoreBtn.className = 'cx-restore-btn';
+      restoreBtn.textContent = '↩';
+      restoreBtn.type = 'button';
+      restoreBtn.onclick = () => restoreChip(wrap);
+      if (xBtn) xBtn.style.display = 'none';
+      chip.appendChild(restoreBtn);
+      wrap._origGrid = wrap.parentElement;
+      descGrid.appendChild(wrap);
+      updateDesc(); updateCounts();
+    }
+    function restoreChip(wrap) {
+      const chip = wrap.querySelector('.cx-chip');
+      chip.classList.remove('discarded');
+      const restoreBtn = chip.querySelector('.cx-restore-btn');
+      if (restoreBtn) restoreBtn.remove();
+      const xBtn = wrap.querySelector('.cx-discard-btn');
+      if (xBtn) xBtn.style.display = '';
+      if (wrap._origGrid) wrap._origGrid.appendChild(wrap);
+      flashChip(chip);
+      updateDesc(); updateCounts();
+    }
+    function updateDesc() {
+      const n = descGrid.children.length;
+      if (descCountEl) descCountEl.textContent = n;
+      if (descSection) descSection.style.display = n > 0 ? '' : 'none';
+    }
+    function updateCounts() {
+      ['give', 'receive'].forEach(side => {
+        const allChips = container.querySelectorAll('.cx-chip[data-cx-side="' + side + '"]');
+        let want = 0, disc = 0, applied = 0, total = 0;
+        allChips.forEach(c => {
+          total++;
+          if (c.classList.contains('applied')) applied++;
+          else if (c.classList.contains('discarded')) disc++;
+          else if (c.classList.contains('want')) want++;
+        });
+        const pend = total - want - disc - applied;
+        const elWant = container.querySelector('[data-cx-want="' + side + '"]');
+        const elDisc = container.querySelector('[data-cx-disc="' + side + '"]');
+        const elPend = container.querySelector('[data-cx-pend="' + side + '"]');
+        const elCount = container.querySelector('[data-cx-count="' + side + '"]');
+        if (elWant) elWant.textContent = want;
+        if (elDisc) elDisc.textContent = disc;
+        if (elPend) elPend.textContent = applied > 0 ? pend + ' pendientes · ' + applied + ' aplicadas' : pend + ' pendientes';
+        if (elCount) elCount.textContent = total - disc - applied;
+      });
+      const wantGive = container.querySelectorAll('.cx-chip.want[data-cx-side="give"]').length;
+      const wantReceive = container.querySelectorAll('.cx-chip.want[data-cx-side="receive"]').length;
+      if (btnConfirm) {
+        btnConfirm.textContent = 'Confirmar cambio (' + wantGive + ' ↔ ' + wantReceive + ')';
+        if (wantGive > 0 && wantReceive > 0) {
+          btnConfirm.removeAttribute('disabled');
+          btnConfirm.classList.add('ready');
+        } else {
+          btnConfirm.setAttribute('disabled', 'disabled');
+          btnConfirm.classList.remove('ready');
+        }
+      }
+    }
+    function showAddError(side, msg, inputEl) {
+      const errEl = container.querySelector('[data-cx-err="' + side + '"]');
+      if (errEl) {
+        errEl.textContent = msg;
+        clearTimeout(errEl._timer);
+        errEl._timer = setTimeout(() => { errEl.textContent = ''; }, 2800);
+      }
+      if (inputEl) {
+        inputEl.classList.remove('invalid');
+        void inputEl.offsetWidth;
+        inputEl.classList.add('invalid');
+        setTimeout(() => inputEl.classList.remove('invalid'), 400);
+      }
+    }
+    function validateAdd(side, code) {
+      const found = findItem(code);
+      if (!found) return { ok: false, msg: 'Código no reconocido' };
+      const id = found.item.id;
+      const total = getPegada(id) + getSueltas(id);
+      if (side === 'give') {
+        if (total === 0) return { ok: false, msg: 'No tienes esta lámina' };
+        if (total === 1) return { ok: false, msg: 'Solo tienes 1 (no es repetida)' };
+        return { ok: true, found: found };
+      }
+      if (total >= 1) return { ok: false, msg: 'Ya la tienes (no te falta)' };
+      return { ok: true, found: found };
+    }
+    function addOrRestore(side, rawCode, inputEl) {
+      const code = (rawCode || '').trim().toUpperCase().replace(/\s+/g, '-').replace(/^-/, '').replace(/-$/, '');
+      if (!code) return false;
+      // ¿Ya está en la lista (activa o descartada)?
+      const all = Array.from(container.querySelectorAll('.cx-chip[data-cx-side="' + side + '"]'));
+      const existing = all.find(c => chipCode(c) === code);
+      if (existing) {
+        const wrap = existing.parentElement;
+        if (existing.classList.contains('discarded')) restoreChip(wrap);
+        else flashChip(existing);
+        const errEl = container.querySelector('[data-cx-err="' + side + '"]');
+        if (errEl) errEl.textContent = '';
+        return true;
+      }
+      const v = validateAdd(side, code);
+      if (!v.ok) { showAddError(side, v.msg, inputEl); return false; }
+      const it = v.found.item;
+      const cat = _finCategoryOf(it.id);
+      const total = getPegada(it.id) + getSueltas(it.id);
+      const stock = side === 'give' ? Math.max(0, total - 1) : 0;
+      const enriched = { id: it.id, displayNum: it.displayNum, label: it.label, sec: v.found.sec, category: cat, weight: CX_WEIGHTS[cat] || 1, stock: stock };
+      const colSel = '.cx-col.' + side;
+      const col = container.querySelector(colSel);
+      let otrasGrid = col.querySelector('.cx-grid.otras');
+      if (!otrasGrid) {
+        const tier = document.createElement('div');
+        tier.className = 'cx-tier';
+        tier.textContent = 'Agregadas';
+        col.appendChild(tier);
+        otrasGrid = document.createElement('div');
+        otrasGrid.className = 'cx-grid otras';
+        col.appendChild(otrasGrid);
+      }
+      const tmp = document.createElement('div');
+      tmp.innerHTML = _cxChipHtml(enriched, side, side === 'give');
+      const wrap = tmp.firstElementChild;
+      otrasGrid.appendChild(wrap);
+      bindChip(wrap.querySelector('.cx-chip'));
+      bindDiscardBtn(wrap.querySelector('.cx-discard-btn'));
+      flashChip(wrap.querySelector('.cx-chip'));
+      const errEl = container.querySelector('[data-cx-err="' + side + '"]');
+      if (errEl) errEl.textContent = '';
+      updateCounts();
+      return true;
+    }
+
+    container.querySelectorAll('.cx-chip[data-cx-side]').forEach(bindChip);
+    container.querySelectorAll('.cx-discard-btn').forEach(bindDiscardBtn);
+    container.querySelectorAll('input[data-cx-add]').forEach(input => {
+      const side = input.dataset.cxAdd;
+      const btn = container.querySelector('button[data-cx-add-btn="' + side + '"]');
+      const submit = () => {
+        const ok = addOrRestore(side, input.value, input);
+        if (ok) input.value = '';
+        input.focus();
+      };
+      if (btn) btn.onclick = submit;
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+    });
+    if (btnRestoreAll) btnRestoreAll.onclick = () => {
+      Array.from(descGrid.querySelectorAll('.cx-chip-wrap')).forEach(wrap => restoreChip(wrap));
+    };
+    if (btnReset) btnReset.onclick = () => {
+      container.querySelectorAll('.cx-chip.want').forEach(c => c.classList.remove('want'));
+      Array.from(descGrid.querySelectorAll('.cx-chip-wrap')).forEach(wrap => restoreChip(wrap));
+      updateCounts();
+    };
+    if (btnConfirm) btnConfirm.onclick = async () => {
+      if (btnConfirm.hasAttribute('disabled')) return;
+      const wantsGive = Array.from(container.querySelectorAll('.cx-chip.want[data-cx-side="give"]'));
+      const wantsReceive = Array.from(container.querySelectorAll('.cx-chip.want[data-cx-side="receive"]'));
+      if (wantsGive.length === 0 || wantsReceive.length === 0) return;
+      const ops = [];
+      wantsGive.forEach(c => ops.push({ id: c.dataset.cxId, action: 'inc', delta: -1 }));
+      wantsReceive.forEach(c => ops.push({ id: c.dataset.cxId, action: 'inc', delta: +1 }));
+      const origText = btnConfirm.textContent;
+      btnConfirm.setAttribute('disabled', 'disabled');
+      btnConfirm.textContent = 'Aplicando…';
+      try {
+        const r = await gsRun('applyManyOps', ops);
+        if (r && r.ok) {
+          if (r.version != null) lastSeenVersion = r.version;
+          if (r.values) {
+            Object.keys(r.values).forEach(id => _applyServerValue(id, r.values[id]));
+          }
+          _persistLocal();
+          renderStats();
+          [...wantsGive, ...wantsReceive].forEach(c => {
+            c.classList.remove('want');
+            c.classList.add('applied');
+            const xBtn = c.parentElement.querySelector('.cx-discard-btn');
+            if (xBtn) xBtn.style.display = 'none';
+          });
+          if (banner && bannerDetail) {
+            bannerDetail.textContent = '−' + wantsGive.length + ' repetidas · +' + wantsReceive.length + ' sueltas';
+            banner.classList.remove('show');
+            void banner.offsetWidth;
+            banner.classList.add('show');
+            setTimeout(() => banner.classList.remove('show'), 3200);
+          }
+        } else {
+          btnConfirm.textContent = origText;
+          alert('Error al aplicar el cambio. Reintenta.');
+        }
+      } catch (e) {
+        btnConfirm.textContent = origText;
+        alert('Error: ' + (e.message || 'no se pudo aplicar'));
+      }
+      updateCounts();
+    };
+    updateCounts();
   }
 
   function renderIntercambio() {
@@ -6136,33 +6735,10 @@
           return;
         }
 
-        crossResult.innerHTML = previewHtml + renderCrossResult(friendData);
+        crossResult.innerHTML = previewHtml + renderCrossResultV2(friendData);
         bindSanitizedPreviewActions(crossResult);
-
-        // Re-bind botones Copiar de los sub-paneles
-        crossResult.querySelectorAll('.btn-copy').forEach(b => {
-          b.onclick = () => {
-            if (!lastCrossData) return;
-            const cross = crossReference(lastCrossData);
-            const items = b.dataset.crossCopy === 'give' ? cross.myCanGive : cross.friendCanGive;
-            const lines = formatItemsGrouped(items, true);
-            const text2 = (b.dataset.crossCopy === 'give' ?
-              '🎁 Te puedo dar (' + items.length + '):\n' :
-              '🎁 Necesito (de tus repetidas) (' + items.length + '):\n') + lines.join('\n');
-            copyToClipboard(text2, b);
-          };
-        });
-        // Wire chips interactivos
-        crossResult.querySelectorAll('.cross-chip[data-cross-action]').forEach(chip => {
-          chip.onclick = (ev) => {
-            ev.preventDefault();
-            if (chip.classList.contains('done')) return;
-            const id = chip.dataset.crossId;
-            const action = chip.dataset.crossAction;
-            applyDelta(id, action === 'give' ? -1 : +1);
-            chip.classList.add('done');
-          };
-        });
+        // Wire-up del nuevo layout v2 (toggle want, descartar, agregar, confirmar batch)
+        cxBindAll(crossResult);
       };
 
       // (Botones "Solo sanear" y "Pedir formato" removidos — el sanear es
