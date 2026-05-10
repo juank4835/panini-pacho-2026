@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1720" width="1080" height="1720" font-family="-apple-system, BlinkMacSystemFont, 'Inter', sans-serif">
+  <defs>
+    <style>
+      .bg { fill: #000; }
+      .panel { fill: #0e0e0e; stroke: #3a3a37; stroke-width: 0.5; }
+      .text { fill: #f0eee6; }
+      .text-2 { fill: #b8b6ae; }
+      .text-3 { fill: #888780; }
+      .mono { font-family: 'JetBrains Mono', 'Menlo', monospace; }
+      .red { fill: #E24B4A; }
+      .blue { fill: #4A9EFF; }
+      .cyan { fill: #00E5FF; }
+      .amber { fill: #EF9F27; }
+      .green { fill: #00D685; }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1080" height="1720"/>
+
+  <!-- ═══════════ HEADER ═══════════ -->
+  <text x="540" y="58" text-anchor="middle" class="text" font-size="32" font-weight="700">Modelo y arquitectura</text>
+  <text x="540" y="86" text-anchor="middle" class="text-3 mono" font-size="13">Álbum Panini Mundial 2026  ·  Modelo (p, s) con vistas derivadas vía predicados puros — sin máquina de estados ni transiciones explícitas</text>
+
+  <!-- ═══════════ 01 · MODELO ═══════════ -->
+  <rect class="panel" x="40" y="130" width="1000" height="180" rx="8"/>
+  <text x="60" y="158" class="text-3 mono" font-size="11" letter-spacing="2">01  ·  MODELO</text>
+
+  <text x="540" y="222" text-anchor="middle" class="text mono" font-size="60" font-weight="700">(p, s)</text>
+  <text x="540" y="246" text-anchor="middle" class="text-3" font-size="11">por cada lámina i del catálogo</text>
+
+  <text x="240" y="287" class="mono" font-size="14"><tspan class="text" font-weight="700">p ∈ {0, 1}</tspan>  <tspan class="text-2">— pegada en el álbum (booleano)</tspan></text>
+  <text x="635" y="287" class="mono" font-size="14"><tspan class="text" font-weight="700">s ∈ ℕ</tspan>  <tspan class="text-2">— sueltas en mano (entero ≥ 0, no acotado)</tspan></text>
+
+  <!-- ═══════════ 02 · EL PLANO ═══════════ -->
+  <rect class="panel" x="40" y="340" width="1000" height="490" rx="8"/>
+  <text x="60" y="368" class="text-3 mono" font-size="11" letter-spacing="2">02  ·  EL PLANO (p, s)</text>
+  <text x="60" y="390" class="text-2" font-size="13">Cada combinación de (p, s) se proyecta automáticamente a las vistas correspondientes — sin estados intermedios.</text>
+
+  <!-- Eje s -->
+  <text x="220" y="425" text-anchor="middle" class="text-3 mono" font-size="12">s = 0</text>
+  <text x="425" y="425" text-anchor="middle" class="text-3 mono" font-size="12">s = 1</text>
+  <text x="630" y="425" text-anchor="middle" class="text-3 mono" font-size="12">s = 2</text>
+  <text x="835" y="425" text-anchor="middle" class="text-3 mono" font-size="12">s ≥ 3</text>
+
+  <!-- Eje p -->
+  <text x="100" y="513" text-anchor="middle" class="text-3 mono" font-size="12">p = 0</text>
+  <text x="100" y="668" text-anchor="middle" class="text-3 mono" font-size="12">p = 1</text>
+
+  <!-- Cell (0,0) FALTA -->
+  <rect x="160" y="445" width="120" height="135" rx="6" fill="#1a0808" stroke="#E24B4A" stroke-width="1"/>
+  <circle cx="220" cy="478" r="16" fill="none" stroke="#E24B4A" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <text x="220" y="484" text-anchor="middle" class="red mono" font-size="16" font-weight="700">×</text>
+  <text x="220" y="525" text-anchor="middle" class="red mono" font-size="11" font-weight="700" letter-spacing="1">FALTA</text>
+  <text x="220" y="544" text-anchor="middle" class="text-3 mono" font-size="9">no la tengo</text>
+  <text x="220" y="566" text-anchor="middle" class="text-3 mono" font-size="9">(0, 0)</text>
+
+  <!-- Cell (0,1) SUELTA -->
+  <rect x="365" y="445" width="120" height="135" rx="6" fill="#0a0f1a" stroke="#4A9EFF" stroke-width="1"/>
+  <circle cx="425" cy="473" r="14" fill="none" stroke="#888780" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>
+  <circle cx="425" cy="503" r="6" fill="#4A9EFF"/>
+  <text x="425" y="525" text-anchor="middle" class="blue mono" font-size="11" font-weight="700" letter-spacing="1">SUELTA</text>
+  <text x="425" y="544" text-anchor="middle" class="text-3 mono" font-size="9">1 en mano</text>
+  <text x="425" y="566" text-anchor="middle" class="text-3 mono" font-size="9">(0, 1)</text>
+
+  <!-- Cell (0,2) — SUELTAREP especial: aura cian -->
+  <rect x="565" y="440" width="130" height="145" rx="9" fill="none" stroke="#00E5FF" stroke-width="1" opacity="0.25"/>
+  <rect x="568" y="443" width="124" height="139" rx="7" fill="none" stroke="#00E5FF" stroke-width="0.5" opacity="0.5"/>
+  <rect x="570" y="445" width="120" height="135" rx="6" fill="#0a1316" stroke="#00E5FF" stroke-width="1.2"/>
+  <circle cx="630" cy="473" r="14" fill="none" stroke="#888780" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>
+  <circle cx="618" cy="503" r="6" fill="#4A9EFF"/>
+  <circle cx="642" cy="503" r="6" fill="#4A9EFF"/>
+  <text x="630" y="525" text-anchor="middle" class="cyan mono" font-size="11" font-weight="700" letter-spacing="1">SUELTAREP</text>
+  <text x="630" y="544" text-anchor="middle" class="text-3 mono" font-size="9">2 en mano · sin pegar</text>
+  <text x="630" y="566" text-anchor="middle" class="text-3 mono" font-size="9">(0, 2)</text>
+
+  <!-- Cell (0,≥3) — SUELTAREP especial: aura cian -->
+  <rect x="770" y="440" width="130" height="145" rx="9" fill="none" stroke="#00E5FF" stroke-width="1" opacity="0.25"/>
+  <rect x="773" y="443" width="124" height="139" rx="7" fill="none" stroke="#00E5FF" stroke-width="0.5" opacity="0.5"/>
+  <rect x="775" y="445" width="120" height="135" rx="6" fill="#0a1316" stroke="#00E5FF" stroke-width="1.2"/>
+  <circle cx="835" cy="473" r="14" fill="none" stroke="#888780" stroke-width="1" stroke-dasharray="2,2" opacity="0.5"/>
+  <circle cx="816" cy="503" r="5" fill="#4A9EFF"/>
+  <circle cx="831" cy="503" r="5" fill="#4A9EFF"/>
+  <circle cx="846" cy="503" r="5" fill="#4A9EFF"/>
+  <text x="858" y="506" class="text-3 mono" font-size="9">…</text>
+  <text x="835" y="525" text-anchor="middle" class="cyan mono" font-size="11" font-weight="700" letter-spacing="1">SUELTAREP</text>
+  <text x="835" y="544" text-anchor="middle" class="text-3 mono" font-size="9">N en mano · sin pegar</text>
+  <text x="835" y="566" text-anchor="middle" class="text-3 mono" font-size="9">(0, N≥3)</text>
+
+  <!-- Cell (1,0) PEGADA — verde -->
+  <rect x="160" y="600" width="120" height="135" rx="6" fill="#0a1f12" stroke="#00D685" stroke-width="1"/>
+  <circle cx="220" cy="633" r="16" fill="#00D685" stroke="#00D685" stroke-width="1.5"/>
+  <path d="M 211 633 L 217 640 L 230 626" stroke="#000" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="220" y="680" text-anchor="middle" class="green mono" font-size="11" font-weight="700" letter-spacing="1">PEGADA</text>
+  <text x="220" y="699" text-anchor="middle" class="text-3 mono" font-size="9">en el álbum</text>
+  <text x="220" y="721" text-anchor="middle" class="text-3 mono" font-size="9">(1, 0)</text>
+
+  <!-- Cell (1,1) PEGADA + REP — borde ámbar, slot verde -->
+  <rect x="365" y="600" width="120" height="135" rx="6" fill="#1a1308" stroke="#EF9F27" stroke-width="1"/>
+  <circle cx="425" cy="628" r="14" fill="#00D685" stroke="#00D685" stroke-width="1"/>
+  <path d="M 417 628 L 422 634 L 433 622" stroke="#000" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="425" cy="663" r="6" fill="#EF9F27"/>
+  <text x="425" y="683" text-anchor="middle" class="mono" font-size="11" font-weight="700" letter-spacing="1"><tspan fill="#00D685">PEGADA</tspan> <tspan fill="#EF9F27">+ REP</tspan></text>
+  <text x="425" y="702" text-anchor="middle" class="text-3 mono" font-size="9">+1 extra</text>
+  <text x="425" y="721" text-anchor="middle" class="text-3 mono" font-size="9">(1, 1)</text>
+
+  <!-- Cell (1,2) PEGADA + REP -->
+  <rect x="570" y="600" width="120" height="135" rx="6" fill="#1a1308" stroke="#EF9F27" stroke-width="1"/>
+  <circle cx="630" cy="628" r="14" fill="#00D685" stroke="#00D685" stroke-width="1"/>
+  <path d="M 622 628 L 627 634 L 638 622" stroke="#000" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="618" cy="663" r="6" fill="#EF9F27"/>
+  <circle cx="642" cy="663" r="6" fill="#EF9F27"/>
+  <text x="630" y="683" text-anchor="middle" class="mono" font-size="11" font-weight="700" letter-spacing="1"><tspan fill="#00D685">PEGADA</tspan> <tspan fill="#EF9F27">+ REP</tspan></text>
+  <text x="630" y="702" text-anchor="middle" class="text-3 mono" font-size="9">+2 extras</text>
+  <text x="630" y="721" text-anchor="middle" class="text-3 mono" font-size="9">(1, 2)</text>
+
+  <!-- Cell (1,≥3) PEGADA + REP -->
+  <rect x="775" y="600" width="120" height="135" rx="6" fill="#1a1308" stroke="#EF9F27" stroke-width="1"/>
+  <circle cx="835" cy="628" r="14" fill="#00D685" stroke="#00D685" stroke-width="1"/>
+  <path d="M 827 628 L 832 634 L 843 622" stroke="#000" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="816" cy="663" r="5" fill="#EF9F27"/>
+  <circle cx="831" cy="663" r="5" fill="#EF9F27"/>
+  <circle cx="846" cy="663" r="5" fill="#EF9F27"/>
+  <text x="858" y="666" class="text-3 mono" font-size="9">…</text>
+  <text x="835" y="683" text-anchor="middle" class="mono" font-size="11" font-weight="700" letter-spacing="1"><tspan fill="#00D685">PEGADA</tspan> <tspan fill="#EF9F27">+ REP</tspan></text>
+  <text x="835" y="702" text-anchor="middle" class="text-3 mono" font-size="9">+N extras</text>
+  <text x="835" y="721" text-anchor="middle" class="text-3 mono" font-size="9">(1, N≥3)</text>
+
+  <!-- Leyenda -->
+  <text x="60" y="775" class="text-3 mono" font-size="11">Borde rojo · falta   |   borde azul · suelta pura   |   <tspan class="cyan">borde cian con halo · sueltarep (p=0 ∧ s≥2)</tspan>   |   <tspan class="green">borde verde · pegada pura</tspan>   |   borde ámbar · pegada con extras</text>
+  <text x="60" y="794" class="text-3 mono" font-size="11">Una misma lámina puede pertenecer a varias vistas a la vez. Las vistas son <tspan class="text-2" font-weight="700">no disjuntas</tspan> por diseño (Sueltas ⊂ Repetidas).</text>
+  <text x="60" y="813" class="text-3 mono" font-size="11">El caso especial <tspan class="cyan" font-weight="700">sueltarep</tspan> se marca con la clase CSS .sueltarep — fondo ámbar, borde cian con pulso de glow (animación cellSueltarepPulse 2s).</text>
+
+  <!-- ═══════════ 03 · PREDICADOS ═══════════ -->
+  <rect class="panel" x="40" y="850" width="1000" height="200" rx="8"/>
+  <text x="60" y="878" class="text-3 mono" font-size="11" letter-spacing="2">03  ·  PREDICADOS — VISTAS COMO FUNCIONES PURAS</text>
+
+  <text x="60" y="916" class="mono text" font-size="14"><tspan class="red" font-weight="700">enFaltantes</tspan>(o)  ≡  o.p === 0  &amp;&amp;  o.s === 0</text>
+  <text x="60" y="942" class="mono text" font-size="14"><tspan class="blue" font-weight="700">enSueltas</tspan>(o)    ≡  o.p === 0  &amp;&amp;  o.s &gt;= 1</text>
+  <text x="60" y="968" class="mono text" font-size="14"><tspan class="amber" font-weight="700">enRepetidas</tspan>(o)  ≡  o.s &gt;= 1                   <tspan class="text-3" font-size="11">// broad — incluye sueltas y pegadas-con-extras</tspan></text>
+  <text x="60" y="994" class="mono text" font-size="14"><tspan class="green" font-weight="700">enPegadas</tspan>(o)    ≡  o.p === 1                   <tspan class="text-3" font-size="11">// broad — pegada-pura y pegada-con-extras</tspan></text>
+
+  <text x="60" y="1031" class="text-3 mono" font-size="11">Sueltas ⊂ Repetidas    ·    Faltantes ∩ Sueltas = ∅    ·    Faltantes ∩ Pegadas = ∅    ·    bulk-actions usan intersección de vistas</text>
+
+  <!-- ═══════════ 04 · OPERACIONES ═══════════ -->
+  <rect class="panel" x="40" y="1080" width="1000" height="290" rx="8"/>
+  <text x="60" y="1108" class="text-3 mono" font-size="11" letter-spacing="2">04  ·  OPERACIONES — applyManyOps(ops)  ·  5 acciones atómicas</text>
+
+  <text x="60" y="1146" class="mono text" font-size="13"><tspan class="blue" font-weight="700">inc</tspan>       →   if δ &gt; 0:  s := s + δ                                  <tspan class="text-3" font-size="11">// nuevas copias obtenidas</tspan></text>
+  <text x="60" y="1167" class="mono text" font-size="13">                if δ &lt; 0:  remueve |δ| copias — primero de s,                </text>
+  <text x="60" y="1186" class="mono text" font-size="13">                                                    luego de p si s no alcanza  <tspan class="text-3" font-size="11">// le doy / vendo / corrijo</tspan></text>
+  <text x="60" y="1212" class="mono text" font-size="13"><tspan class="green" font-weight="700">pegar</tspan>     →   p := 1 ;  s := s − 1                          <tspan class="text-3" font-size="11">pre: s ≥ 1  ∧  p &lt; 1</tspan></text>
+  <text x="60" y="1233" class="mono text" font-size="13"><tspan class="text-2" font-weight="700">despegar</tspan>  →   p := 0 ;  s := s + 1                          <tspan class="text-3" font-size="11">pre: p ≥ 1   (inverso de pegar)</tspan></text>
+  <text x="60" y="1254" class="mono text" font-size="13"><tspan class="text-2" font-weight="700">set</tspan>       →   (p, s) := (clamp{0,1}(p′), max(0, s′))         <tspan class="text-3" font-size="11">// override admin / corrección directa</tspan></text>
+  <text x="60" y="1275" class="mono text" font-size="13"><tspan class="text-2" font-weight="700">clear</tspan>     →   (p, s) := (0, 0)                              <tspan class="text-3" font-size="11">// reset a Faltante</tspan></text>
+
+  <text x="60" y="1313" class="text-3 mono" font-size="11"><tspan class="amber">Vender</tspan> (UI bulk) NO es acción atómica — compone:  inc(δ = −n) sobre el estado  +  registro independiente en __finanzas (su propio __fin_version)</text>
+  <text x="60" y="1331" class="text-3 mono" font-size="11">Toda mutación pasa por syncOpsMany(ops) → applyManyOps bajo único LockService.getScriptLock(10s) → __version++  →  poll de clientes (8s)</text>
+  <text x="60" y="1349" class="text-3 mono" font-size="11">Wrappers de compatibilidad: incManySticker(updates), pegarMuchas(ids) — ambos delegan a applyManyOps.</text>
+
+  <!-- ═══════════ 05 · BACKEND ═══════════ -->
+  <rect class="panel" x="40" y="1400" width="1000" height="240" rx="8"/>
+  <text x="60" y="1428" class="text-3 mono" font-size="11" letter-spacing="2">05  ·  BACKEND — APPS SCRIPT + PROPERTIESSERVICE</text>
+
+  <text x="60" y="1465" class="mono text-2" font-size="12">PropertiesService.getScriptProperties()</text>
+  <text x="80" y="1487" class="mono" font-size="12"><tspan class="text-2">├─</tspan> <tspan class="amber">s_&lt;bucket&gt;</tspan>        <tspan class="text-2">→  { id: { p, s }, … }</tspan>     <tspan class="text-3" font-size="11">// s_intro · s_history · s_&lt;CODE&gt; — cada bucket ≤ 9 KB</tspan></text>
+  <text x="80" y="1508" class="mono" font-size="12"><tspan class="text-2">├─</tspan> <tspan class="amber">__orden</tspan>            <tspan class="text-2">→  [ equipo, … ]</tspan>             <tspan class="text-3" font-size="11">// orden de equipos elegido por el usuario</tspan></text>
+  <text x="80" y="1529" class="mono" font-size="12"><tspan class="text-2">├─</tspan> <tspan class="amber">__version</tspan>          <tspan class="text-2">→  N (counter monotónico)</tspan>    <tspan class="text-3" font-size="11">// dispara pull en clientes vía pullState(sinceVersion)</tspan></text>
+  <text x="80" y="1550" class="mono" font-size="12"><tspan class="text-2">├─</tspan> <tspan class="amber">__finanzas</tspan>         <tspan class="text-2">→  { ventas, gastos, … }</tspan>     <tspan class="text-3" font-size="11">// bloque independiente del estado del álbum</tspan></text>
+  <text x="80" y="1571" class="mono" font-size="12"><tspan class="text-2">└─</tspan> <tspan class="amber">__fin_version</tspan>      <tspan class="text-2">→  M (counter de finanzas)</tspan>   <tspan class="text-3" font-size="11">// separado para no triggerar re-pull del estado</tspan></text>
+
+  <text x="60" y="1610" class="text-3 mono" font-size="11">LockService.getScriptLock(10s)  →  atómico cross-tab/cross-device   ·   JSONP en /exec?action=publica para vista compartible vía GitHub Pages</text>
+  <text x="60" y="1628" class="text-3 mono" font-size="11">2 instancias separadas: Juan = panini-mundial-2026  ·  Pacho = panini-pacho-2026   (scriptId distinto, mismo código fuente, deploy con clasp)</text>
+
+  <!-- ═══════════ FOOTER ═══════════ -->
+  <text x="540" y="1690" text-anchor="middle" class="text-3 mono" font-size="11">Hecho por Juan Camilo</text>
+</svg>

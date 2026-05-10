@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Arquitectura · Álbum Panini Mundial 2026</title>
+<meta name="description" content="Modelo de estado derivado y arquitectura del álbum Panini Mundial 2026 — single source of truth (p, s) con vistas computadas vía predicados puros.">
+<style>
+  :root {
+    --bg: #000;
+    --bg-2: #1a1a1a;
+    --border: #3a3a37;
+    --text: #f0eee6;
+    --text-2: #b8b6ae;
+    --text-3: #888780;
+    --amber: #EF9F27;
+    --green: #00D685;
+    --blue: #4A9EFF;
+    --cyan: #00E5FF;
+    --danger: #E24B4A;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 18px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 18px;
+    padding-bottom: 16px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .eyebrow {
+    color: var(--text-3);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    margin-bottom: 6px;
+  }
+  header h1 {
+    margin: 0 0 8px;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+  }
+  header .lede {
+    margin: 0 auto;
+    max-width: 720px;
+    color: var(--text-3);
+    font-size: 12px;
+    line-height: 1.55;
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  header .lede code {
+    color: var(--text-2);
+    background: var(--bg-2);
+    border: 0.5px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 11.5px;
+  }
+  header .back {
+    display: inline-block;
+    margin-top: 12px;
+    color: var(--amber);
+    text-decoration: none;
+    font-size: 12px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    border: 0.5px solid var(--border);
+    border-radius: 100px;
+    padding: 5px 14px;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+  header .back:hover { background: var(--bg-2); border-color: var(--amber); }
+  .diagram-wrap {
+    width: 100%;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .diagram-wrap img {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: var(--bg);
+    border-radius: 8px;
+  }
+  .note {
+    background: var(--bg-2);
+    border: 0.5px solid var(--border);
+    border-left: 3px solid var(--amber);
+    border-radius: 8px;
+    padding: 14px 18px;
+    color: var(--text-2);
+    font-size: 12.5px;
+    line-height: 1.65;
+    margin-bottom: 18px;
+  }
+  .note h2 {
+    margin: 0 0 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .note p { margin: 0 0 10px; }
+  .note p:last-child { margin-bottom: 0; }
+  .note code {
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-size: 11.5px;
+    color: var(--text);
+    background: var(--bg);
+    border: 0.5px solid var(--border);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+  .note .term { color: var(--amber); font-weight: 600; }
+  footer {
+    text-align: center;
+    color: var(--text-3);
+    font-size: 11px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 0.5px solid var(--border);
+  }
+  footer a { color: var(--amber); text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="eyebrow">Patrón · Estado derivado</div>
+    <h1>Modelo y arquitectura</h1>
+    <p class="lede">Álbum Panini Mundial 2026 — single source of truth <code>(p, s)</code> con vistas computadas vía predicados puros. Sin máquina de estados ni transiciones explícitas.</p>
+    <a class="back" href="../">← volver a la app</a>
+  </header>
+
+  <div class="diagram-wrap">
+    <img src="diagrama.svg" alt="Diagrama de arquitectura: modelo (p, s) por lámina, predicados puros enFaltantes/enSueltas/enRepetidas/enPegadas, operaciones atómicas vía applyManyOps, backend Apps Script + PropertiesService + LockService.">
+  </div>
+
+  <div class="note">
+    <h2>¿Por qué no es una máquina de estados?</h2>
+    <p>Una FSM tiene un conjunto finito de estados nombrados con transiciones explícitas. Acá el "estado" es un par de enteros <code>(p, s)</code> por lámina, y los estados visuales (Faltante / Suelta / Sueltarep / Pegada / Repetida) son <strong>proyecciones derivadas</strong> del dato — no nodos en un grafo. Cuando <code>s</code> cambia de 0 a 1 no hay transición FALTA → SUELTA; solo se incrementa un contador, y los predicados puros reclasifican automáticamente.</p>
+    <p>El patrón se llama formalmente <span class="term">estado derivado</span> (derived state) o <span class="term">single source of truth + selectores</span> — el mismo modelo de Redux, MobX, Vue computed y React selectors. La fuente de verdad es <code>(p, s)</code>; <code>enFaltantes</code>, <code>enSueltas</code>, <code>enRepetidas</code> y <code>enPegadas</code> son funciones puras que computan pertenencia a vistas.</p>
+  </div>
+
+  <footer>
+    Hecho por Juan Camilo  ·  <a href="../">tracker</a>  ·  <a href="https://github.com/juank4835/reportes-financieros">repo</a>
+  </footer>
+</div>
+</body>
+</html>
