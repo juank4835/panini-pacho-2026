@@ -233,14 +233,76 @@
   .refresh:hover { background: var(--bg-2); color: var(--text); }
 
   footer {
-    text-align: center;
     color: var(--text-3);
     font-size: 11px;
     margin-top: 24px;
-    padding-top: 16px;
+    padding-top: 18px;
     border-top: 0.5px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
   }
   footer a { color: var(--amber); text-decoration: none; }
+  /* Avatar circular de los doggos espaciales — tap abre modal full-screen */
+  .doggos-mini {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 88px; height: 88px;
+    padding: 0;
+    border-radius: 50%;
+    border: 0.5px solid var(--border);
+    background: var(--bg-2);
+    cursor: pointer;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  }
+  .doggos-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .doggos-mini:hover {
+    transform: scale(1.05);
+    border-color: var(--amber);
+    box-shadow: 0 0 0 0.5px var(--amber), 0 0 12px rgba(239,159,39,0.45);
+  }
+  .doggos-mini:active { transform: scale(0.96); }
+  .doggos-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 3000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .doggos-modal-backdrop.open { display: flex; animation: doggosFadeIn 0.18s ease-out; }
+  @keyframes doggosFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .doggos-modal-img {
+    max-width: 90vw;
+    max-height: 80vh;
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(247,147,26,0.4), 0 0 0 0.5px rgba(239,159,39,0.6);
+    animation: doggosScaleIn 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes doggosScaleIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .doggos-modal-cap {
+    position: absolute;
+    bottom: 32px;
+    left: 0; right: 0;
+    text-align: center;
+    color: var(--amber);
+    font-size: 12px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 6px rgba(239,159,39,0.5);
+  }
 </style>
 </head>
 <body>
@@ -259,9 +321,20 @@
   </div>
 
   <footer>
-    Vista pública · Solo lectura · Datos en vivo<br>
-    <a href="../">Tracker (privado)</a>
+    <button type="button" id="doggos-mini-btn" class="doggos-mini" aria-label="Ver perros espaciales">
+      <img src="https://juank4835.github.io/panini-pacho-2026/doggos.jpg" alt="">
+    </button>
+    <div>
+      Hecho por Juan Camilo<br>
+      <span style="opacity:0.75;">Vista pública · Solo lectura · Datos en vivo</span><br>
+      <a href="../">Tracker (privado)</a>
+    </div>
   </footer>
+</div>
+
+<div class="doggos-modal-backdrop" id="doggos-modal-backdrop">
+  <img src="https://juank4835.github.io/panini-pacho-2026/doggos.jpg" alt="" class="doggos-modal-img">
+  <div class="doggos-modal-cap">Stack sats · Paste cromos</div>
 </div>
 
 <script>
@@ -585,6 +658,16 @@
     }
   }
   init();
+
+  // Tap en el avatar del footer abre el modal con la foto a tamaño full;
+  // tap en el backdrop cierra. Idéntico al del tracker privado.
+  (function bindDoggosModal() {
+    const btn = document.getElementById('doggos-mini-btn');
+    const modal = document.getElementById('doggos-modal-backdrop');
+    if (!btn || !modal) return;
+    btn.onclick = (e) => { e.stopPropagation(); modal.classList.add('open'); };
+    modal.onclick = () => { modal.classList.remove('open'); };
+  })();
 </script>
 </body>
 </html>
