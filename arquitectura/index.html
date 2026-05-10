@@ -141,9 +141,9 @@
 <body>
 <div class="page">
   <header>
-    <div class="eyebrow">Patrón · Estado derivado</div>
-    <h1>Modelo y arquitectura</h1>
-    <p class="lede">Álbum Panini Mundial 2026 — single source of truth <code>(p, s)</code> con vistas computadas vía predicados puros. Sin máquina de estados ni transiciones explícitas.</p>
+    <div class="eyebrow">Modelo relacional · Estado derivado</div>
+    <h1>Modelo relacional con estado derivado</h1>
+    <p class="lede">Álbum Panini Mundial 2026 — una tabla <code>Laminas(id, p, s)</code> con vistas σ-derivadas vía predicados puros. Codd 1970 + Redux 2015. Sin máquina de estados.</p>
     <a class="back" href="../">← volver a la app</a>
   </header>
 
@@ -152,9 +152,10 @@
   </div>
 
   <div class="note">
-    <h2>¿Por qué no es una máquina de estados?</h2>
-    <p>Una FSM tiene un conjunto finito de estados nombrados con transiciones explícitas. Acá el "estado" es un par de enteros <code>(p, s)</code> por lámina, y los estados visuales (Faltante / Suelta / Sueltarep / Pegada / Repetida) son <strong>proyecciones derivadas</strong> del dato — no nodos en un grafo. Cuando <code>s</code> cambia de 0 a 1 no hay transición FALTA → SUELTA; solo se incrementa un contador, y los predicados puros reclasifican automáticamente.</p>
-    <p>El patrón se llama formalmente <span class="term">estado derivado</span> (derived state) o <span class="term">single source of truth + selectores</span> — el mismo modelo de Redux, MobX, Vue computed y React selectors. La fuente de verdad es <code>(p, s)</code>; <code>enFaltantes</code>, <code>enSueltas</code>, <code>enRepetidas</code> y <code>enPegadas</code> son funciones puras que computan pertenencia a vistas.</p>
+    <h2>El nombre técnico: modelo relacional con estado derivado</h2>
+    <p>La <strong>estructura de datos</strong> es <span class="term">relacional</span> en el sentido de Codd (1970): una tupla <code>(id, p, s)</code> por lámina forma la relación base <code>Laminas</code>, y las vistas (<code>Faltantes</code>, <code>Sueltas</code>, <code>Repetidas</code>, <code>Pegadas</code>, <code>Sueltarep</code>) son <strong>relaciones derivadas</strong> obtenidas vía la operación de selección σ del álgebra relacional — exactamente lo que hace una <code>VIEW</code> en SQL. La diferencia con un RDBMS pleno: tenemos una sola relación efectiva, sin joins, y el storage subyacente es key-value (<code>PropertiesService</code>), no un motor SQL.</p>
+    <p>La <strong>mecánica de actualización</strong> es <span class="term">estado derivado</span> en el sentido de Redux/MobX (2015+): la fuente única de verdad es <code>(p, s)</code>, todo lo demás se computa al vuelo vía predicados puros. <code>enFaltantes</code>, <code>enSueltas</code>, <code>enRepetidas</code> y <code>enPegadas</code> son selectores. Las mutaciones se canalizan por una sola función (<code>applyManyOps</code>) — el reducer.</p>
+    <p><strong>¿Por qué no es una máquina de estados?</strong> Una FSM tiene un conjunto finito de estados nombrados con transiciones explícitas entre ellos. Acá los "estados" no se almacenan ni se transicionan — son proyecciones del dato. Cuando <code>s</code> cambia de 0 a 1 no hay transición FALTA → SUELTA; solo se incrementa un contador y los predicados reclasifican automáticamente.</p>
   </div>
 
   <footer>

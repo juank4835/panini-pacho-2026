@@ -19,8 +19,8 @@
   <rect class="bg" width="1080" height="1720"/>
 
   <!-- ═══════════ HEADER ═══════════ -->
-  <text x="540" y="58" text-anchor="middle" class="text" font-size="32" font-weight="700">Modelo y arquitectura</text>
-  <text x="540" y="86" text-anchor="middle" class="text-3 mono" font-size="13">Álbum Panini Mundial 2026  ·  Modelo (p, s) con vistas derivadas vía predicados puros — sin máquina de estados ni transiciones explícitas</text>
+  <text x="540" y="58" text-anchor="middle" class="text" font-size="32" font-weight="700">Modelo relacional con estado derivado</text>
+  <text x="540" y="86" text-anchor="middle" class="text-3 mono" font-size="13">Álbum Panini Mundial 2026  ·  Tabla Laminas(id, p, s) con vistas σ-derivadas vía predicados puros  ·  Codd 1970 + Redux 2015</text>
 
   <!-- ═══════════ 01 · MODELO ═══════════ -->
   <rect class="panel" x="40" y="130" width="1000" height="180" rx="8"/>
