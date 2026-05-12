@@ -118,19 +118,20 @@
   .legend-cell.pegada  { background: var(--green); }
 
   /* Estado "apagado" (off) de cualquier categoría → la bolita se ve como
-     SOMBRA: fondo gris oscuro, inset shadow tipo socket, número muy dim,
-     sin el ×N de las repetidas. Esto mantiene la grilla completa siempre
-     visible (preservas el contexto espacial) mientras el ojo va directo
-     a las bolitas activas. La regla compartida cubre: pegadas en su estado
-     default, faltantes cuando "Me falta" está off, repetidas cuando
-     "Repetidas" está off. */
+     SOMBRA: drop-shadow oscuro visible bajo un círculo gris dim. Mantiene
+     la grilla completa siempre visible (preservas el contexto espacial)
+     mientras el ojo va directo a las bolitas activas. Cubre 3 estados:
+     pegadas default, faltantes cuando "Me falta" off, repetidas cuando
+     "Repetidas" off. */
   .cell.tengo,
   body.hide-falta .cell.falta,
   body.hide-rep   .cell.rep {
-    background: var(--bg-2);
+    background: var(--bg-3);
     color: var(--text-3);
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
-    opacity: 0.55;
+    box-shadow:
+      0 2px 4px rgba(0,0,0,0.85),
+      inset 0 0 0 0.5px rgba(255,255,255,0.06);
+    opacity: 0.7;
   }
   body.hide-rep .cell.rep .x { display: none; }
 
