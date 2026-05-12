@@ -130,10 +130,10 @@
     opacity: 0.45;
   }
   body.hide-rep .cell.rep .x { display: none; }
-  /* En modo Lista los toggles ocultan las filas correspondientes por completo
-     (no tienen sentido "apagadas"). */
-  body.hide-falta .team-card-falt { display: none; }
-  body.hide-rep .team-card-rep { display: none; }
+  /* En modo Lista los toggles ocultan las bolitas correspondientes
+     (mismo predicado que en Mapa: hide-falta esconde rojos, hide-rep ámbar). */
+  body.hide-falta .compact-row .cell.falta { display: none; }
+  body.hide-rep   .compact-row .cell.rep   { display: none; }
 
   /* === Mode switch (Lista | Mapa) === */
   .mode-switch {
@@ -164,110 +164,72 @@
     font-weight: 700;
   }
 
-  /* === Modo Lista (compacta por equipo) === */
-  .team-card {
-    background: var(--bg-2);
-    border: 0.5px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin-bottom: 6px;
-    font-size: 12px;
-  }
-  .team-card.complete { opacity: 0.55; padding: 8px 12px; }
-  .team-card-head {
+  /* === Modo Lista: bolitas comprimidas por equipo === */
+  /* Cada equipo es una row horizontal: nombre + contador + bolitas que
+     fluyen (solo faltantes y repetidas, las pegadas se cuentan pero no se
+     dibujan). Mantiene el look circular del modo Mapa pero sin grid fijo. */
+  .compact-row {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 4px;
+    gap: 8px;
+    padding: 6px 4px;
+    border-bottom: 0.5px solid var(--bg-2);
+    flex-wrap: wrap;
   }
-  .team-card-code {
-    font-weight: 700;
-    color: var(--text);
+  .compact-row:last-child { border-bottom: 0; }
+  .compact-row.complete { opacity: 0.55; }
+  .compact-row .team-name {
+    background: transparent;
+    padding: 0;
+    color: var(--text-2);
     font-family: "JetBrains Mono", Menlo, monospace;
-    font-size: 13px;
-    letter-spacing: 0.5px;
-    min-width: 38px;
-  }
-  .team-card-progress {
-    flex: 1;
-    height: 5px;
-    background: var(--bg-3);
-    border-radius: 100px;
-    overflow: hidden;
-  }
-  .team-card-progress-fill {
-    height: 100%;
-    background: var(--green);
-    border-radius: inherit;
-    transition: width 0.3s ease;
-  }
-  .team-card-count {
-    color: var(--text-3);
-    font-size: 11px;
-    font-family: "JetBrains Mono", Menlo, monospace;
-    min-width: 42px;
-    text-align: right;
-  }
-  .team-card-count b { color: var(--text-2); font-weight: 600; }
-  .team-card-complete-mark {
-    color: var(--green);
     font-weight: 700;
     font-size: 12px;
-    margin-left: 4px;
+    letter-spacing: 0.3px;
+    min-width: 44px;
+    flex-shrink: 0;
   }
-  .team-card-falt,
-  .team-card-rep {
+  .compact-row .team-count {
+    color: var(--text-3);
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-size: 10px;
+    min-width: 38px;
+    flex-shrink: 0;
+  }
+  .compact-row .team-count.full {
+    color: var(--green);
+    font-weight: 700;
+  }
+  /* Las bolitas del modo Lista usan el MISMO estilo .cell.falta/.cell.rep
+     que el modo Mapa — solo cambian el tamaño y el flujo (flex en vez de grid). */
+  .compact-row .cells-flow {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
-    align-items: center;
-    padding: 4px 0;
-    margin-left: 48px;
+    flex: 1;
+    min-width: 0;
   }
-  .team-card-falt-label,
-  .team-card-rep-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 700;
-    margin-right: 4px;
-  }
-  .team-card-falt-label { color: var(--danger); }
-  .team-card-rep-label  { color: var(--amber); }
-  .id-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-family: "JetBrains Mono", Menlo, monospace;
-    font-size: 11px;
-    padding: 2px 7px;
-    border-radius: 100px;
-    font-weight: 600;
-    line-height: 1.5;
-  }
-  .id-chip.falta {
-    background: rgba(226,75,74,0.18);
-    color: var(--danger);
-    border: 0.5px solid rgba(226,75,74,0.4);
-  }
-  .id-chip.rep {
-    background: rgba(239,159,39,0.18);
-    color: var(--amber);
-    border: 0.5px solid rgba(239,159,39,0.4);
-  }
-  .id-chip .x {
+  .compact-row .cell {
+    width: 26px;
+    height: 26px;
+    aspect-ratio: 1;
+    flex-shrink: 0;
     font-size: 9px;
-    opacity: 0.85;
-    font-weight: 700;
   }
-  .id-chip .x::before { content: '×'; }
+  /* Bolitas con id largo (FWC9, etc.) — caja un pelín más ancha */
+  .compact-row .cell.wide {
+    width: 34px;
+    border-radius: 14px;
+    padding: 0 4px;
+    aspect-ratio: auto;
+  }
   .group-banner {
     color: var(--text-3);
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 1.5px;
     font-weight: 700;
-    margin: 14px 0 6px;
+    margin: 14px 0 4px;
     padding: 0 4px;
   }
 
@@ -653,62 +615,49 @@
     });
   }
 
-  // === Modo Lista: tarjetas compactas por equipo ===
-  // Cada equipo muestra su progreso (N/20 pegadas) + lista de faltantes y
-  // repetidas. Equipos completos colapsan a una row con check verde.
-  // Si un equipo no tiene ni faltantes ni repetidas que mostrar (porque están
-  // ocultados por toggle, o porque está completo), se reduce a la row de
-  // progreso.
+  // === Modo Lista: bolitas comprimidas por equipo ===
+  // Cada equipo es una row horizontal con el mismo look circular del modo
+  // Mapa, pero las pegadas se cuentan (en `N/total`) en vez de dibujarse.
+  // Solo aparecen las bolitas rojas (faltantes) y ámbar (repetidas con ×N).
+  // Resultado: misma estética pero MUCHO menos altura — el ojo va directo
+  // a lo accionable.
   function renderListaBody(state, equipos) {
     let html = '';
 
-    // Helper para una tarjeta de equipo (o intro/history)
-    function teamCard(code, items, totalLaminas) {
+    // Helper: dibuja una row compacta para un grupo de stickers.
+    // `wide=true` para IDs largos tipo "FWC9" (intro/history) — bolita
+    // más ancha en vez de circular estricta.
+    function compactRow(code, items, totalLaminas, wide) {
       let pegadas = 0;
-      const faltas = [];
-      const repetidas = [];
+      let cellsHtml = '';
+      const wideAttr = wide ? ' wide' : '';
       items.forEach(it => {
         const r = statusOf(state, it.id);
         if (r.st === 'falta') {
-          faltas.push(it.displayNum);
+          cellsHtml += '<div class="cell falta' + wideAttr + '">' + it.displayNum + '</div>';
         } else if (r.st === 'rep') {
-          repetidas.push({ num: it.displayNum, extras: r.copies - 1 });
-          pegadas++; // tener repetidas implica tenerla pegada (al menos 1)
+          const xN = r.copies - 1;
+          // Si hay ≥1 extra mostramos ×N; si solo es exactamente 1 copia extra
+          // también mostramos ×1 (consistente con el modo Mapa).
+          cellsHtml += '<div class="cell rep' + wideAttr + '">' + it.displayNum +
+            '<span class="x">' + xN + '</span></div>';
+          pegadas++; // tener repetida implica al menos 1 copia pegable
         } else {
-          pegadas++; // 'tengo' = pegada simple
+          pegadas++; // 'tengo' = pegada simple, no dibuja bolita
         }
       });
-      const total = totalLaminas;
-      const pct = total > 0 ? (pegadas / total * 100) : 0;
-      const isComplete = (faltas.length === 0 && repetidas.length === 0);
-      let card = '<div class="team-card' + (isComplete ? ' complete' : '') + '">';
-      card += '<div class="team-card-head">' +
-        '<span class="team-card-code">' + code + '</span>' +
-        '<span class="team-card-progress"><span class="team-card-progress-fill" style="width:' + pct.toFixed(1) + '%"></span></span>' +
-        '<span class="team-card-count"><b>' + pegadas + '</b>/' + total + (isComplete ? '<span class="team-card-complete-mark">✓</span>' : '') + '</span>' +
+      const isComplete = (pegadas === totalLaminas);
+      const countCls = isComplete ? ' full' : '';
+      return '<div class="compact-row' + (isComplete ? ' complete' : '') + '">' +
+        '<span class="team-name">' + code + '</span>' +
+        '<span class="team-count' + countCls + '">' + pegadas + '/' + totalLaminas + (isComplete ? ' ✓' : '') + '</span>' +
+        '<div class="cells-flow">' + cellsHtml + '</div>' +
       '</div>';
-      if (faltas.length) {
-        card += '<div class="team-card-falt">' +
-          '<span class="team-card-falt-label">↑ Faltan ' + faltas.length + '</span>' +
-          faltas.map(n => '<span class="id-chip falta">' + n + '</span>').join('') +
-        '</div>';
-      }
-      if (repetidas.length) {
-        card += '<div class="team-card-rep">' +
-          '<span class="team-card-rep-label">↓ Rep ' + repetidas.length + '</span>' +
-          repetidas.map(r => {
-            const xPart = r.extras > 1 ? '<span class="x">' + r.extras + '</span>' : '';
-            return '<span class="id-chip rep">' + r.num + xPart + '</span>';
-          }).join('') +
-        '</div>';
-      }
-      card += '</div>';
-      return card;
     }
 
     // Intro
     html += '<div class="group-banner">Intro · Logos y emblemas</div>';
-    html += teamCard('INTRO', introStickers, introStickers.length);
+    html += compactRow('INTRO', introStickers, introStickers.length, true);
 
     // Equipos por grupo
     const grupos = ['A','B','C','D','E','F','G','H','I','J','K','L'];
@@ -719,13 +668,13 @@
       teamsInGrupo.forEach(eq => {
         const items = [];
         for (let i = 1; i <= 20; i++) items.push({ id: eq.code + '-' + i, displayNum: String(i) });
-        html += teamCard(eq.code, items, 20);
+        html += compactRow(eq.code, items, 20, false);
       });
     });
 
     // History
     html += '<div class="group-banner">History · Mundiales pasados</div>';
-    html += teamCard('HIST', historyStickers, historyStickers.length);
+    html += compactRow('HIST', historyStickers, historyStickers.length, true);
 
     return html;
   }
