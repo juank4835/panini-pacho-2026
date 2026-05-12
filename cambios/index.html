@@ -37,11 +37,39 @@
 
   .hero { text-align: center; margin-bottom: 14px; }
   .hero h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
-  .hero p { margin: 0; color: var(--text-3); font-size: 12px; }
+  .hero .meta {
+    color: var(--text-3); font-size: 12px;
+    display: inline-flex; align-items: center; gap: 8px;
+    justify-content: center;
+  }
+  /* Refresh icon mini al lado del subtitle — reemplaza el botón grande
+     "Actualizar datos" que vivía debajo del CTA principal. */
+  .refresh-mini {
+    background: transparent;
+    border: 0.5px solid var(--border);
+    color: var(--text-3);
+    font-size: 13px;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+    font-family: inherit;
+    transition: color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+    -webkit-appearance: none;
+    flex-shrink: 0;
+  }
+  .refresh-mini:hover {
+    color: var(--amber);
+    border-color: rgba(239,159,39,0.6);
+    box-shadow: 0 0 8px rgba(239,159,39,0.25);
+  }
+  .refresh-mini:active { transform: scale(0.92); }
 
-  /* Todos los controles (stats, botones, hint, legend) van centrados con
-     max-width igual al inventario (520px) para alineación consistente. */
-  .stats-mini {
+  /* Stats + Toggles unificados: 3 pills que muestran el contador Y filtran
+     el grid. Cada pill mantiene su LED glow cuando está activa, dim cuando
+     off. Reemplaza la combinación stat-pills + legend chips. */
+  .stats-toggles {
     display: flex; gap: 8px; margin-bottom: 12px;
     max-width: 520px; margin-left: auto; margin-right: auto;
   }
@@ -49,45 +77,64 @@
     flex: 1;
     background: var(--bg-2);
     border: 1px solid transparent;
-    border-radius: 8px;
-    padding: 10px;
+    border-radius: 10px;
+    padding: 12px 8px;
     text-align: center;
+    cursor: pointer;
+    transition: opacity 0.2s ease, filter 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+    color: var(--text);
+    -webkit-appearance: none;
   }
+  .stat-pill:hover { filter: brightness(1.08); }
+  .stat-pill:active { transform: scale(0.97); }
   .stat-pill b {
     display: block;
-    font-size: 18px;
+    font-size: 22px;
+    font-weight: 700;
     font-family: "JetBrains Mono", Menlo, monospace;
+    margin-bottom: 2px;
+    line-height: 1;
   }
   .stat-pill small {
     color: var(--text-3);
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    font-weight: 600;
   }
-  /* Stat-pills siempre con LED glow encendido — borde de color + neón en
-     los números, mismo patrón que las stat-pill del app principal. */
-  .stat-pill.rep {
+  /* Stat-pills activos: LED glow encendido por categoría */
+  .stat-pill.rep:not(.off) {
     border-color: rgba(239,159,39,0.55);
     box-shadow: 0 0 0 1px rgba(239,159,39,0.15), 0 0 14px rgba(239,159,39,0.2);
   }
-  .stat-pill.falta {
+  .stat-pill.falta:not(.off) {
     border-color: rgba(226,75,74,0.55);
     box-shadow: 0 0 0 1px rgba(226,75,74,0.15), 0 0 14px rgba(226,75,74,0.2);
   }
-  .stat-pill.rep b {
+  .stat-pill.pegada:not(.off) {
+    border-color: rgba(0,214,133,0.55);
+    box-shadow: 0 0 0 1px rgba(0,214,133,0.15), 0 0 14px rgba(0,214,133,0.2);
+  }
+  .stat-pill.rep:not(.off) b {
     color: var(--amber);
-    text-shadow:
-      0 0 6px rgba(239,159,39,0.7),
-      0 0 14px rgba(239,159,39,0.4),
-      0 0 22px rgba(239,159,39,0.2);
+    text-shadow: 0 0 6px rgba(239,159,39,0.7), 0 0 14px rgba(239,159,39,0.4), 0 0 22px rgba(239,159,39,0.2);
   }
-  .stat-pill.falta b {
+  .stat-pill.falta:not(.off) b {
     color: var(--danger);
-    text-shadow:
-      0 0 6px rgba(226,75,74,0.7),
-      0 0 14px rgba(226,75,74,0.4),
-      0 0 22px rgba(226,75,74,0.2);
+    text-shadow: 0 0 6px rgba(226,75,74,0.7), 0 0 14px rgba(226,75,74,0.4), 0 0 22px rgba(226,75,74,0.2);
   }
+  .stat-pill.pegada:not(.off) b {
+    color: var(--green);
+    text-shadow: 0 0 6px rgba(0,214,133,0.7), 0 0 14px rgba(0,214,133,0.4), 0 0 22px rgba(0,214,133,0.2);
+  }
+  /* OFF: gris dim sin glow */
+  .stat-pill.off {
+    opacity: 0.4;
+    border-color: var(--border);
+  }
+  .stat-pill.off b { color: var(--text-3); text-shadow: none; }
 
   /* Botón primario "Copiar faltantes + repetidas" — estilo LED outline +
      glow, mismo formato cyberpunk que los botones del app principal
@@ -130,76 +177,26 @@
     line-height: 1.4;
   }
 
-  .legend {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
-    margin: 0 auto 14px;
-    max-width: 520px;
-  }
-  /* Legend toggles con LED outline + glow encendido cuando están ACTIVOS,
-     dim+gray cuando están OFF. Mismo formato que card-action-btn del app
-     principal (las variantes .is-falta / .is-rep / .is-pegada). */
-  .legend-item {
-    background: var(--bg-2);
-    border: 0.5px solid var(--border);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 10px 18px;
-    border-radius: 100px;
-    cursor: pointer;
-    letter-spacing: 0.2px;
-    transition: transform 0.1s ease, opacity 0.2s ease, filter 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    -webkit-appearance: none;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
-  }
-  .legend-item:hover { filter: brightness(1.08); }
-  .legend-item:active { transform: scale(0.97); }
-  /* Glow activo: el color de la categoría se prende en texto + borde + glow */
-  .legend-item[data-toggle="falta"]:not(.off) {
-    color: var(--danger);
-    border-color: var(--danger);
-    text-shadow: 0 0 6px rgba(226,75,74,0.5), 0 0 12px rgba(226,75,74,0.25);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(226,75,74,0.35);
-  }
-  .legend-item[data-toggle="rep"]:not(.off) {
-    color: var(--amber);
-    border-color: var(--amber);
-    text-shadow: 0 0 6px rgba(239,159,39,0.5), 0 0 12px rgba(239,159,39,0.25);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(239,159,39,0.35);
-  }
-  .legend-item[data-toggle="pegadas"]:not(.off) {
-    color: var(--green);
-    border-color: var(--green);
-    text-shadow: 0 0 6px rgba(0,214,133,0.55), 0 0 12px rgba(0,214,133,0.3);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(0,214,133,0.35);
-  }
-  /* OFF: gris dim sin glow */
-  .legend-item.off {
-    color: var(--text-3);
-    border-color: var(--border);
-    opacity: 0.55;
-  }
-  /* Dot de color escondido — el LED glow ya comunica la categoría */
-  .legend-cell { display: none; }
+  /* Legend section eliminado: las stat-pills mergeadas ya cumplen ese rol */
 
-  /* Estado "apagado" (off) de cualquier categoría → círculo dim con fondo
-     gris (bg-3), sin outline. Mantiene la grilla completa siempre visible
-     pero las bolitas inactivas se ven como "huecos" subordinados a las
-     activas. Cubre 3 estados: pegadas default, faltantes cuando "Me falta"
-     off, repetidas cuando "Repetidas" off. */
-  .cell.tengo,
-  body.hide-falta .cell.falta,
-  body.hide-rep   .cell.rep {
+  /* Pegadas ON por default (mockup A): fondo gris-3 + número verde neón
+     + aura verde sutil. Mirá como las pegadas del app principal estilo
+     LED — gris base con glow verde como halo. */
+  .cell.tengo {
     background: var(--bg-3);
-    color: var(--text-3);
-    border: 0;
-    box-shadow: none;
+    color: var(--green);
+    text-shadow: 0 0 4px rgba(0,214,133,0.75), 0 0 9px rgba(0,214,133,0.4);
+    box-shadow: 0 0 8px rgba(0,214,133,0.35), 0 0 0 0.5px rgba(0,214,133,0.45);
+  }
+  /* Estado "apagado" (off) de cualquier categoría → círculo dim con fondo
+     gris-3, sin glow ni neón. Comparte estilo entre las 3 cuando son OFF. */
+  body.hide-falta .cell.falta,
+  body.hide-rep   .cell.rep,
+  body.hide-pegadas .cell.tengo {
+    background: var(--bg-3) !important;
+    color: var(--text-3) !important;
+    text-shadow: none !important;
+    box-shadow: none !important;
     opacity: 0.55;
   }
   body.hide-rep .cell.rep .x { display: none; }
@@ -254,16 +251,9 @@
     position: relative;
     color: #fff;
   }
-  /* Pegadas: default = sombra (regla compartida arriba). Cuando el toggle
-     "Pegadas" está ON (body.show-pegadas), las prende en verde — mismo
-     color que la vista global del app — overriding la sombra. */
-  body.show-pegadas .cell.tengo {
-    background: var(--green);
-    color: #fff;
-    border: 0;
-    box-shadow: none;
-    opacity: 1;
-  }
+  /* Pegadas activas por DEFAULT en mockup A: fondo gris + número verde
+     neón + aura verde alrededor del círculo. Cuando el toggle Pegadas
+     está OFF (body.hide-pegadas), las cells caen al estado dim común. */
   .cell.falta { background: var(--danger); color: #fff; }
   .cell.rep {
     background: var(--amber);
@@ -302,36 +292,8 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Botón secundario "Actualizar datos" — LED outline neutral pill. Hover
-     wakes up un glow ámbar sutil (consistente con la paleta del share). */
-  .refresh {
-    width: 100%;
-    max-width: 520px;
-    margin: 6px auto 0;
-    background: var(--bg-2);
-    color: var(--text-2);
-    border: 0.5px solid var(--border);
-    padding: 11px 12px;
-    border-radius: 100px;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    letter-spacing: 0.2px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    transition: color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
-    -webkit-appearance: none;
-  }
-  .refresh:hover {
-    color: var(--amber);
-    border-color: rgba(239,159,39,0.5);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25), 0 0 12px rgba(239,159,39,0.18);
-  }
-  .refresh:active { transform: scale(0.98); }
+  /* Refresh button standalone eliminado — ahora vive como .refresh-mini
+     en el header (al lado del subtitle). */
 
   footer {
     color: var(--text-3);
@@ -411,7 +373,10 @@
 
   <div class="hero">
     <h1>Álbum Panini Mundial 2026 · Cambios</h1>
-    <p id="subtitle">Cargando…</p>
+    <div class="meta">
+      <span id="subtitle">Cargando…</span>
+      <button class="refresh-mini" id="btn-refresh" title="Actualizar datos">↻</button>
+    </div>
   </div>
 
   <div id="content">
@@ -545,25 +510,18 @@
     const total = allItems.length;
     const pct = total > 0 ? (nTengo / total * 100) : 0;
 
-    // Construir HTML — muestro TOTAL DE COPIAS EXTRAS (mismo criterio que el
-    // home del tracker, así los números coinciden entre las dos vistas).
-    let html = '<div class="stats-mini">' +
-      '<div class="stat-pill rep"><b>' + nRepExtras + '</b><small>Repetidas</small></div>' +
-      '<div class="stat-pill falta"><b>' + nFalta + '</b><small>Me faltan</small></div>' +
+    // Stats + Toggles unificados (mockup A): 3 pills que muestran el contador
+    // Y al taparlas filtran su categoría en el grid. nRepExtras = total de
+    // copias extras (mismo criterio que el app); nTengo = láminas pegadas
+    // (incluye las que tienen repetidas — todas tienen al menos 1 pegada).
+    let html = '<div class="stats-toggles">' +
+      '<button type="button" class="stat-pill rep" data-toggle="rep"><b>' + nRepExtras + '</b><small>Repetidas</small></button>' +
+      '<button type="button" class="stat-pill falta" data-toggle="falta"><b>' + nFalta + '</b><small>Me faltan</small></button>' +
+      '<button type="button" class="stat-pill pegada" data-toggle="pegadas"><b>' + nTengo + '</b><small>Pegadas</small></button>' +
     '</div>';
 
     html += '<button class="btn-share-main" id="btn-share">Copiar faltantes + repetidas</button>' +
-      '<button class="refresh" id="btn-refresh">↻ Actualizar datos</button>' +
-      '<div class="share-hint">El mensaje queda listo para pegar en WhatsApp / Telegram. Tocá Actualizar para traer los últimos datos del álbum.</div>';
-
-    // Legend: 3 toggles. Me falta / Repetidas arrancan ON (las bolitas se
-    // muestran por default). Pegadas arranca OFF (las pegadas son invisibles
-    // por default — tap al botón verde las prende en verde como en la app).
-    html += '<div class="legend">' +
-      '<button class="legend-item" data-toggle="falta"><span class="legend-cell falta"></span> Me falta</button>' +
-      '<button class="legend-item" data-toggle="rep"><span class="legend-cell rep"></span> Repetidas</button>' +
-      '<button class="legend-item off" data-toggle="pegadas"><span class="legend-cell pegada"></span> Pegadas</button>' +
-    '</div>';
+      '<div class="share-hint">El mensaje queda listo para pegar en WhatsApp / Telegram. Tocá ↻ arriba para traer los últimos datos del álbum.</div>';
 
     // Grid de bolitas (mismo tamaño que la vista global del app):
     // 10 cells por fila, cada equipo ocupa 2 filas con su team-name spanning.
@@ -631,28 +589,18 @@
     };
     document.getElementById('btn-refresh').onclick = () => init();
 
-    // Toggles del legend:
-    //   - 'falta' / 'rep': ON por default (visible). Click → toggle .off +
-    //     toggle body.hide-X → CSS aplica visibility:hidden a esas cells.
-    //   - 'pegadas': OFF por default (invisible). Click → toggle .off +
-    //     toggle body.show-pegadas → CSS hace visible + verde a .cell.tengo.
-    //   Restaurar el estado visual del botón si su body class ya estaba puesta
-    //   (caso re-render: el toggle preserva su estado entre llamadas a render).
-    document.querySelectorAll('.legend-item[data-toggle]').forEach(btn => {
+    // Stat-pill toggles (mockup A): los 3 pills son botones que filtran.
+    // Las 3 categorías arrancan ON por default; tap toggle .off + body.hide-X
+    // → CSS aplica visibility:hidden / estilo dim a esas cells del grid.
+    // Restaurar el estado visual del pill si el body class ya estaba puesta
+    // (preserva la elección entre re-renders).
+    document.querySelectorAll('.stat-pill[data-toggle]').forEach(btn => {
       const what = btn.dataset.toggle;
-      if (what === 'pegadas') {
-        // Pegadas: botón ON solo si body.show-pegadas existe; si no, queda .off.
-        if (document.body.classList.contains('show-pegadas')) btn.classList.remove('off');
-        else btn.classList.add('off');
-      } else {
-        // Falta / rep: botón OFF solo si body.hide-X existe.
-        if (document.body.classList.contains('hide-' + what)) btn.classList.add('off');
-        else btn.classList.remove('off');
-      }
+      if (document.body.classList.contains('hide-' + what)) btn.classList.add('off');
+      else btn.classList.remove('off');
       btn.onclick = () => {
         btn.classList.toggle('off');
-        if (what === 'pegadas') document.body.classList.toggle('show-pegadas');
-        else document.body.classList.toggle('hide-' + what);
+        document.body.classList.toggle('hide-' + what);
       };
     });
   }
