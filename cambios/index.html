@@ -130,6 +130,146 @@
     opacity: 0.45;
   }
   body.hide-rep .cell.rep .x { display: none; }
+  /* En modo Lista los toggles ocultan las filas correspondientes por completo
+     (no tienen sentido "apagadas"). */
+  body.hide-falta .team-card-falt { display: none; }
+  body.hide-rep .team-card-rep { display: none; }
+
+  /* === Mode switch (Lista | Mapa) === */
+  .mode-switch {
+    display: flex;
+    background: var(--bg-2);
+    border: 0.5px solid var(--border);
+    border-radius: 100px;
+    padding: 3px;
+    margin-bottom: 12px;
+    width: 100%;
+  }
+  .mode-switch button {
+    flex: 1;
+    background: transparent;
+    border: 0;
+    color: var(--text-3);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 10px;
+    border-radius: 100px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s;
+  }
+  .mode-switch button.active {
+    background: var(--bg-3);
+    color: var(--amber);
+    font-weight: 700;
+  }
+
+  /* === Modo Lista (compacta por equipo) === */
+  .team-card {
+    background: var(--bg-2);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+  .team-card.complete { opacity: 0.55; padding: 8px 12px; }
+  .team-card-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .team-card-code {
+    font-weight: 700;
+    color: var(--text);
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    min-width: 38px;
+  }
+  .team-card-progress {
+    flex: 1;
+    height: 5px;
+    background: var(--bg-3);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+  .team-card-progress-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: inherit;
+    transition: width 0.3s ease;
+  }
+  .team-card-count {
+    color: var(--text-3);
+    font-size: 11px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    min-width: 42px;
+    text-align: right;
+  }
+  .team-card-count b { color: var(--text-2); font-weight: 600; }
+  .team-card-complete-mark {
+    color: var(--green);
+    font-weight: 700;
+    font-size: 12px;
+    margin-left: 4px;
+  }
+  .team-card-falt,
+  .team-card-rep {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+    padding: 4px 0;
+    margin-left: 48px;
+  }
+  .team-card-falt-label,
+  .team-card-rep-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    margin-right: 4px;
+  }
+  .team-card-falt-label { color: var(--danger); }
+  .team-card-rep-label  { color: var(--amber); }
+  .id-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 100px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .id-chip.falta {
+    background: rgba(226,75,74,0.18);
+    color: var(--danger);
+    border: 0.5px solid rgba(226,75,74,0.4);
+  }
+  .id-chip.rep {
+    background: rgba(239,159,39,0.18);
+    color: var(--amber);
+    border: 0.5px solid rgba(239,159,39,0.4);
+  }
+  .id-chip .x {
+    font-size: 9px;
+    opacity: 0.85;
+    font-weight: 700;
+  }
+  .id-chip .x::before { content: '×'; }
+  .group-banner {
+    color: var(--text-3);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    margin: 14px 0 6px;
+    padding: 0 4px;
+  }
 
   /* Tabla checklist */
   .table-grid {
@@ -341,6 +481,11 @@
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxO6ce9vpKOiFwRXCw9Th_R7O1PmBAKHJtCVZGKy3_IIAvaCQ_ZQgzMBSsiasd8g18/exec';
   const SHARE_URL = 'https://juank4835.github.io/panini-pacho-2026/cambios/';
 
+  // Modo de visualización del listado del álbum. 'lista' (default) = tarjetas
+  // compactas por equipo solo con lo accionable (faltantes + repetidas);
+  // 'mapa' = grid completa de 20 columnas (vista original).
+  let currentMode = 'lista';
+
   // === Catálogo ===
   const introStickers = [
     { id: '00', displayNum: '00' },
@@ -455,24 +600,148 @@
       '<button class="refresh" id="btn-refresh">🔄 Actualizar datos</button>' +
       '<div class="share-hint">El mensaje queda listo para pegar en WhatsApp / Telegram. Tocá Actualizar para traer los últimos datos del álbum.</div>';
 
+    // Mode switch: Lista (default, compacta) | Mapa (grid completa).
+    html += '<div class="mode-switch">' +
+      '<button type="button" data-mode="lista" class="' + (currentMode === 'lista' ? 'active' : '') + '">📋 Lista</button>' +
+      '<button type="button" data-mode="mapa" class="' + (currentMode === 'mapa' ? 'active' : '') + '">🗺 Mapa</button>' +
+    '</div>';
+
     html += '<div class="legend">' +
       '<button class="legend-item" data-toggle="falta"><span class="legend-cell falta"></span> Me falta</button>' +
       '<button class="legend-item" data-toggle="rep"><span class="legend-cell rep"></span> Tengo repetida (×N copias)</button>' +
     '</div>';
 
-    // Tabla
-    html += '<div class="table-grid">';
-    // Header con números 1-20
+    // Body por modo
+    if (currentMode === 'lista') {
+      html += renderListaBody(state, equipos);
+    } else {
+      html += renderMapaBody(state, equipos);
+    }
+
+    document.getElementById('content').innerHTML = html;
+    document.getElementById('subtitle').textContent =
+      pct.toFixed(1) + '% completo · ' + nTengo + ' / ' + total + ' · actualizado ' + new Date().toLocaleTimeString();
+
+    // Bind del botón compartir
+    document.getElementById('btn-share').onclick = (e) => {
+      copyToClipboard(buildShareMessage(state, equipos), e.currentTarget);
+    };
+    document.getElementById('btn-refresh').onclick = () => init();
+
+    // Mode switch handler — re-renderiza con el nuevo modo. Mantiene los
+    // toggles de hide-falta/hide-rep al cambiar de modo (siguen ocultando).
+    document.querySelectorAll('.mode-switch button[data-mode]').forEach(btn => {
+      btn.onclick = () => {
+        const next = btn.dataset.mode;
+        if (next === currentMode) return;
+        currentMode = next;
+        render(state, equipos);
+      };
+    });
+
+    // Toggles del legend (Me falta / Tengo repetida): en modo Mapa apagan
+    // el color de las celdas; en modo Lista ocultan las filas correspondientes.
+    document.querySelectorAll('.legend-item[data-toggle]').forEach(btn => {
+      // Restaurar estado visual del toggle si ya estaba apagado antes del re-render.
+      const what = btn.dataset.toggle;
+      if (document.body.classList.contains('hide-' + what)) btn.classList.add('off');
+      btn.onclick = () => {
+        const w = btn.dataset.toggle; // 'falta' | 'rep'
+        btn.classList.toggle('off');
+        document.body.classList.toggle('hide-' + w);
+      };
+    });
+  }
+
+  // === Modo Lista: tarjetas compactas por equipo ===
+  // Cada equipo muestra su progreso (N/20 pegadas) + lista de faltantes y
+  // repetidas. Equipos completos colapsan a una row con check verde.
+  // Si un equipo no tiene ni faltantes ni repetidas que mostrar (porque están
+  // ocultados por toggle, o porque está completo), se reduce a la row de
+  // progreso.
+  function renderListaBody(state, equipos) {
+    let html = '';
+
+    // Helper para una tarjeta de equipo (o intro/history)
+    function teamCard(code, items, totalLaminas) {
+      let pegadas = 0;
+      const faltas = [];
+      const repetidas = [];
+      items.forEach(it => {
+        const r = statusOf(state, it.id);
+        if (r.st === 'falta') {
+          faltas.push(it.displayNum);
+        } else if (r.st === 'rep') {
+          repetidas.push({ num: it.displayNum, extras: r.copies - 1 });
+          pegadas++; // tener repetidas implica tenerla pegada (al menos 1)
+        } else {
+          pegadas++; // 'tengo' = pegada simple
+        }
+      });
+      const total = totalLaminas;
+      const pct = total > 0 ? (pegadas / total * 100) : 0;
+      const isComplete = (faltas.length === 0 && repetidas.length === 0);
+      let card = '<div class="team-card' + (isComplete ? ' complete' : '') + '">';
+      card += '<div class="team-card-head">' +
+        '<span class="team-card-code">' + code + '</span>' +
+        '<span class="team-card-progress"><span class="team-card-progress-fill" style="width:' + pct.toFixed(1) + '%"></span></span>' +
+        '<span class="team-card-count"><b>' + pegadas + '</b>/' + total + (isComplete ? '<span class="team-card-complete-mark">✓</span>' : '') + '</span>' +
+      '</div>';
+      if (faltas.length) {
+        card += '<div class="team-card-falt">' +
+          '<span class="team-card-falt-label">↑ Faltan ' + faltas.length + '</span>' +
+          faltas.map(n => '<span class="id-chip falta">' + n + '</span>').join('') +
+        '</div>';
+      }
+      if (repetidas.length) {
+        card += '<div class="team-card-rep">' +
+          '<span class="team-card-rep-label">↓ Rep ' + repetidas.length + '</span>' +
+          repetidas.map(r => {
+            const xPart = r.extras > 1 ? '<span class="x">' + r.extras + '</span>' : '';
+            return '<span class="id-chip rep">' + r.num + xPart + '</span>';
+          }).join('') +
+        '</div>';
+      }
+      card += '</div>';
+      return card;
+    }
+
+    // Intro
+    html += '<div class="group-banner">Intro · Logos y emblemas</div>';
+    html += teamCard('INTRO', introStickers, introStickers.length);
+
+    // Equipos por grupo
+    const grupos = ['A','B','C','D','E','F','G','H','I','J','K','L'];
+    grupos.forEach(grupo => {
+      const teamsInGrupo = equipos.filter(eq => eq.grupo === grupo);
+      if (!teamsInGrupo.length) return;
+      html += '<div class="group-banner">Grupo ' + grupo + '</div>';
+      teamsInGrupo.forEach(eq => {
+        const items = [];
+        for (let i = 1; i <= 20; i++) items.push({ id: eq.code + '-' + i, displayNum: String(i) });
+        html += teamCard(eq.code, items, 20);
+      });
+    });
+
+    // History
+    html += '<div class="group-banner">History · Mundiales pasados</div>';
+    html += teamCard('HIST', historyStickers, historyStickers.length);
+
+    return html;
+  }
+
+  // === Modo Mapa: grid completa de 20 columnas (la vista original) ===
+  function renderMapaBody(state, equipos) {
+    let html = '<div class="table-grid">';
     html += '<div></div>';
     for (let i = 1; i <= 20; i++) html += '<div class="col-header">' + i + '</div>';
 
-    // Helper para renderizar una fila de equipo
     function teamRow(code, items) {
       let row = '<div class="team-name">' + code + '</div>';
-      items.forEach((it, idx) => {
+      items.forEach(it => {
         const r = statusOf(state, it.id);
         if (r.st === 'rep') {
-          const xN = r.copies - 1; // copias extra
+          const xN = r.copies - 1;
           row += '<div class="cell rep">' + it.displayNum + '<span class="x">' + xN + '</span></div>';
         } else if (r.st === 'falta') {
           row += '<div class="cell falta">' + it.displayNum + '</div>';
@@ -483,8 +752,6 @@
       return row;
     }
 
-    // Intro como su propia "fila" (con menos columnas; el grid sigue alineado pero
-    // las celdas ausentes se ven como un espacio vacío)
     html += '<div class="group-row">Intro</div>';
     let introHtml = '<div class="team-name">INTRO</div>';
     introStickers.forEach(s => {
@@ -498,11 +765,9 @@
         introHtml += '<div class="cell tengo" style="font-size:7px;">' + s.displayNum + '</div>';
       }
     });
-    // Padding hasta llegar a 20 cells
     for (let i = introStickers.length; i < 20; i++) introHtml += '<div></div>';
     html += introHtml;
 
-    // Equipos por grupo
     const grupos = ['A','B','C','D','E','F','G','H','I','J','K','L'];
     grupos.forEach(grupo => {
       const teamsInGrupo = equipos.filter(eq => eq.grupo === grupo);
@@ -515,7 +780,6 @@
       });
     });
 
-    // History
     html += '<div class="group-row">History</div>';
     let histHtml = '<div class="team-name">HIST</div>';
     historyStickers.forEach(s => {
@@ -533,26 +797,7 @@
     html += histHtml;
 
     html += '</div>';
-
-    document.getElementById('content').innerHTML = html;
-    document.getElementById('subtitle').textContent =
-      pct.toFixed(1) + '% completo · ' + nTengo + ' / ' + total + ' · actualizado ' + new Date().toLocaleTimeString();
-
-    // Bind del botón compartir
-    document.getElementById('btn-share').onclick = (e) => {
-      copyToClipboard(buildShareMessage(state, equipos), e.currentTarget);
-    };
-    document.getElementById('btn-refresh').onclick = () => init();
-
-    // Toggles del legend (Me falta / Tengo repetida): apagan/encienden
-    // el color de las celdas correspondientes en toda la tabla.
-    document.querySelectorAll('.legend-item[data-toggle]').forEach(btn => {
-      btn.onclick = () => {
-        const what = btn.dataset.toggle; // 'falta' | 'rep'
-        btn.classList.toggle('off');
-        document.body.classList.toggle('hide-' + what);
-      };
-    });
+    return html;
   }
 
   // === Mensaje de compartir (mismo formato que la app real) ===
