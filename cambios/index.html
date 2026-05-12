@@ -113,8 +113,9 @@
   .legend-item.off { opacity: 0.4; }
   .legend-item.off .legend-cell { background: var(--bg-3); }
   .legend-cell { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-  .legend-cell.falta { background: var(--danger); }
-  .legend-cell.rep   { background: var(--amber); }
+  .legend-cell.falta   { background: var(--danger); }
+  .legend-cell.rep     { background: var(--amber); }
+  .legend-cell.pegada  { background: var(--green); }
 
   /* Toggles del legend: cuando "Me falta" o "Tengo repetida" están OFF,
      las celdas de ese tipo se vuelven INVISIBLES (visibility:hidden) en lugar
@@ -173,10 +174,17 @@
     position: relative;
     color: #fff;
   }
-  /* Pegadas (tengo) NO se dibujan — la celda ocupa su slot para mantener la
-     alineación 1–20 por columna, pero el círculo es invisible. Esto comprime
-     visualmente el grid: solo ves las bolitas accionables (falta + rep). */
+  /* Pegadas (tengo) NO se dibujan por default — la celda ocupa su slot para
+     mantener la alineación pero el círculo es invisible. Esto comprime
+     visualmente el grid: solo ves las bolitas accionables (falta + rep).
+     El toggle "Pegadas" en el legend agrega body.show-pegadas → las prende
+     en verde (mismo color que la vista global del app). */
   .cell.tengo { visibility: hidden; }
+  body.show-pegadas .cell.tengo {
+    visibility: visible;
+    background: var(--green);
+    color: #fff;
+  }
   .cell.falta { background: var(--danger); color: #fff; }
   .cell.rep {
     background: var(--amber);
@@ -452,9 +460,13 @@
       '<button class="refresh" id="btn-refresh">🔄 Actualizar datos</button>' +
       '<div class="share-hint">El mensaje queda listo para pegar en WhatsApp / Telegram. Tocá Actualizar para traer los últimos datos del álbum.</div>';
 
+    // Legend: 3 toggles. Me falta / Repetidas arrancan ON (las bolitas se
+    // muestran por default). Pegadas arranca OFF (las pegadas son invisibles
+    // por default — tap al botón verde las prende en verde como en la app).
     html += '<div class="legend">' +
       '<button class="legend-item" data-toggle="falta"><span class="legend-cell falta"></span> Me falta</button>' +
-      '<button class="legend-item" data-toggle="rep"><span class="legend-cell rep"></span> Tengo repetida (×N copias)</button>' +
+      '<button class="legend-item" data-toggle="rep"><span class="legend-cell rep"></span> Repetidas</button>' +
+      '<button class="legend-item off" data-toggle="pegadas"><span class="legend-cell pegada"></span> Pegadas</button>' +
     '</div>';
 
     // Grid de bolitas (mismo tamaño que la vista global del app):
@@ -523,15 +535,28 @@
     };
     document.getElementById('btn-refresh').onclick = () => init();
 
-    // Toggles del legend (Me falta / Tengo repetida): visibility:hidden de
-    // las celdas correspondientes cuando OFF. Las pegadas (tengo) son
-    // invisibles por default, sin toggle.
+    // Toggles del legend:
+    //   - 'falta' / 'rep': ON por default (visible). Click → toggle .off +
+    //     toggle body.hide-X → CSS aplica visibility:hidden a esas cells.
+    //   - 'pegadas': OFF por default (invisible). Click → toggle .off +
+    //     toggle body.show-pegadas → CSS hace visible + verde a .cell.tengo.
+    //   Restaurar el estado visual del botón si su body class ya estaba puesta
+    //   (caso re-render: el toggle preserva su estado entre llamadas a render).
     document.querySelectorAll('.legend-item[data-toggle]').forEach(btn => {
       const what = btn.dataset.toggle;
-      if (document.body.classList.contains('hide-' + what)) btn.classList.add('off');
+      if (what === 'pegadas') {
+        // Pegadas: botón ON solo si body.show-pegadas existe; si no, queda .off.
+        if (document.body.classList.contains('show-pegadas')) btn.classList.remove('off');
+        else btn.classList.add('off');
+      } else {
+        // Falta / rep: botón OFF solo si body.hide-X existe.
+        if (document.body.classList.contains('hide-' + what)) btn.classList.add('off');
+        else btn.classList.remove('off');
+      }
       btn.onclick = () => {
         btn.classList.toggle('off');
-        document.body.classList.toggle('hide-' + what);
+        if (what === 'pegadas') document.body.classList.toggle('show-pegadas');
+        else document.body.classList.toggle('hide-' + what);
       };
     });
   }
