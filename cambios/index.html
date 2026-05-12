@@ -62,25 +62,36 @@
   .stat-pill.rep b { color: var(--amber); }
   .stat-pill.falta b { color: var(--danger); }
 
-  /* Botón primario "Copiar faltantes + repetidas" — mismo formato que el
-     btn-share-repetidas de la app principal (Cambios/Repetidas): amber con
-     hover a amber-dark, font 14px/600, radius 8px. */
+  /* Botón primario "Copiar faltantes + repetidas" — estilo LED outline +
+     glow, mismo formato cyberpunk que los botones del app principal
+     (card-action-btn.is-rep). Border ámbar + text-shadow + box-shadow glow.
+     Cuando se copia, transición a verde LED. */
   .btn-share-main {
     width: 100%;
-    padding: 12px 16px;
-    background: var(--amber);
-    color: var(--amber-text);
-    border: 0;
-    border-radius: var(--radius);
+    background: var(--bg-2);
+    color: var(--amber);
+    border: 0.5px solid var(--amber);
+    padding: 12px 22px;
+    border-radius: 100px;
     font-family: inherit;
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
+    letter-spacing: 0.2px;
+    text-shadow: 0 0 6px rgba(239,159,39,0.5), 0 0 12px rgba(239,159,39,0.25);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(239,159,39,0.35);
     margin-bottom: 8px;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: transform 0.1s ease, filter 0.15s ease;
+    -webkit-appearance: none;
   }
-  .btn-share-main:hover { background: var(--amber-dark); color: #fff; }
-  .btn-share-main.copied { background: var(--green); color: #fff; }
+  .btn-share-main:hover { filter: brightness(1.08); }
+  .btn-share-main:active { transform: scale(0.98); }
+  .btn-share-main.copied {
+    color: var(--green);
+    border-color: var(--green);
+    text-shadow: 0 0 6px rgba(0,214,133,0.55), 0 0 12px rgba(0,214,133,0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(0,214,133,0.35);
+  }
   .share-hint {
     text-align: center;
     color: var(--text-3);
@@ -235,16 +246,15 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Botón secundario "Actualizar datos" — mismo formato que el fin-quick-actions
-     button de la app principal: bg-2 con border hairline, font 12px/600,
-     radius 10px, ícono + label centrados. */
+  /* Botón secundario "Actualizar datos" — LED outline neutral pill. Hover
+     wakes up un glow ámbar sutil (consistente con la paleta del share). */
   .refresh {
     width: 100%;
     background: var(--bg-2);
-    border: 0.5px solid var(--border);
     color: var(--text-2);
+    border: 0.5px solid var(--border);
     padding: 11px 12px;
-    border-radius: 10px;
+    border-radius: 100px;
     font-family: inherit;
     font-size: 12px;
     font-weight: 600;
@@ -253,10 +263,18 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+    letter-spacing: 0.2px;
     margin-top: 6px;
-    transition: color 0.15s, border-color 0.15s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    transition: color 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+    -webkit-appearance: none;
   }
-  .refresh:hover { color: var(--text); border-color: var(--text-3); }
+  .refresh:hover {
+    color: var(--amber);
+    border-color: rgba(239,159,39,0.5);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25), 0 0 12px rgba(239,159,39,0.18);
+  }
+  .refresh:active { transform: scale(0.98); }
 
   footer {
     color: var(--text-3);
