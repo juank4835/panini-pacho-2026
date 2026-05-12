@@ -150,9 +150,10 @@
   }
   .stat-pill.off b { color: var(--text-3); text-shadow: none; }
 
-  /* Panel "Precios de referencia" — tabla compacta de precios por categoría
-     debajo de las stat-pills. Sirve para que la gente en el grupo sepa
-     cuánto vale cada tipo de lámina al negociar. */
+  /* Panel "Precios de referencia" — colapsable via <details>/<summary>.
+     Cerrado por default; tap al header expande la tabla por categoría.
+     Useful when sharing in buy/sell groups: people see the header
+     immediately, expand only if quieren la referencia exacta. */
   .precios-panel {
     background: var(--bg-2);
     border: 0.5px solid var(--border);
@@ -162,15 +163,34 @@
     max-width: 520px;
     font-family: "JetBrains Mono", Menlo, monospace;
   }
-  .precios-panel h3 {
-    margin: 0 0 6px;
+  .precios-panel summary {
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 10px;
     color: var(--text-3);
     text-transform: uppercase;
     letter-spacing: 1.2px;
     font-weight: 700;
-    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
   }
+  .precios-panel summary::-webkit-details-marker { display: none; }
+  .precios-panel summary::marker { content: ''; }
+  .precios-panel summary::after {
+    content: '›';
+    color: var(--text-3);
+    font-size: 14px;
+    transition: transform 0.2s ease;
+    margin-left: 8px;
+  }
+  .precios-panel[open] summary::after { transform: rotate(90deg); }
+  .precios-panel[open] summary { margin-bottom: 6px; }
+  .precios-panel summary:hover { color: var(--amber); }
+  .precios-panel summary:hover::after { color: var(--amber); }
   .precios-row {
     display: flex;
     justify-content: space-between;
@@ -431,7 +451,7 @@
   }
 </style>
 </head>
-<body>
+<body class="hide-pegadas">
 <div class="page">
 
   <div class="hero">
@@ -644,10 +664,10 @@
         '<span class="price">$' + fmtMoney(precios[cat]) + '</span>' +
       '</div>')
       .join('');
-    html += '<div class="precios-panel">' +
-      '<h3>Precios de referencia</h3>' +
+    html += '<details class="precios-panel">' +
+      '<summary>Precios de referencia</summary>' +
       (preciosRows || '<div class="precios-empty">Sin precios cargados todavía.</div>') +
-    '</div>';
+    '</details>';
 
     html += '<button class="btn-share-main" id="btn-share">Copiar faltantes + repetidas</button>' +
       '<div class="share-hint">El mensaje queda listo para pegar en WhatsApp / Telegram. Tocá ↻ arriba para traer los últimos datos del álbum.</div>';
