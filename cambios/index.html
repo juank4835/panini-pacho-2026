@@ -48,7 +48,7 @@
   .stat-pill {
     flex: 1;
     background: var(--bg-2);
-    border: 0.5px solid var(--border);
+    border: 1px solid transparent;
     border-radius: 8px;
     padding: 10px;
     text-align: center;
@@ -64,8 +64,30 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
-  .stat-pill.rep b { color: var(--amber); }
-  .stat-pill.falta b { color: var(--danger); }
+  /* Stat-pills siempre con LED glow encendido — borde de color + neón en
+     los números, mismo patrón que las stat-pill del app principal. */
+  .stat-pill.rep {
+    border-color: rgba(239,159,39,0.55);
+    box-shadow: 0 0 0 1px rgba(239,159,39,0.15), 0 0 14px rgba(239,159,39,0.2);
+  }
+  .stat-pill.falta {
+    border-color: rgba(226,75,74,0.55);
+    box-shadow: 0 0 0 1px rgba(226,75,74,0.15), 0 0 14px rgba(226,75,74,0.2);
+  }
+  .stat-pill.rep b {
+    color: var(--amber);
+    text-shadow:
+      0 0 6px rgba(239,159,39,0.7),
+      0 0 14px rgba(239,159,39,0.4),
+      0 0 22px rgba(239,159,39,0.2);
+  }
+  .stat-pill.falta b {
+    color: var(--danger);
+    text-shadow:
+      0 0 6px rgba(226,75,74,0.7),
+      0 0 14px rgba(226,75,74,0.4),
+      0 0 22px rgba(226,75,74,0.2);
+  }
 
   /* Botón primario "Copiar faltantes + repetidas" — estilo LED outline +
      glow, mismo formato cyberpunk que los botones del app principal
@@ -116,43 +138,54 @@
     margin: 0 auto 14px;
     max-width: 520px;
   }
-  /* Legend = botones toggle con el mismo estilo que btn-share-repetidas y
-     btn-share-faltantes del app principal: filled con el color de la
-     categoría, font 13/600, radius var(--radius). Estado "off" hace dim
-     con bg-2 + opacidad baja. */
+  /* Legend toggles con LED outline + glow encendido cuando están ACTIVOS,
+     dim+gray cuando están OFF. Mismo formato que card-action-btn del app
+     principal (las variantes .is-falta / .is-rep / .is-pegada). */
   .legend-item {
-    border: 0;
+    background: var(--bg-2);
+    border: 0.5px solid var(--border);
+    color: var(--text);
     font-family: inherit;
     font-size: 13px;
-    font-weight: 600;
-    padding: 8px 16px;
-    border-radius: var(--radius);
+    font-weight: 700;
+    padding: 10px 18px;
+    border-radius: 100px;
     cursor: pointer;
-    transition: opacity 0.2s ease, filter 0.15s ease, background 0.2s ease, color 0.2s ease;
+    letter-spacing: 0.2px;
+    transition: transform 0.1s ease, opacity 0.2s ease, filter 0.15s ease;
     display: inline-flex;
     align-items: center;
     -webkit-appearance: none;
-    letter-spacing: 0.1px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
   }
   .legend-item:hover { filter: brightness(1.08); }
-  .legend-item[data-toggle="falta"] {
-    background: var(--danger);
-    color: #fff;
+  .legend-item:active { transform: scale(0.97); }
+  /* Glow activo: el color de la categoría se prende en texto + borde + glow */
+  .legend-item[data-toggle="falta"]:not(.off) {
+    color: var(--danger);
+    border-color: var(--danger);
+    text-shadow: 0 0 6px rgba(226,75,74,0.5), 0 0 12px rgba(226,75,74,0.25);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(226,75,74,0.35);
   }
-  .legend-item[data-toggle="rep"] {
-    background: var(--amber);
-    color: var(--amber-text);
+  .legend-item[data-toggle="rep"]:not(.off) {
+    color: var(--amber);
+    border-color: var(--amber);
+    text-shadow: 0 0 6px rgba(239,159,39,0.5), 0 0 12px rgba(239,159,39,0.25);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(239,159,39,0.35);
   }
-  .legend-item[data-toggle="pegadas"] {
-    background: var(--green);
-    color: #003420;
+  .legend-item[data-toggle="pegadas"]:not(.off) {
+    color: var(--green);
+    border-color: var(--green);
+    text-shadow: 0 0 6px rgba(0,214,133,0.55), 0 0 12px rgba(0,214,133,0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(0,214,133,0.35);
   }
+  /* OFF: gris dim sin glow */
   .legend-item.off {
-    background: var(--bg-2);
     color: var(--text-3);
+    border-color: var(--border);
     opacity: 0.55;
   }
-  /* Dot de color escondido — el fondo del botón ya comunica la categoría */
+  /* Dot de color escondido — el LED glow ya comunica la categoría */
   .legend-cell { display: none; }
 
   /* Estado "apagado" (off) de cualquier categoría → círculo dim con fondo
