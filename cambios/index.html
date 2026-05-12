@@ -123,53 +123,55 @@
   body.hide-falta .cell.falta { visibility: hidden; }
   body.hide-rep   .cell.rep   { visibility: hidden; }
 
-  /* Tabla checklist */
+  /* Tabla checklist — replica el tamaño de la vista global del app: grid
+     de 11 cols (nombre de equipo 44px + 10 cells de 1fr), cada equipo en
+     2 filas de 10 (team-name con grid-row: span 2). Intro cabe en 1 fila
+     vía .team-name.single-row. Max-width chico para que en desktop las
+     bolitas no se inflen — debe sentirse como en el app móvil. */
   .table-grid {
     display: grid;
-    grid-template-columns: 70px repeat(20, 1fr);
-    gap: 2px;
-    margin-bottom: 12px;
-    font-size: 10px;
+    grid-template-columns: 44px repeat(10, 1fr);
+    gap: 3px;
+    margin: 0 auto 12px;
+    max-width: 520px;
     font-family: "JetBrains Mono", Menlo, monospace;
-  }
-  .col-header {
-    text-align: center;
-    color: var(--text-3);
-    padding: 6px 0;
-    font-weight: 700;
-    font-size: 9px;
   }
   .group-row {
     grid-column: 1 / -1;
     background: var(--bg-2);
     color: var(--amber);
-    padding: 6px 10px;
-    font-size: 11px;
+    padding: 5px 10px;
+    font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 4px;
-    border-radius: 6px;
+    letter-spacing: 0.8px;
+    margin-top: 6px;
+    border-radius: 4px;
   }
   .team-name {
-    padding: 6px 8px;
+    padding: 2px 4px;
     background: var(--bg-2);
     border-radius: 4px;
     color: var(--text-2);
     font-weight: 600;
     display: flex;
     align-items: center;
-    font-size: 11px;
+    justify-content: center;
+    font-size: 10px;
+    grid-row: span 2; /* equipo completo: 2 filas de 10 */
   }
+  /* Intro tiene 9 stickers — cabe en una sola fila de 10 */
+  .team-name.single-row { grid-row: span 1; }
   .cell {
     aspect-ratio: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 9px;
+    font-size: 11px;
     border-radius: 50%;
     position: relative;
+    color: #fff;
   }
   /* Pegadas (tengo) NO se dibujan — la celda ocupa su slot para mantener la
      alineación 1–20 por columna, pero el círculo es invisible. Esto comprime
@@ -186,7 +188,7 @@
     gap: 1px;
   }
   .cell.rep .x {
-    font-size: 6px;
+    font-size: 7px;
     font-weight: 700;
     line-height: 1;
     color: #fff;
@@ -455,45 +457,41 @@
       '<button class="legend-item" data-toggle="rep"><span class="legend-cell rep"></span> Tengo repetida (×N copias)</button>' +
     '</div>';
 
-    // Grid de bolitas (las pegadas son invisibles por CSS — preservan la
-    // alineación de columnas 1–20 pero no se dibujan, comprimiendo el ruido
-    // visual sin romper el layout).
+    // Grid de bolitas (mismo tamaño que la vista global del app):
+    // 10 cells por fila, cada equipo ocupa 2 filas con su team-name spanning.
+    // Las pegadas son invisibles por CSS — preservan el slot del grid pero
+    // no se dibujan, comprimiendo el ruido visual sin romper el layout.
     html += '<div class="table-grid">';
-    html += '<div></div>';
-    for (let i = 1; i <= 20; i++) html += '<div class="col-header">' + i + '</div>';
 
-    function teamRow(code, items) {
+    // Renderiza una celda según el status. `idsLong=true` reduce font-size
+    // para IDs largos (FWC1, FWC19, etc.) que no caben con el font default.
+    function renderCell(it, idsLong) {
+      const r = statusOf(state, it.id);
+      const styleAttr = idsLong ? ' style="font-size:8px;"' : '';
+      if (r.st === 'rep') {
+        const xN = r.copies - 1;
+        return '<div class="cell rep"' + styleAttr + '>' + it.displayNum + '<span class="x">' + xN + '</span></div>';
+      } else if (r.st === 'falta') {
+        return '<div class="cell falta"' + styleAttr + '>' + it.displayNum + '</div>';
+      } else {
+        return '<div class="cell tengo"' + styleAttr + '>' + it.displayNum + '</div>';
+      }
+    }
+    function teamRow(code, items, idsLong) {
       let row = '<div class="team-name">' + code + '</div>';
-      items.forEach(it => {
-        const r = statusOf(state, it.id);
-        if (r.st === 'rep') {
-          const xN = r.copies - 1;
-          row += '<div class="cell rep">' + it.displayNum + '<span class="x">' + xN + '</span></div>';
-        } else if (r.st === 'falta') {
-          row += '<div class="cell falta">' + it.displayNum + '</div>';
-        } else {
-          row += '<div class="cell tengo">' + it.displayNum + '</div>';
-        }
-      });
+      items.forEach(it => { row += renderCell(it, idsLong); });
       return row;
     }
 
+    // Intro: 9 stickers → cabe en una sola fila de 10. Usa single-row para
+    // que el team-name no spanee 2 filas (queda mejor con el padding final).
     html += '<div class="group-row">Intro</div>';
-    let introHtml = '<div class="team-name">INTRO</div>';
-    introStickers.forEach(s => {
-      const r = statusOf(state, s.id);
-      if (r.st === 'rep') {
-        const xN = r.copies - 1;
-        introHtml += '<div class="cell rep" style="font-size:7px;">' + s.displayNum + '<span class="x">' + xN + '</span></div>';
-      } else if (r.st === 'falta') {
-        introHtml += '<div class="cell falta" style="font-size:7px;">' + s.displayNum + '</div>';
-      } else {
-        introHtml += '<div class="cell tengo" style="font-size:7px;">' + s.displayNum + '</div>';
-      }
-    });
-    for (let i = introStickers.length; i < 20; i++) introHtml += '<div></div>';
+    let introHtml = '<div class="team-name single-row">INTRO</div>';
+    introStickers.forEach(s => { introHtml += renderCell(s, true); });
+    for (let i = introStickers.length; i < 10; i++) introHtml += '<div></div>';
     html += introHtml;
 
+    // Equipos: 20 stickers en 2 filas de 10. team-name spans rows 1-2.
     const grupos = ['A','B','C','D','E','F','G','H','I','J','K','L'];
     grupos.forEach(grupo => {
       const teamsInGrupo = equipos.filter(eq => eq.grupo === grupo);
@@ -502,23 +500,14 @@
       teamsInGrupo.forEach(eq => {
         const items = [];
         for (let i = 1; i <= 20; i++) items.push({ id: eq.code + '-' + i, displayNum: String(i) });
-        html += teamRow(eq.code, items);
+        html += teamRow(eq.code, items, false);
       });
     });
 
+    // History: 11 stickers → 2 filas (10 + 1) con team-name span 2.
     html += '<div class="group-row">History</div>';
     let histHtml = '<div class="team-name">HIST</div>';
-    historyStickers.forEach(s => {
-      const r = statusOf(state, s.id);
-      if (r.st === 'rep') {
-        const xN = r.copies - 1;
-        histHtml += '<div class="cell rep" style="font-size:7px;">' + s.displayNum + '<span class="x">' + xN + '</span></div>';
-      } else if (r.st === 'falta') {
-        histHtml += '<div class="cell falta" style="font-size:7px;">' + s.displayNum + '</div>';
-      } else {
-        histHtml += '<div class="cell tengo" style="font-size:7px;">' + s.displayNum + '</div>';
-      }
-    });
+    historyStickers.forEach(s => { histHtml += renderCell(s, true); });
     for (let i = historyStickers.length; i < 20; i++) histHtml += '<div></div>';
     html += histHtml;
 
