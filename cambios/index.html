@@ -104,20 +104,8 @@
     letter-spacing: 0.5px;
     font-weight: 600;
   }
-  /* Sub-line con el monto en $ — valor total de la categoría. Hereda color
-     del pill activo, dim cuando off. */
-  .stat-pill .money {
-    display: block;
-    font-size: 11px;
-    font-weight: 700;
-    margin-top: 4px;
-    font-family: "JetBrains Mono", Menlo, monospace;
-    line-height: 1;
-    letter-spacing: 0.2px;
-  }
-  .stat-pill.rep:not(.off) .money { color: var(--amber); opacity: 0.9; }
-  .stat-pill.falta:not(.off) .money { color: var(--danger); opacity: 0.9; }
-  .stat-pill.off .money { color: var(--text-3); opacity: 0.6; }
+  /* .money sub-line removida — pills volvieron a mostrar solo count + label.
+     Los precios viven solo en el panel "Precios de referencia" colapsable. */
   /* Stat-pills activos: LED glow encendido por categoría */
   .stat-pill.rep:not(.off) {
     border-color: rgba(239,159,39,0.55);
@@ -609,19 +597,15 @@
     historyStickers.forEach(s => allItems.push(s));
 
     let nTengo = 0, nRep = 0, nFalta = 0, nRepExtras = 0;
-    let valorRepetidas = 0, costoFaltantes = 0;
     allItems.forEach(it => {
       const r = statusOf(state, it.id);
-      const price = priceForId(it.id, precios, especiales);
       if (r.st === 'falta') {
         nFalta++;
-        costoFaltantes += price;
       } else {
         nTengo++;
         if (r.st === 'rep') {
           nRep++;
           nRepExtras += (r.copies - 1); // copias extra (no incluye la 1ª que va al álbum)
-          valorRepetidas += (r.copies - 1) * price;
         }
       }
     });
@@ -637,15 +621,12 @@
     let html = '<div class="stats-toggles">' +
       '<button type="button" class="stat-pill rep" data-toggle="rep">' +
         '<b>' + nRepExtras + '</b><small>Repetidas</small>' +
-        '<span class="money">$' + fmtMoney(valorRepetidas) + '</span>' +
       '</button>' +
       '<button type="button" class="stat-pill falta" data-toggle="falta">' +
         '<b>' + nFalta + '</b><small>Me faltan</small>' +
-        '<span class="money">$' + fmtMoney(costoFaltantes) + '</span>' +
       '</button>' +
       '<button type="button" class="stat-pill pegada" data-toggle="pegadas">' +
         '<b>' + nTengo + '</b><small>Pegadas</small>' +
-        '<span class="money">' + (nTengo > 0 ? nTengo + '/' + total : '—') + '</span>' +
       '</button>' +
     '</div>';
 
