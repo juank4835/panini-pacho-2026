@@ -104,6 +104,20 @@
     letter-spacing: 0.5px;
     font-weight: 600;
   }
+  /* Sub-line con el monto en $ — valor total de la categoría. Hereda color
+     del pill activo, dim cuando off. */
+  .stat-pill .money {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 4px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    line-height: 1;
+    letter-spacing: 0.2px;
+  }
+  .stat-pill.rep:not(.off) .money { color: var(--amber); opacity: 0.9; }
+  .stat-pill.falta:not(.off) .money { color: var(--danger); opacity: 0.9; }
+  .stat-pill.off .money { color: var(--text-3); opacity: 0.6; }
   /* Stat-pills activos: LED glow encendido por categoría */
   .stat-pill.rep:not(.off) {
     border-color: rgba(239,159,39,0.55);
@@ -135,6 +149,55 @@
     border-color: var(--border);
   }
   .stat-pill.off b { color: var(--text-3); text-shadow: none; }
+
+  /* Panel "Precios de referencia" — tabla compacta de precios por categoría
+     debajo de las stat-pills. Sirve para que la gente en el grupo sepa
+     cuánto vale cada tipo de lámina al negociar. */
+  .precios-panel {
+    background: var(--bg-2);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin: 0 auto 12px;
+    max-width: 520px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  .precios-panel h3 {
+    margin: 0 0 6px;
+    font-size: 10px;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 700;
+    font-family: inherit;
+  }
+  .precios-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    font-size: 12px;
+    border-bottom: 0.5px solid var(--bg-3);
+  }
+  .precios-row:last-child { border-bottom: 0; }
+  .precios-row .cat {
+    color: var(--text-2);
+    font-weight: 500;
+    text-transform: capitalize;
+    font-family: inherit;
+  }
+  .precios-row .price {
+    color: var(--amber);
+    font-weight: 700;
+    text-shadow: 0 0 4px rgba(239,159,39,0.4);
+  }
+  .precios-empty {
+    color: var(--text-3);
+    font-size: 11px;
+    text-align: center;
+    padding: 6px 0;
+    font-style: italic;
+  }
 
   /* Botón primario "Copiar faltantes + repetidas" — estilo LED outline +
      glow, mismo formato cyberpunk que los botones del app principal
@@ -486,7 +549,37 @@
     return { st: 'tengo', copies: 1 };
   }
 
-  function render(state, equipos) {
+  // Categoría por id — mismo criterio que _finCategoryOf en el app:
+  //   '00' → cero, 'FWC*' → fwc, 'TEAM-1' → escudo, 'TEAM-13' → equipo,
+  //   resto (TEAM-N con N != 1 ni 13) → jugador.
+  function categoryOf(id) {
+    if (id === '00') return 'cero';
+    if (id.indexOf('FWC') === 0) return 'fwc';
+    const parts = id.split('-');
+    if (parts.length === 2) {
+      const num = parseInt(parts[1], 10);
+      if (num === 1) return 'escudo';
+      if (num === 13) return 'equipo';
+      return 'jugador';
+    }
+    return 'jugador';
+  }
+  // Precio aplicable a una lámina — primero especiales (override por id),
+  // si no, precio por categoría, si no, 0.
+  function priceForId(id, precios, especiales) {
+    if (especiales && typeof especiales[id] === 'number' && especiales[id] >= 0) {
+      return especiales[id];
+    }
+    const cat = categoryOf(id);
+    return (precios && typeof precios[cat] === 'number' && precios[cat] >= 0) ? precios[cat] : 0;
+  }
+  // Formatea miles con separador colombiano. Ej: 1500000 → "1.500.000"
+  function fmtMoney(n) {
+    n = Math.round(n || 0);
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  function render(state, equipos, precios, especiales) {
     // Stats globales
     const allItems = [];
     introStickers.forEach(s => allItems.push(s));
@@ -496,14 +589,19 @@
     historyStickers.forEach(s => allItems.push(s));
 
     let nTengo = 0, nRep = 0, nFalta = 0, nRepExtras = 0;
+    let valorRepetidas = 0, costoFaltantes = 0;
     allItems.forEach(it => {
       const r = statusOf(state, it.id);
-      if (r.st === 'falta') nFalta++;
-      else {
+      const price = priceForId(it.id, precios, especiales);
+      if (r.st === 'falta') {
+        nFalta++;
+        costoFaltantes += price;
+      } else {
         nTengo++;
         if (r.st === 'rep') {
           nRep++;
           nRepExtras += (r.copies - 1); // copias extra (no incluye la 1ª que va al álbum)
+          valorRepetidas += (r.copies - 1) * price;
         }
       }
     });
@@ -514,10 +612,41 @@
     // Y al taparlas filtran su categoría en el grid. nRepExtras = total de
     // copias extras (mismo criterio que el app); nTengo = láminas pegadas
     // (incluye las que tienen repetidas — todas tienen al menos 1 pegada).
+    // Cada pill muestra el monto en $ debajo del count: para repetidas el
+    // valor potencial de venta, para faltantes el costo de completarlas.
     let html = '<div class="stats-toggles">' +
-      '<button type="button" class="stat-pill rep" data-toggle="rep"><b>' + nRepExtras + '</b><small>Repetidas</small></button>' +
-      '<button type="button" class="stat-pill falta" data-toggle="falta"><b>' + nFalta + '</b><small>Me faltan</small></button>' +
-      '<button type="button" class="stat-pill pegada" data-toggle="pegadas"><b>' + nTengo + '</b><small>Pegadas</small></button>' +
+      '<button type="button" class="stat-pill rep" data-toggle="rep">' +
+        '<b>' + nRepExtras + '</b><small>Repetidas</small>' +
+        '<span class="money">$' + fmtMoney(valorRepetidas) + '</span>' +
+      '</button>' +
+      '<button type="button" class="stat-pill falta" data-toggle="falta">' +
+        '<b>' + nFalta + '</b><small>Me faltan</small>' +
+        '<span class="money">$' + fmtMoney(costoFaltantes) + '</span>' +
+      '</button>' +
+      '<button type="button" class="stat-pill pegada" data-toggle="pegadas">' +
+        '<b>' + nTengo + '</b><small>Pegadas</small>' +
+        '<span class="money">' + (nTengo > 0 ? nTengo + '/' + total : '—') + '</span>' +
+      '</button>' +
+    '</div>';
+
+    // Panel "Precios de referencia" — tabla compacta de precios por categoría.
+    // Útil cuando se comparte el link en grupos donde la gente compra/vende:
+    // todos saben el valor base de cada tipo de lámina al negociar.
+    const catLabels = {
+      jugador: 'Jugador', escudo: 'Escudo', equipo: 'Equipo',
+      fwc: 'FWC', estrella: 'Estrella', cero: 'Lámina 00'
+    };
+    const catOrder = ['jugador', 'escudo', 'equipo', 'fwc', 'estrella', 'cero'];
+    const preciosRows = catOrder
+      .filter(cat => precios && typeof precios[cat] === 'number' && precios[cat] > 0)
+      .map(cat => '<div class="precios-row">' +
+        '<span class="cat">' + (catLabels[cat] || cat) + '</span>' +
+        '<span class="price">$' + fmtMoney(precios[cat]) + '</span>' +
+      '</div>')
+      .join('');
+    html += '<div class="precios-panel">' +
+      '<h3>Precios de referencia</h3>' +
+      (preciosRows || '<div class="precios-empty">Sin precios cargados todavía.</div>') +
     '</div>';
 
     html += '<button class="btn-share-main" id="btn-share">Copiar faltantes + repetidas</button>' +
@@ -700,7 +829,7 @@
       if (!data || !data.ok) throw new Error('Respuesta inválida');
       let equipos = equiposDefault;
       if (data.orden && Array.isArray(data.orden) && data.orden.length === 48) equipos = data.orden;
-      render(data.state || {}, equipos);
+      render(data.state || {}, equipos, data.precios || {}, data.especiales || {});
     } catch (e) {
       document.getElementById('content').innerHTML =
         '<div class="errstate">⚠ ' + (e.message || 'Error al cargar') +
