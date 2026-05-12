@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Mockup A · Stats = Toggles</title>
+<style>
+  :root {
+    --bg: #000000;
+    --bg-2: #1a1a1a;
+    --bg-3: #2a2a2a;
+    --border: #3a3a37;
+    --text: #f0eee6;
+    --text-2: #b8b6ae;
+    --text-3: #888780;
+    --green: #00D685;
+    --amber: #EF9F27;
+    --amber-text: #412402;
+    --danger: #E24B4A;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    font-size: 13px;
+    padding-top: env(safe-area-inset-top);
+  }
+  .page { max-width: 900px; margin: 0 auto; padding: 16px; }
+
+  .mockup-banner {
+    background: rgba(239,159,39,0.12);
+    border: 0.5px solid var(--amber);
+    color: var(--amber);
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .hero { text-align: center; margin-bottom: 14px; }
+  .hero h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  .hero .meta {
+    color: var(--text-3); font-size: 12px;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .hero .refresh-mini {
+    background: transparent;
+    border: 0.5px solid var(--border);
+    color: var(--text-3);
+    font-size: 13px;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0;
+    font-family: inherit;
+    transition: color 0.15s, border-color 0.15s, box-shadow 0.15s;
+  }
+  .hero .refresh-mini:hover {
+    color: var(--amber);
+    border-color: rgba(239,159,39,0.6);
+    box-shadow: 0 0 8px rgba(239,159,39,0.25);
+  }
+
+  /* === Stats + Toggles merged === */
+  .stats-toggles {
+    display: flex; gap: 8px;
+    max-width: 520px; margin: 0 auto 12px;
+  }
+  .pill {
+    flex: 1;
+    background: var(--bg-2);
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: opacity 0.2s, filter 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+    color: var(--text);
+  }
+  .pill:active { transform: scale(0.97); }
+  .pill b {
+    display: block;
+    font-size: 22px;
+    font-weight: 700;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    margin-bottom: 2px;
+    line-height: 1;
+  }
+  .pill small {
+    color: var(--text-3);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  /* Active states con glow LED */
+  .pill.rep {
+    border-color: rgba(239,159,39,0.55);
+    box-shadow: 0 0 0 1px rgba(239,159,39,0.15), 0 0 14px rgba(239,159,39,0.2);
+  }
+  .pill.rep b {
+    color: var(--amber);
+    text-shadow: 0 0 6px rgba(239,159,39,0.7), 0 0 14px rgba(239,159,39,0.4), 0 0 22px rgba(239,159,39,0.2);
+  }
+  .pill.falta {
+    border-color: rgba(226,75,74,0.55);
+    box-shadow: 0 0 0 1px rgba(226,75,74,0.15), 0 0 14px rgba(226,75,74,0.2);
+  }
+  .pill.falta b {
+    color: var(--danger);
+    text-shadow: 0 0 6px rgba(226,75,74,0.7), 0 0 14px rgba(226,75,74,0.4), 0 0 22px rgba(226,75,74,0.2);
+  }
+  .pill.pegada {
+    border-color: rgba(0,214,133,0.55);
+    box-shadow: 0 0 0 1px rgba(0,214,133,0.15), 0 0 14px rgba(0,214,133,0.2);
+  }
+  .pill.pegada b {
+    color: var(--green);
+    text-shadow: 0 0 6px rgba(0,214,133,0.7), 0 0 14px rgba(0,214,133,0.4), 0 0 22px rgba(0,214,133,0.2);
+  }
+  /* OFF state — dim, sin glow */
+  .pill.off {
+    border-color: var(--border);
+    box-shadow: none;
+    opacity: 0.4;
+  }
+  .pill.off b { color: var(--text-3); text-shadow: none; }
+  .pill .hint {
+    color: var(--text-3);
+    font-size: 8px;
+    margin-top: 4px;
+    opacity: 0.7;
+    letter-spacing: 0.3px;
+  }
+
+  /* Primary action LED */
+  .btn-share-main {
+    display: block;
+    width: 100%; max-width: 520px;
+    margin: 0 auto 12px;
+    background: var(--bg-2);
+    color: var(--amber);
+    border: 0.5px solid var(--amber);
+    padding: 12px 22px;
+    border-radius: 100px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    text-shadow: 0 0 6px rgba(239,159,39,0.5), 0 0 12px rgba(239,159,39,0.25);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(239,159,39,0.35);
+    transition: transform 0.1s, filter 0.15s;
+    -webkit-appearance: none;
+  }
+  .btn-share-main:hover { filter: brightness(1.08); }
+  .btn-share-main:active { transform: scale(0.98); }
+
+  .share-hint {
+    text-align: center;
+    color: var(--text-3);
+    font-size: 10.5px;
+    max-width: 520px; margin: 0 auto 16px;
+  }
+
+  /* Grid */
+  .table-grid {
+    display: grid;
+    grid-template-columns: 44px repeat(10, 1fr);
+    gap: 3px;
+    max-width: 520px; margin: 0 auto;
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  .group-row {
+    grid-column: 1 / -1;
+    background: var(--bg-2);
+    color: var(--amber);
+    padding: 5px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-top: 6px;
+    border-radius: 4px;
+  }
+  .team-name {
+    padding: 2px 4px;
+    background: var(--bg-2);
+    border-radius: 4px;
+    color: var(--text-2);
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    grid-row: span 2;
+  }
+  .team-name.single-row { grid-row: span 1; }
+  .cell {
+    aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 11px;
+    border-radius: 50%;
+    color: #fff;
+  }
+  .cell.tengo { background: var(--bg-3); color: var(--text-3); opacity: 0.55; }
+  .cell.falta { background: var(--danger); }
+  .cell.rep { background: var(--amber); flex-direction: column; line-height: 1; gap: 1px; }
+  .cell.rep .x { font-size: 7px; opacity: 0.85; }
+  .cell.rep .x::before { content: '×'; opacity: 0.7; }
+
+  body.hide-falta .cell.falta { visibility: hidden; }
+  body.hide-rep .cell.rep { visibility: hidden; }
+  body.hide-pegadas .cell.tengo { visibility: hidden; }
+
+  footer {
+    text-align: center;
+    color: var(--text-3);
+    font-size: 11px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 0.5px solid var(--border);
+  }
+  footer a { color: var(--amber); }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="mockup-banner">Mockup A · Stats = Toggles</div>
+
+  <div class="hero">
+    <h1>Álbum Panini Mundial 2026 · Cambios</h1>
+    <div class="meta">
+      <span>96.6% · 947/980 · 9:30 a.m.</span>
+      <button class="refresh-mini" title="Actualizar datos">↻</button>
+    </div>
+  </div>
+
+  <div class="stats-toggles">
+    <button class="pill rep" data-toggle="rep">
+      <b>550</b><small>Repetidas</small>
+      <div class="hint">tap para filtrar</div>
+    </button>
+    <button class="pill falta" data-toggle="falta">
+      <b>33</b><small>Me faltan</small>
+      <div class="hint">tap para filtrar</div>
+    </button>
+    <button class="pill pegada off" data-toggle="pegadas">
+      <b>947</b><small>Pegadas</small>
+      <div class="hint">tap para mostrar</div>
+    </button>
+  </div>
+
+  <button class="btn-share-main">Copiar faltantes + repetidas</button>
+  <div class="share-hint">El mensaje queda listo para pegar en WhatsApp / Telegram.</div>
+
+  <div class="table-grid">
+    <div class="group-row">Intro</div>
+    <div class="team-name single-row">INTRO</div>
+    <div class="cell rep" style="font-size:8px;">00<span class="x">2</span></div>
+    <div class="cell rep" style="font-size:8px;">FWC1<span class="x">3</span></div>
+    <div class="cell rep" style="font-size:8px;">FWC2<span class="x">1</span></div>
+    <div class="cell tengo" style="font-size:8px;">FWC3</div>
+    <div class="cell rep" style="font-size:8px;">FWC4<span class="x">1</span></div>
+    <div class="cell rep" style="font-size:8px;">FWC5<span class="x">1</span></div>
+    <div class="cell tengo" style="font-size:8px;">FWC6</div>
+    <div class="cell tengo" style="font-size:8px;">FWC7</div>
+    <div class="cell tengo" style="font-size:8px;">FWC8</div>
+    <div></div>
+
+    <div class="group-row">Grupo A</div>
+    <div class="team-name">MEX</div>
+    <div class="cell tengo">1</div><div class="cell tengo">2</div><div class="cell tengo">3</div><div class="cell tengo">4</div><div class="cell tengo">5</div><div class="cell tengo">6</div><div class="cell tengo">7</div><div class="cell rep">8<span class="x">1</span></div><div class="cell rep">9<span class="x">1</span></div><div class="cell tengo">10</div>
+    <div class="cell tengo">11</div><div class="cell tengo">12</div><div class="cell tengo">13</div><div class="cell tengo">14</div><div class="cell tengo">15</div><div class="cell falta">16</div><div class="cell tengo">17</div><div class="cell tengo">18</div><div class="cell falta">19</div><div class="cell rep">20<span class="x">1</span></div>
+
+    <div class="team-name">RSA</div>
+    <div class="cell tengo">1</div><div class="cell rep">2<span class="x">1</span></div><div class="cell tengo">3</div><div class="cell rep">4<span class="x">1</span></div><div class="cell rep">5<span class="x">2</span></div><div class="cell rep">6<span class="x">1</span></div><div class="cell tengo">7</div><div class="cell rep">8<span class="x">1</span></div><div class="cell rep">9<span class="x">5</span></div><div class="cell tengo">10</div>
+    <div class="cell rep">11<span class="x">1</span></div><div class="cell rep">12<span class="x">2</span></div><div class="cell tengo">13</div><div class="cell rep">14<span class="x">1</span></div><div class="cell tengo">15</div><div class="cell tengo">16</div><div class="cell tengo">17</div><div class="cell rep">18<span class="x">1</span></div><div class="cell rep">19<span class="x">3</span></div><div class="cell rep">20<span class="x">2</span></div>
+
+    <div class="team-name">KOR</div>
+    <div class="cell tengo">1</div><div class="cell rep">2<span class="x">1</span></div><div class="cell tengo">3</div><div class="cell tengo">4</div><div class="cell tengo">5</div><div class="cell rep">6<span class="x">2</span></div><div class="cell tengo">7</div><div class="cell tengo">8</div><div class="cell tengo">9</div><div class="cell tengo">10</div>
+    <div class="cell tengo">11</div><div class="cell rep">12<span class="x">1</span></div><div class="cell rep">13<span class="x">1</span></div><div class="cell tengo">14</div><div class="cell rep">15<span class="x">2</span></div><div class="cell rep">16<span class="x">3</span></div><div class="cell falta">17</div><div class="cell falta">18</div><div class="cell rep">19<span class="x">1</span></div><div class="cell tengo">20</div>
+
+    <div class="team-name">CZE</div>
+    <div class="cell tengo">1</div><div class="cell rep">2<span class="x">2</span></div><div class="cell tengo">3</div><div class="cell tengo">4</div><div class="cell tengo">5</div><div class="cell rep">6<span class="x">2</span></div><div class="cell rep">7<span class="x">1</span></div><div class="cell rep">8<span class="x">2</span></div><div class="cell tengo">9</div><div class="cell tengo">10</div>
+    <div class="cell tengo">11</div><div class="cell tengo">12</div><div class="cell tengo">13</div><div class="cell tengo">14</div><div class="cell tengo">15</div><div class="cell rep">16<span class="x">1</span></div><div class="cell rep">17<span class="x">1</span></div><div class="cell tengo">18</div><div class="cell tengo">19</div><div class="cell tengo">20</div>
+  </div>
+
+  <footer>
+    Hecho por Juan Camilo · <a href="cambios/">Volver a la versión actual</a>
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.pill[data-toggle]').forEach(btn => {
+    btn.onclick = () => {
+      const what = btn.dataset.toggle;
+      btn.classList.toggle('off');
+      if (what === 'pegadas') {
+        document.body.classList.toggle('hide-pegadas');
+      } else {
+        document.body.classList.toggle('hide-' + what);
+      }
+    };
+  });
+  // Estado inicial: pegadas OFF
+  document.body.classList.add('hide-pegadas');
+</script>
+</body>
+</html>

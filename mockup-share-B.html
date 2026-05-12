@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Mockup B · Filtros sticky</title>
+<style>
+  :root {
+    --bg: #000000;
+    --bg-2: #1a1a1a;
+    --bg-3: #2a2a2a;
+    --border: #3a3a37;
+    --text: #f0eee6;
+    --text-2: #b8b6ae;
+    --text-3: #888780;
+    --green: #00D685;
+    --amber: #EF9F27;
+    --amber-text: #412402;
+    --danger: #E24B4A;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+    font-size: 13px;
+    padding-top: env(safe-area-inset-top);
+  }
+  .page { max-width: 900px; margin: 0 auto; padding: 16px; }
+
+  .mockup-banner {
+    background: rgba(239,159,39,0.12);
+    border: 0.5px solid var(--amber);
+    color: var(--amber);
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+
+  .hero { text-align: center; margin-bottom: 14px; }
+  .hero h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  .hero p { margin: 0; color: var(--text-3); font-size: 12px; }
+
+  .stats-mini {
+    display: flex; gap: 8px; margin: 0 auto 12px;
+    max-width: 520px;
+  }
+  .stat-pill {
+    flex: 1; background: var(--bg-2); border: 1px solid transparent;
+    border-radius: 8px; padding: 10px; text-align: center;
+  }
+  .stat-pill b {
+    display: block; font-size: 18px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  .stat-pill small {
+    color: var(--text-3); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .stat-pill.rep {
+    border-color: rgba(239,159,39,0.55);
+    box-shadow: 0 0 0 1px rgba(239,159,39,0.15), 0 0 14px rgba(239,159,39,0.2);
+  }
+  .stat-pill.rep b {
+    color: var(--amber);
+    text-shadow: 0 0 6px rgba(239,159,39,0.7), 0 0 14px rgba(239,159,39,0.4), 0 0 22px rgba(239,159,39,0.2);
+  }
+  .stat-pill.falta {
+    border-color: rgba(226,75,74,0.55);
+    box-shadow: 0 0 0 1px rgba(226,75,74,0.15), 0 0 14px rgba(226,75,74,0.2);
+  }
+  .stat-pill.falta b {
+    color: var(--danger);
+    text-shadow: 0 0 6px rgba(226,75,74,0.7), 0 0 14px rgba(226,75,74,0.4), 0 0 22px rgba(226,75,74,0.2);
+  }
+
+  .btn-share-main {
+    display: block; width: 100%; max-width: 520px;
+    margin: 0 auto 8px;
+    background: var(--bg-2);
+    color: var(--amber);
+    border: 0.5px solid var(--amber);
+    padding: 12px 22px;
+    border-radius: 100px;
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    letter-spacing: 0.2px; cursor: pointer;
+    text-shadow: 0 0 6px rgba(239,159,39,0.5), 0 0 12px rgba(239,159,39,0.25);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(239,159,39,0.35);
+  }
+  .refresh {
+    width: 100%; max-width: 520px; margin: 6px auto 0;
+    background: var(--bg-2);
+    color: var(--text-2);
+    border: 0.5px solid var(--border);
+    padding: 11px 12px;
+    border-radius: 100px;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    gap: 8px; letter-spacing: 0.2px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  }
+  .share-hint {
+    text-align: center; color: var(--text-3); font-size: 11px;
+    margin: 0 auto 14px; max-width: 520px;
+  }
+
+  /* === STICKY LEGEND === */
+  .legend-wrap {
+    position: sticky;
+    top: env(safe-area-inset-top, 0);
+    z-index: 50;
+    background: var(--bg);
+    padding: 10px 0;
+    margin: 0 auto 6px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 0.5px solid var(--border);
+  }
+  .legend {
+    display: flex; gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .legend-item {
+    background: var(--bg-2);
+    border: 0.5px solid var(--border);
+    color: var(--text);
+    font-family: inherit; font-size: 13px; font-weight: 700;
+    padding: 10px 18px; border-radius: 100px;
+    cursor: pointer; letter-spacing: 0.2px;
+    display: inline-flex; align-items: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+    transition: opacity 0.2s, filter 0.15s, transform 0.1s;
+  }
+  .legend-item:active { transform: scale(0.97); }
+  .legend-item[data-toggle="falta"]:not(.off) {
+    color: var(--danger); border-color: var(--danger);
+    text-shadow: 0 0 6px rgba(226,75,74,0.5), 0 0 12px rgba(226,75,74,0.25);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(226,75,74,0.35);
+  }
+  .legend-item[data-toggle="rep"]:not(.off) {
+    color: var(--amber); border-color: var(--amber);
+    text-shadow: 0 0 6px rgba(239,159,39,0.5), 0 0 12px rgba(239,159,39,0.25);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(239,159,39,0.35);
+  }
+  .legend-item[data-toggle="pegadas"]:not(.off) {
+    color: var(--green); border-color: var(--green);
+    text-shadow: 0 0 6px rgba(0,214,133,0.55), 0 0 12px rgba(0,214,133,0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(0,214,133,0.35);
+  }
+  .legend-item.off {
+    color: var(--text-3); border-color: var(--border);
+    opacity: 0.55;
+  }
+
+  /* Grid */
+  .table-grid {
+    display: grid;
+    grid-template-columns: 44px repeat(10, 1fr);
+    gap: 3px;
+    max-width: 520px; margin: 0 auto;
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  .group-row {
+    grid-column: 1 / -1; background: var(--bg-2); color: var(--amber);
+    padding: 5px 10px; font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin-top: 6px; border-radius: 4px;
+  }
+  .team-name {
+    padding: 2px 4px; background: var(--bg-2); border-radius: 4px;
+    color: var(--text-2); font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; grid-row: span 2;
+  }
+  .team-name.single-row { grid-row: span 1; }
+  .cell {
+    aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 11px; border-radius: 50%; color: #fff;
+  }
+  .cell.tengo { background: var(--bg-3); color: var(--text-3); opacity: 0.55; }
+  .cell.falta { background: var(--danger); }
+  .cell.rep { background: var(--amber); flex-direction: column; line-height: 1; gap: 1px; }
+  .cell.rep .x { font-size: 7px; opacity: 0.85; }
+  .cell.rep .x::before { content: '×'; opacity: 0.7; }
+
+  body.hide-falta .cell.falta { visibility: hidden; }
+  body.hide-rep .cell.rep { visibility: hidden; }
+  body.show-pegadas .cell.tengo { background: var(--green); color: #fff; opacity: 1; }
+
+  footer {
+    text-align: center; color: var(--text-3); font-size: 11px;
+    margin-top: 24px; padding-top: 16px;
+    border-top: 0.5px solid var(--border);
+  }
+  footer a { color: var(--amber); }
+  .scroll-hint {
+    text-align: center; color: var(--amber); font-size: 10px;
+    margin: 12px auto; padding: 8px;
+    border: 0.5px dashed var(--amber);
+    border-radius: 8px; max-width: 520px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="mockup-banner">Mockup B · Legend sticky al scrollear</div>
+
+  <div class="hero">
+    <h1>Álbum Panini Mundial 2026 · Cambios</h1>
+    <p>96.6% completo · 947 / 980 · 9:30 a.m.</p>
+  </div>
+
+  <div class="stats-mini">
+    <div class="stat-pill rep"><b>550</b><small>Repetidas</small></div>
+    <div class="stat-pill falta"><b>33</b><small>Me faltan</small></div>
+  </div>
+
+  <button class="btn-share-main">Copiar faltantes + repetidas</button>
+  <button class="refresh">↻ Actualizar datos</button>
+  <div class="share-hint" style="margin-top:6px;">El mensaje queda listo para pegar en WhatsApp / Telegram.</div>
+
+  <div class="scroll-hint">↓ Hacé scroll para ver cómo el legend se queda pegado arriba ↓</div>
+
+  <div class="legend-wrap">
+    <div class="legend">
+      <button class="legend-item" data-toggle="falta">Me falta</button>
+      <button class="legend-item" data-toggle="rep">Repetidas</button>
+      <button class="legend-item off" data-toggle="pegadas">Pegadas</button>
+    </div>
+  </div>
+
+  <div class="table-grid">
+    <div class="group-row">Intro</div>
+    <div class="team-name single-row">INTRO</div>
+    <div class="cell rep" style="font-size:8px;">00<span class="x">2</span></div>
+    <div class="cell rep" style="font-size:8px;">FWC1<span class="x">3</span></div>
+    <div class="cell rep" style="font-size:8px;">FWC2<span class="x">1</span></div>
+    <div class="cell tengo" style="font-size:8px;">FWC3</div>
+    <div class="cell rep" style="font-size:8px;">FWC4<span class="x">1</span></div>
+    <div class="cell rep" style="font-size:8px;">FWC5<span class="x">1</span></div>
+    <div class="cell tengo" style="font-size:8px;">FWC6</div>
+    <div class="cell tengo" style="font-size:8px;">FWC7</div>
+    <div class="cell tengo" style="font-size:8px;">FWC8</div>
+    <div></div>
+
+    <div class="group-row">Grupo A</div>
+    <div class="team-name">MEX</div>
+    <div class="cell tengo">1</div><div class="cell tengo">2</div><div class="cell tengo">3</div><div class="cell tengo">4</div><div class="cell tengo">5</div><div class="cell tengo">6</div><div class="cell tengo">7</div><div class="cell rep">8<span class="x">1</span></div><div class="cell rep">9<span class="x">1</span></div><div class="cell tengo">10</div>
+    <div class="cell tengo">11</div><div class="cell tengo">12</div><div class="cell tengo">13</div><div class="cell tengo">14</div><div class="cell tengo">15</div><div class="cell falta">16</div><div class="cell tengo">17</div><div class="cell tengo">18</div><div class="cell falta">19</div><div class="cell rep">20<span class="x">1</span></div>
+
+    <div class="team-name">RSA</div>
+    <div class="cell tengo">1</div><div class="cell rep">2<span class="x">1</span></div><div class="cell tengo">3</div><div class="cell rep">4<span class="x">1</span></div><div class="cell rep">5<span class="x">2</span></div><div class="cell rep">6<span class="x">1</span></div><div class="cell tengo">7</div><div class="cell rep">8<span class="x">1</span></div><div class="cell rep">9<span class="x">5</span></div><div class="cell tengo">10</div>
+    <div class="cell rep">11<span class="x">1</span></div><div class="cell rep">12<span class="x">2</span></div><div class="cell tengo">13</div><div class="cell rep">14<span class="x">1</span></div><div class="cell tengo">15</div><div class="cell tengo">16</div><div class="cell tengo">17</div><div class="cell rep">18<span class="x">1</span></div><div class="cell rep">19<span class="x">3</span></div><div class="cell rep">20<span class="x">2</span></div>
+
+    <div class="team-name">KOR</div>
+    <div class="cell tengo">1</div><div class="cell rep">2<span class="x">1</span></div><div class="cell tengo">3</div><div class="cell tengo">4</div><div class="cell tengo">5</div><div class="cell rep">6<span class="x">2</span></div><div class="cell tengo">7</div><div class="cell tengo">8</div><div class="cell tengo">9</div><div class="cell tengo">10</div>
+    <div class="cell tengo">11</div><div class="cell rep">12<span class="x">1</span></div><div class="cell rep">13<span class="x">1</span></div><div class="cell tengo">14</div><div class="cell rep">15<span class="x">2</span></div><div class="cell rep">16<span class="x">3</span></div><div class="cell falta">17</div><div class="cell falta">18</div><div class="cell rep">19<span class="x">1</span></div><div class="cell tengo">20</div>
+
+    <div class="team-name">CZE</div>
+    <div class="cell tengo">1</div><div class="cell rep">2<span class="x">2</span></div><div class="cell tengo">3</div><div class="cell tengo">4</div><div class="cell tengo">5</div><div class="cell rep">6<span class="x">2</span></div><div class="cell rep">7<span class="x">1</span></div><div class="cell rep">8<span class="x">2</span></div><div class="cell tengo">9</div><div class="cell tengo">10</div>
+    <div class="cell tengo">11</div><div class="cell tengo">12</div><div class="cell tengo">13</div><div class="cell tengo">14</div><div class="cell tengo">15</div><div class="cell rep">16<span class="x">1</span></div><div class="cell rep">17<span class="x">1</span></div><div class="cell tengo">18</div><div class="cell tengo">19</div><div class="cell tengo">20</div>
+
+    <div class="group-row">Grupo B</div>
+    <div class="team-name">CAN</div>
+    <div class="cell tengo">1</div><div class="cell tengo">2</div><div class="cell tengo">3</div><div class="cell falta">4</div><div class="cell falta">5</div><div class="cell tengo">6</div><div class="cell tengo">7</div><div class="cell tengo">8</div><div class="cell tengo">9</div><div class="cell tengo">10</div>
+    <div class="cell tengo">11</div><div class="cell tengo">12</div><div class="cell rep">13<span class="x">1</span></div><div class="cell tengo">14</div><div class="cell tengo">15</div><div class="cell tengo">16</div><div class="cell tengo">17</div><div class="cell rep">18<span class="x">2</span></div><div class="cell tengo">19</div><div class="cell tengo">20</div>
+  </div>
+
+  <footer>
+    Hecho por Juan Camilo · <a href="cambios/">Volver a la versión actual</a>
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.legend-item[data-toggle]').forEach(btn => {
+    btn.onclick = () => {
+      const what = btn.dataset.toggle;
+      btn.classList.toggle('off');
+      if (what === 'pegadas') document.body.classList.toggle('show-pegadas');
+      else document.body.classList.toggle('hide-' + what);
+    };
+  });
+</script>
+</body>
+</html>
