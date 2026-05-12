@@ -116,122 +116,12 @@
   .legend-cell.falta { background: var(--danger); }
   .legend-cell.rep   { background: var(--amber); }
 
-  /* Cuando un toggle está apagado, las celdas de ese tipo se "apagan"
-     (gris apagado) — siguen visibles pero pierden el color para que el ojo
-     pueda enfocarse en lo que sí está activo. */
-  body.hide-falta .cell.falta {
-    background: var(--bg-2);
-    color: var(--text-3);
-    opacity: 0.45;
-  }
-  body.hide-rep .cell.rep {
-    background: var(--bg-2);
-    color: var(--text-3);
-    opacity: 0.45;
-  }
-  body.hide-rep .cell.rep .x { display: none; }
-  /* En modo Lista los toggles ocultan las bolitas correspondientes
-     (mismo predicado que en Mapa: hide-falta esconde rojos, hide-rep ámbar). */
-  body.hide-falta .compact-row .cell.falta { display: none; }
-  body.hide-rep   .compact-row .cell.rep   { display: none; }
-
-  /* === Mode switch (Lista | Mapa) === */
-  .mode-switch {
-    display: flex;
-    background: var(--bg-2);
-    border: 0.5px solid var(--border);
-    border-radius: 100px;
-    padding: 3px;
-    margin-bottom: 12px;
-    width: 100%;
-  }
-  .mode-switch button {
-    flex: 1;
-    background: transparent;
-    border: 0;
-    color: var(--text-3);
-    font-size: 12px;
-    font-weight: 500;
-    padding: 8px 10px;
-    border-radius: 100px;
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 0.15s, color 0.15s;
-  }
-  .mode-switch button.active {
-    background: var(--bg-3);
-    color: var(--amber);
-    font-weight: 700;
-  }
-
-  /* === Modo Lista: bolitas comprimidas por equipo === */
-  /* Cada equipo es una row horizontal: nombre + contador + bolitas que
-     fluyen (solo faltantes y repetidas, las pegadas se cuentan pero no se
-     dibujan). Mantiene el look circular del modo Mapa pero sin grid fijo. */
-  .compact-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 4px;
-    border-bottom: 0.5px solid var(--bg-2);
-    flex-wrap: wrap;
-  }
-  .compact-row:last-child { border-bottom: 0; }
-  .compact-row.complete { opacity: 0.55; }
-  .compact-row .team-name {
-    background: transparent;
-    padding: 0;
-    color: var(--text-2);
-    font-family: "JetBrains Mono", Menlo, monospace;
-    font-weight: 700;
-    font-size: 12px;
-    letter-spacing: 0.3px;
-    min-width: 44px;
-    flex-shrink: 0;
-  }
-  .compact-row .team-count {
-    color: var(--text-3);
-    font-family: "JetBrains Mono", Menlo, monospace;
-    font-size: 10px;
-    min-width: 38px;
-    flex-shrink: 0;
-  }
-  .compact-row .team-count.full {
-    color: var(--green);
-    font-weight: 700;
-  }
-  /* Las bolitas del modo Lista usan el MISMO estilo .cell.falta/.cell.rep
-     que el modo Mapa — solo cambian el tamaño y el flujo (flex en vez de grid). */
-  .compact-row .cells-flow {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    flex: 1;
-    min-width: 0;
-  }
-  .compact-row .cell {
-    width: 26px;
-    height: 26px;
-    aspect-ratio: 1;
-    flex-shrink: 0;
-    font-size: 9px;
-  }
-  /* Bolitas con id largo (FWC9, etc.) — caja un pelín más ancha */
-  .compact-row .cell.wide {
-    width: 34px;
-    border-radius: 14px;
-    padding: 0 4px;
-    aspect-ratio: auto;
-  }
-  .group-banner {
-    color: var(--text-3);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 700;
-    margin: 14px 0 4px;
-    padding: 0 4px;
-  }
+  /* Toggles del legend: cuando "Me falta" o "Tengo repetida" están OFF,
+     las celdas de ese tipo se vuelven INVISIBLES (visibility:hidden) en lugar
+     de quedar dim. Mantiene la alineación 1–20 por columna pero compresso
+     visualmente — el ojo solo ve los bolitas activas. */
+  body.hide-falta .cell.falta { visibility: hidden; }
+  body.hide-rep   .cell.rep   { visibility: hidden; }
 
   /* Tabla checklist */
   .table-grid {
@@ -281,7 +171,10 @@
     border-radius: 50%;
     position: relative;
   }
-  .cell.tengo { background: var(--bg-2); color: var(--text-3); opacity: 0.45; }
+  /* Pegadas (tengo) NO se dibujan — la celda ocupa su slot para mantener la
+     alineación 1–20 por columna, pero el círculo es invisible. Esto comprime
+     visualmente el grid: solo ves las bolitas accionables (falta + rep). */
+  .cell.tengo { visibility: hidden; }
   .cell.falta { background: var(--danger); color: #fff; }
   .cell.rep {
     background: var(--amber);
@@ -443,11 +336,6 @@
   const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxO6ce9vpKOiFwRXCw9Th_R7O1PmBAKHJtCVZGKy3_IIAvaCQ_ZQgzMBSsiasd8g18/exec';
   const SHARE_URL = 'https://juank4835.github.io/panini-pacho-2026/cambios/';
 
-  // Modo de visualización del listado del álbum. 'lista' (default) = tarjetas
-  // compactas por equipo solo con lo accionable (faltantes + repetidas);
-  // 'mapa' = grid completa de 20 columnas (vista original).
-  let currentMode = 'lista';
-
   // === Catálogo ===
   const introStickers = [
     { id: '00', displayNum: '00' },
@@ -562,126 +450,15 @@
       '<button class="refresh" id="btn-refresh">🔄 Actualizar datos</button>' +
       '<div class="share-hint">El mensaje queda listo para pegar en WhatsApp / Telegram. Tocá Actualizar para traer los últimos datos del álbum.</div>';
 
-    // Mode switch: Lista (default, compacta) | Mapa (grid completa).
-    html += '<div class="mode-switch">' +
-      '<button type="button" data-mode="lista" class="' + (currentMode === 'lista' ? 'active' : '') + '">📋 Lista</button>' +
-      '<button type="button" data-mode="mapa" class="' + (currentMode === 'mapa' ? 'active' : '') + '">🗺 Mapa</button>' +
-    '</div>';
-
     html += '<div class="legend">' +
       '<button class="legend-item" data-toggle="falta"><span class="legend-cell falta"></span> Me falta</button>' +
       '<button class="legend-item" data-toggle="rep"><span class="legend-cell rep"></span> Tengo repetida (×N copias)</button>' +
     '</div>';
 
-    // Body por modo
-    if (currentMode === 'lista') {
-      html += renderListaBody(state, equipos);
-    } else {
-      html += renderMapaBody(state, equipos);
-    }
-
-    document.getElementById('content').innerHTML = html;
-    document.getElementById('subtitle').textContent =
-      pct.toFixed(1) + '% completo · ' + nTengo + ' / ' + total + ' · actualizado ' + new Date().toLocaleTimeString();
-
-    // Bind del botón compartir
-    document.getElementById('btn-share').onclick = (e) => {
-      copyToClipboard(buildShareMessage(state, equipos), e.currentTarget);
-    };
-    document.getElementById('btn-refresh').onclick = () => init();
-
-    // Mode switch handler — re-renderiza con el nuevo modo. Mantiene los
-    // toggles de hide-falta/hide-rep al cambiar de modo (siguen ocultando).
-    document.querySelectorAll('.mode-switch button[data-mode]').forEach(btn => {
-      btn.onclick = () => {
-        const next = btn.dataset.mode;
-        if (next === currentMode) return;
-        currentMode = next;
-        render(state, equipos);
-      };
-    });
-
-    // Toggles del legend (Me falta / Tengo repetida): en modo Mapa apagan
-    // el color de las celdas; en modo Lista ocultan las filas correspondientes.
-    document.querySelectorAll('.legend-item[data-toggle]').forEach(btn => {
-      // Restaurar estado visual del toggle si ya estaba apagado antes del re-render.
-      const what = btn.dataset.toggle;
-      if (document.body.classList.contains('hide-' + what)) btn.classList.add('off');
-      btn.onclick = () => {
-        const w = btn.dataset.toggle; // 'falta' | 'rep'
-        btn.classList.toggle('off');
-        document.body.classList.toggle('hide-' + w);
-      };
-    });
-  }
-
-  // === Modo Lista: bolitas comprimidas por equipo ===
-  // Cada equipo es una row horizontal con el mismo look circular del modo
-  // Mapa, pero las pegadas se cuentan (en `N/total`) en vez de dibujarse.
-  // Solo aparecen las bolitas rojas (faltantes) y ámbar (repetidas con ×N).
-  // Resultado: misma estética pero MUCHO menos altura — el ojo va directo
-  // a lo accionable.
-  function renderListaBody(state, equipos) {
-    let html = '';
-
-    // Helper: dibuja una row compacta para un grupo de stickers.
-    // `wide=true` para IDs largos tipo "FWC9" (intro/history) — bolita
-    // más ancha en vez de circular estricta.
-    function compactRow(code, items, totalLaminas, wide) {
-      let pegadas = 0;
-      let cellsHtml = '';
-      const wideAttr = wide ? ' wide' : '';
-      items.forEach(it => {
-        const r = statusOf(state, it.id);
-        if (r.st === 'falta') {
-          cellsHtml += '<div class="cell falta' + wideAttr + '">' + it.displayNum + '</div>';
-        } else if (r.st === 'rep') {
-          const xN = r.copies - 1;
-          // Si hay ≥1 extra mostramos ×N; si solo es exactamente 1 copia extra
-          // también mostramos ×1 (consistente con el modo Mapa).
-          cellsHtml += '<div class="cell rep' + wideAttr + '">' + it.displayNum +
-            '<span class="x">' + xN + '</span></div>';
-          pegadas++; // tener repetida implica al menos 1 copia pegable
-        } else {
-          pegadas++; // 'tengo' = pegada simple, no dibuja bolita
-        }
-      });
-      const isComplete = (pegadas === totalLaminas);
-      const countCls = isComplete ? ' full' : '';
-      return '<div class="compact-row' + (isComplete ? ' complete' : '') + '">' +
-        '<span class="team-name">' + code + '</span>' +
-        '<span class="team-count' + countCls + '">' + pegadas + '/' + totalLaminas + (isComplete ? ' ✓' : '') + '</span>' +
-        '<div class="cells-flow">' + cellsHtml + '</div>' +
-      '</div>';
-    }
-
-    // Intro
-    html += '<div class="group-banner">Intro · Logos y emblemas</div>';
-    html += compactRow('INTRO', introStickers, introStickers.length, true);
-
-    // Equipos por grupo
-    const grupos = ['A','B','C','D','E','F','G','H','I','J','K','L'];
-    grupos.forEach(grupo => {
-      const teamsInGrupo = equipos.filter(eq => eq.grupo === grupo);
-      if (!teamsInGrupo.length) return;
-      html += '<div class="group-banner">Grupo ' + grupo + '</div>';
-      teamsInGrupo.forEach(eq => {
-        const items = [];
-        for (let i = 1; i <= 20; i++) items.push({ id: eq.code + '-' + i, displayNum: String(i) });
-        html += compactRow(eq.code, items, 20, false);
-      });
-    });
-
-    // History
-    html += '<div class="group-banner">History · Mundiales pasados</div>';
-    html += compactRow('HIST', historyStickers, historyStickers.length, true);
-
-    return html;
-  }
-
-  // === Modo Mapa: grid completa de 20 columnas (la vista original) ===
-  function renderMapaBody(state, equipos) {
-    let html = '<div class="table-grid">';
+    // Grid de bolitas (las pegadas son invisibles por CSS — preservan la
+    // alineación de columnas 1–20 pero no se dibujan, comprimiendo el ruido
+    // visual sin romper el layout).
+    html += '<div class="table-grid">';
     html += '<div></div>';
     for (let i = 1; i <= 20; i++) html += '<div class="col-header">' + i + '</div>';
 
@@ -746,7 +523,28 @@
     html += histHtml;
 
     html += '</div>';
-    return html;
+
+    document.getElementById('content').innerHTML = html;
+    document.getElementById('subtitle').textContent =
+      pct.toFixed(1) + '% completo · ' + nTengo + ' / ' + total + ' · actualizado ' + new Date().toLocaleTimeString();
+
+    // Bind del botón compartir
+    document.getElementById('btn-share').onclick = (e) => {
+      copyToClipboard(buildShareMessage(state, equipos), e.currentTarget);
+    };
+    document.getElementById('btn-refresh').onclick = () => init();
+
+    // Toggles del legend (Me falta / Tengo repetida): visibility:hidden de
+    // las celdas correspondientes cuando OFF. Las pegadas (tengo) son
+    // invisibles por default, sin toggle.
+    document.querySelectorAll('.legend-item[data-toggle]').forEach(btn => {
+      const what = btn.dataset.toggle;
+      if (document.body.classList.contains('hide-' + what)) btn.classList.add('off');
+      btn.onclick = () => {
+        btn.classList.toggle('off');
+        document.body.classList.toggle('hide-' + what);
+      };
+    });
   }
 
   // === Mensaje de compartir (mismo formato que la app real) ===
