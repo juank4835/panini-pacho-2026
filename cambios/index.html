@@ -117,12 +117,22 @@
   .legend-cell.rep     { background: var(--amber); }
   .legend-cell.pegada  { background: var(--green); }
 
-  /* Toggles del legend: cuando "Me falta" o "Tengo repetida" están OFF,
-     las celdas de ese tipo se vuelven INVISIBLES (visibility:hidden) en lugar
-     de quedar dim. Mantiene la alineación 1–20 por columna pero compresso
-     visualmente — el ojo solo ve los bolitas activas. */
-  body.hide-falta .cell.falta { visibility: hidden; }
-  body.hide-rep   .cell.rep   { visibility: hidden; }
+  /* Estado "apagado" (off) de cualquier categoría → la bolita se ve como
+     SOMBRA: fondo gris oscuro, inset shadow tipo socket, número muy dim,
+     sin el ×N de las repetidas. Esto mantiene la grilla completa siempre
+     visible (preservas el contexto espacial) mientras el ojo va directo
+     a las bolitas activas. La regla compartida cubre: pegadas en su estado
+     default, faltantes cuando "Me falta" está off, repetidas cuando
+     "Repetidas" está off. */
+  .cell.tengo,
+  body.hide-falta .cell.falta,
+  body.hide-rep   .cell.rep {
+    background: var(--bg-2);
+    color: var(--text-3);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+    opacity: 0.55;
+  }
+  body.hide-rep .cell.rep .x { display: none; }
 
   /* Tabla checklist — replica el tamaño de la vista global del app: grid
      de 11 cols (nombre de equipo 44px + 10 cells de 1fr), cada equipo en
@@ -174,16 +184,14 @@
     position: relative;
     color: #fff;
   }
-  /* Pegadas (tengo) NO se dibujan por default — la celda ocupa su slot para
-     mantener la alineación pero el círculo es invisible. Esto comprime
-     visualmente el grid: solo ves las bolitas accionables (falta + rep).
-     El toggle "Pegadas" en el legend agrega body.show-pegadas → las prende
-     en verde (mismo color que la vista global del app). */
-  .cell.tengo { visibility: hidden; }
+  /* Pegadas: default = sombra (regla compartida arriba). Cuando el toggle
+     "Pegadas" está ON (body.show-pegadas), las prende en verde — mismo
+     color que la vista global del app — overriding la sombra. */
   body.show-pegadas .cell.tengo {
-    visibility: visible;
     background: var(--green);
     color: #fff;
+    box-shadow: none;
+    opacity: 1;
   }
   .cell.falta { background: var(--danger); color: #fff; }
   .cell.rep {
