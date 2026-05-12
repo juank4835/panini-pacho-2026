@@ -17,8 +17,10 @@
     --text-3: #888780;
     --green: #00D685;
     --amber: #EF9F27;
+    --amber-dark: #BA7517;
     --amber-text: #412402;
     --danger: #E24B4A;
+    --radius: 8px;
   }
   * { box-sizing: border-box; }
   html, body {
@@ -60,23 +62,25 @@
   .stat-pill.rep b { color: var(--amber); }
   .stat-pill.falta b { color: var(--danger); }
 
-  /* Botón copiar (estilo Cambios de la app real) */
+  /* Botón primario "Copiar faltantes + repetidas" — mismo formato que el
+     btn-share-repetidas de la app principal (Cambios/Repetidas): amber con
+     hover a amber-dark, font 14px/600, radius 8px. */
   .btn-share-main {
     width: 100%;
     padding: 12px 16px;
     background: var(--amber);
     color: var(--amber-text);
     border: 0;
-    border-radius: 8px;
+    border-radius: var(--radius);
     font-family: inherit;
     font-size: 14px;
-    font-weight: 700;
+    font-weight: 600;
     cursor: pointer;
-    margin-bottom: 6px;
-    transition: filter 0.15s ease, background 0.2s ease, color 0.2s ease;
+    margin-bottom: 8px;
+    transition: background 0.15s ease, color 0.15s ease;
   }
-  .btn-share-main:hover { filter: brightness(1.08); }
-  .btn-share-main.copied { background: var(--green); color: #003420; }
+  .btn-share-main:hover { background: var(--amber-dark); color: #fff; }
+  .btn-share-main.copied { background: var(--green); color: #fff; }
   .share-hint {
     text-align: center;
     color: var(--text-3);
@@ -231,19 +235,28 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* Botón secundario "Actualizar datos" — mismo formato que el fin-quick-actions
+     button de la app principal: bg-2 con border hairline, font 12px/600,
+     radius 10px, ícono + label centrados. */
   .refresh {
     width: 100%;
-    padding: 10px;
-    background: transparent;
+    background: var(--bg-2);
     border: 0.5px solid var(--border);
-    border-radius: 8px;
     color: var(--text-2);
+    padding: 11px 12px;
+    border-radius: 10px;
     font-family: inherit;
     font-size: 12px;
+    font-weight: 600;
     cursor: pointer;
-    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+    transition: color 0.15s, border-color 0.15s;
   }
-  .refresh:hover { background: var(--bg-2); color: var(--text); }
+  .refresh:hover { color: var(--text); border-color: var(--text-3); }
 
   footer {
     color: var(--text-3);
