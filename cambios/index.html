@@ -132,19 +132,19 @@
   .legend-cell.rep     { background: var(--amber); }
   .legend-cell.pegada  { background: var(--green); }
 
-  /* Estado "apagado" (off) de cualquier categoría → círculo OUTLINE: fondo
-     transparente, borde gris, número dim. Mantiene la grilla completa
-     siempre visible (preservas el contexto espacial) mientras el ojo va
-     directo a las bolitas activas. Cubre 3 estados: pegadas default,
-     faltantes cuando "Me falta" off, repetidas cuando "Repetidas" off. */
+  /* Estado "apagado" (off) de cualquier categoría → círculo dim con fondo
+     gris (bg-3), sin outline. Mantiene la grilla completa siempre visible
+     pero las bolitas inactivas se ven como "huecos" subordinados a las
+     activas. Cubre 3 estados: pegadas default, faltantes cuando "Me falta"
+     off, repetidas cuando "Repetidas" off. */
   .cell.tengo,
   body.hide-falta .cell.falta,
   body.hide-rep   .cell.rep {
-    background: transparent;
+    background: var(--bg-3);
     color: var(--text-3);
-    border: 1px solid var(--text-3);
+    border: 0;
     box-shadow: none;
-    opacity: 0.5;
+    opacity: 0.55;
   }
   body.hide-rep .cell.rep .x { display: none; }
 
@@ -353,7 +353,7 @@
 <div class="page">
 
   <div class="hero">
-    <h1>📒 Álbum Panini Mundial 2026 · Cambios</h1>
+    <h1>Álbum Panini Mundial 2026 · Cambios</h1>
     <p id="subtitle">Cargando…</p>
   </div>
 
@@ -495,8 +495,8 @@
       '<div class="stat-pill falta"><b>' + nFalta + '</b><small>Me faltan</small></div>' +
     '</div>';
 
-    html += '<button class="btn-share-main" id="btn-share">📋 Copiar faltantes + repetidas</button>' +
-      '<button class="refresh" id="btn-refresh">🔄 Actualizar datos</button>' +
+    html += '<button class="btn-share-main" id="btn-share">Copiar faltantes + repetidas</button>' +
+      '<button class="refresh" id="btn-refresh">Actualizar datos</button>' +
       '<div class="share-hint">El mensaje queda listo para pegar en WhatsApp / Telegram. Tocá Actualizar para traer los últimos datos del álbum.</div>';
 
     // Legend: 3 toggles. Me falta / Repetidas arrancan ON (las bolitas se
@@ -640,7 +640,7 @@
 
     const lines = ['🎴 Álbum Panini Mundial 2026', ''];
     if (totalFalt > 0) {
-      lines.push('📋 ME FALTAN (' + totalFalt + '):');
+      lines.push('ME FALTAN (' + totalFalt + '):');
       if (fIntro.length) lines.push('Intro: ' + fIntro.join(', '));
       equipos.forEach(eq => {
         const e = eqMap[eq.code];
@@ -650,7 +650,7 @@
       lines.push('');
     }
     if (totalRep > 0) {
-      lines.push('🔄 TENGO PARA CAMBIAR (' + totalRep + '):');
+      lines.push('TENGO PARA CAMBIAR (' + totalRep + '):');
       if (rIntro.length) lines.push('Intro: ' + rIntro.join(', '));
       equipos.forEach(eq => {
         const e = eqMap[eq.code];
@@ -659,10 +659,10 @@
       if (rHist.length) lines.push('History: ' + rHist.join(', '));
       lines.push('');
     }
-    if (totalFalt === 0 && totalRep === 0) lines.push('🎉 ¡Álbum completo!');
-    else lines.push('🤝 ¿Hacemos cambio?');
+    if (totalFalt === 0 && totalRep === 0) lines.push('¡Álbum completo!');
+    else lines.push('¿Hacemos cambio?');
     lines.push('');
-    lines.push('📲 ' + SHARE_URL);
+    lines.push('· ' + SHARE_URL);
     return lines.join('\n');
   }
 
