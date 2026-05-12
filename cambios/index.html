@@ -107,30 +107,44 @@
     flex-wrap: wrap;
     margin-bottom: 14px;
   }
-  /* Legend = botones toggle. Chip neutro con un círculo de color adentro.
-     Active = chip a opacidad completa con su circulito de color visible.
-     Off = chip dim + círculo en gris. */
+  /* Legend = botones toggle con el mismo estilo que btn-share-repetidas y
+     btn-share-faltantes del app principal: filled con el color de la
+     categoría, font 13/600, radius var(--radius). Estado "off" hace dim
+     con bg-2 + opacidad baja. */
   .legend-item {
-    background: var(--bg-2);
-    border: 0.5px solid var(--border);
-    color: var(--text-2);
-    font-size: 11px;
+    border: 0;
     font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: var(--radius);
     cursor: pointer;
-    display: flex;
+    transition: opacity 0.2s ease, filter 0.15s ease, background 0.2s ease, color 0.2s ease;
+    display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    border-radius: 100px;
-    transition: opacity 0.2s ease, background 0.2s ease;
+    -webkit-appearance: none;
+    letter-spacing: 0.1px;
   }
-  .legend-item:hover { background: var(--bg-3); }
-  .legend-item.off { opacity: 0.4; }
-  .legend-item.off .legend-cell { background: var(--bg-3); }
-  .legend-cell { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-  .legend-cell.falta   { background: var(--danger); }
-  .legend-cell.rep     { background: var(--amber); }
-  .legend-cell.pegada  { background: var(--green); }
+  .legend-item:hover { filter: brightness(1.08); }
+  .legend-item[data-toggle="falta"] {
+    background: var(--danger);
+    color: #fff;
+  }
+  .legend-item[data-toggle="rep"] {
+    background: var(--amber);
+    color: var(--amber-text);
+  }
+  .legend-item[data-toggle="pegadas"] {
+    background: var(--green);
+    color: #003420;
+  }
+  .legend-item.off {
+    background: var(--bg-2);
+    color: var(--text-3);
+    opacity: 0.55;
+  }
+  /* Dot de color escondido — el fondo del botón ya comunica la categoría */
+  .legend-cell { display: none; }
 
   /* Estado "apagado" (off) de cualquier categoría → círculo dim con fondo
      gris (bg-3), sin outline. Mantiene la grilla completa siempre visible
@@ -496,7 +510,7 @@
     '</div>';
 
     html += '<button class="btn-share-main" id="btn-share">Copiar faltantes + repetidas</button>' +
-      '<button class="refresh" id="btn-refresh">Actualizar datos</button>' +
+      '<button class="refresh" id="btn-refresh">↻ Actualizar datos</button>' +
       '<div class="share-hint">El mensaje queda listo para pegar en WhatsApp / Telegram. Tocá Actualizar para traer los últimos datos del álbum.</div>';
 
     // Legend: 3 toggles. Me falta / Repetidas arrancan ON (las bolitas se
