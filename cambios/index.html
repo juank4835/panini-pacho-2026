@@ -1249,9 +1249,13 @@
       if (!s) return false;
       const p = parseInt(s.p, 10) || 0;
       const su = parseInt(s.s, 10) || 0;
-      // Disponible = al menos una copia "tradeable" (suelta sin pegar, o
-      // repetida con extras). Si solo está pegada (p=1, s=0) NO está libre.
-      return su >= 1;
+      // REGLA DE EXCEDENTE: el dueño puede dar la lámina solo si tiene MÁS
+      // de 1 copia total (p + s >= 2). Si solo tiene 1 (pegada O suelta)
+      // la reserva para sí mismo. La suelta única todavía la quiere pegar,
+      // y la pegada está en el álbum. Solo a partir de 2 copias hay 1
+      // tradeable. Antes este chequeo era `su >= 1`, lo que incluía las
+      // sueltas únicas como disponibles por error.
+      return (p + su) >= 2;
     }
 
     // Categoría + grupo del álbum por id (mismo criterio que render normal).

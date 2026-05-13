@@ -8524,22 +8524,31 @@
   }
 
   // Cruza la data del amigo con la mía. Devuelve dos listas:
-  //  - myCanGive: mis sueltas (s>=1) que el amigo necesita (en sus faltan)
+  //  - myCanGive: mis copias EXCEDENTES que el amigo necesita (en sus faltan)
   //  - friendCanGive: sus repetidas que yo necesito (yo en faltante completo)
+  //
+  // REGLA DE EXCEDENTE: una copia es ofrecible solo si tengo MÁS de 1 total
+  // (p + s >= 2). Si solo tengo 1 (sea pegada O suelta), la reservo para mí
+  // — la pegada está en el álbum, la suelta única todavía la quiero pegar.
+  // El stock ofrecible es entonces max(0, p+s - 1). Antes este chequeo solo
+  // miraba `s >= 1`, lo que incluía sueltas únicas (p=0,s=1) como ofrecibles
+  // por error, regalando láminas que el usuario aún necesita.
   function crossReference(friendData) {
     if (!friendData) return { myCanGive: [], friendCanGive: [] };
     const myCanGive = [];
     const friendCanGive = [];
 
     for (const id in friendData.faltan) {
+      const myP = getPegada(id);
       const myS = getSueltas(id);
-      if (myS >= 1) {
+      const tradeable = Math.max(0, (myP + myS) - 1);
+      if (tradeable >= 1) {
         const found = findItem(id);
         myCanGive.push({
           id: id,
           label: found ? found.item.label : '',
           sec: found ? found.seccion : null,
-          stock: myS
+          stock: tradeable
         });
       }
     }
