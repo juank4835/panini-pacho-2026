@@ -10018,28 +10018,72 @@
             valorComunesShare += (_priceForId(id) || 0);
           }
         });
+        // Mensaje de share — estructura escalonada que muestra:
+        //   1. Cantidad de COMUNES (el bulk real, no el total inflado)
+        //   2. Total si lleva todas (al mejor tier alcanzable)
+        //   3. Precio escalonado completo (si hay tiers configurados)
+        //   4. Mención de especiales como opt-in separado (si las hay)
+        //   5. CTA al envío
+        // El texto usa *bold* de WhatsApp para resaltar números clave.
         // shareText NO incluye la URL — Web Share API la pasa por el campo
-        // `url` separado para que WhatsApp la muestre como preview card
-        // (no duplicada con el texto). Para clipboard fallback, sí
-        // necesitamos incluirla.
-        //
-        // Precio por unidad (no total) — el total cambia según lo que el
-        // vecino seleccione, pero el precio por lámina es info accionable
-        // y estable. Las especiales tienen precios distintos cada una, así
-        // que solo se menciona "precios en el link" si las hay.
-        let parteCantidad = 'Te puedo dar ' + ids.length + ' láminas de tu lista de faltantes';
-        if (nEspecialesShare > 0 && nComunesShare > 0) {
-          parteCantidad += ' (' + nComunesShare + ' comunes + ' + nEspecialesShare + ' especiales — actívalas en el link)';
+        // `url` separado para que WhatsApp muestre el preview card. Para
+        // clipboard fallback sí concatenamos URL al final.
+        const basePriceComun = (finanzasState && finanzasState.precios && finanzasState.precios.jugador)
+          ? finanzasState.precios.jugador
+          : 1000;
+        // Tier vigente si el vecino llevara TODAS las comunes (escenario max)
+        let pctTierMax = 0;
+        if (descuentosTiers.length > 0 && nComunesShare > 0) {
+          descuentosTiers.forEach(d => {
+            if (nComunesShare >= d.minQty && d.descuento > pctTierMax) {
+              pctTierMax = d.descuento;
+            }
+          });
         }
-        let partePrecio = '';
-        if (nComunesShare > 0) {
-          const unitPrice = Math.round(valorComunesShare / nComunesShare);
-          partePrecio = '. Precio: $' + _fmtMoney(unitPrice) + ' por lámina' + (nEspecialesShare > 0 ? ' común' : '');
-        } else if (nEspecialesShare > 0) {
-          partePrecio = '. Precios en el link';
+        const unitConTier = pctTierMax > 0
+          ? Math.round(basePriceComun * (1 - pctTierMax / 100))
+          : basePriceComun;
+        const totalConTier = unitConTier * nComunesShare;
+
+        // Construir mensaje por escenarios
+        const msgLines = [];
+        if (nComunesShare === 0 && nEspecialesShare > 0) {
+          // Caso: solo especiales (sin comunes en la oferta)
+          msgLines.push('Te ofrezco *' + nEspecialesShare + ' láminas especiales* de tu lista de faltantes.');
+          msgLines.push('');
+          msgLines.push('Cada una tiene precio aparte — mira los detalles en el link.');
+          msgLines.push('');
+          msgLines.push('Selecciona y envíame tu lista.');
+        } else if (nComunesShare > 0) {
+          // Caso: comunes (con o sin especiales)
+          msgLines.push('Te ofrezco *' + nComunesShare + ' láminas comunes* de tu lista de faltantes.');
+          msgLines.push('');
+          if (pctTierMax > 0) {
+            msgLines.push('Si las llevas todas: *$' + _fmtMoney(totalConTier) + '* ($' + _fmtMoney(unitConTier) + ' c/u con −' + pctTierMax + '% por volumen).');
+          } else {
+            msgLines.push('Si las llevas todas: *$' + _fmtMoney(totalConTier) + '* ($' + _fmtMoney(basePriceComun) + ' c/u).');
+          }
+          msgLines.push('');
+          // Tier ladder (solo si hay tiers configurados)
+          if (descuentosTiers.length > 0) {
+            msgLines.push('Precio escalonado:');
+            msgLines.push('· $' + _fmtMoney(basePriceComun) + ' c/u (precio normal)');
+            descuentosTiers.forEach(d => {
+              const unitAtTier = Math.round(basePriceComun * (1 - d.descuento / 100));
+              msgLines.push('· $' + _fmtMoney(unitAtTier) + ' c/u desde ' + d.minQty + ' láminas (−' + d.descuento + '%)');
+            });
+            msgLines.push('');
+          }
+          if (nEspecialesShare > 0) {
+            msgLines.push('+' + nEspecialesShare + ' especiales activables aparte en el link (precio individual).');
+            msgLines.push('');
+          }
+          msgLines.push('Selecciona y envíame tu lista.');
         }
-        const shareTextBody = parteCantidad + partePrecio + '. Selecciona las que quieras y envíame tu lista.';
-        const shareTitle = 'Oferta de ' + ids.length + ' láminas';
+        const shareTextBody = msgLines.join('\n');
+        const shareTitle = nComunesShare > 0
+          ? 'Oferta de ' + nComunesShare + ' láminas comunes'
+          : 'Oferta de ' + nEspecialesShare + ' especiales';
 
         try {
           if (navigator.share) {
