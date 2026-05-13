@@ -672,6 +672,184 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.25), 0 0 12px rgba(239,159,39,0.18);
   }
 
+  /* Top sticky stats bar — siempre visible mientras el vecino selecciona.
+     Refuerza el total como anchor psicológico de la decisión. Doble feedback
+     con la sticky de abajo: aunque scrolleen, el total nunca desaparece. */
+  .oferta-top-stats {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(0,0,0,0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 0.5px solid var(--border);
+    padding: 10px 16px;
+    margin: 0 -16px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .oferta-top-stats .top-stat { display: flex; flex-direction: column; gap: 3px; }
+  .oferta-top-stats .top-stat.price { align-items: flex-end; }
+  .oferta-top-stats .lbl {
+    color: var(--text-3);
+    font-size: 9.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .oferta-top-stats .num {
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-weight: 700;
+    font-size: 17px;
+    line-height: 1;
+    transition: transform 0.18s ease, color 0.15s;
+  }
+  .oferta-top-stats .num-count { color: var(--text); }
+  .oferta-top-stats .num-price { color: var(--amber); text-shadow: 0 0 6px rgba(239,159,39,0.45); }
+  @keyframes ofertaPulse {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+  .oferta-top-stats.bumped .num-price,
+  .oferta-top-stats.bumped .num-count {
+    animation: ofertaPulse 0.28s ease;
+  }
+
+  /* Modal de confirmación: "Vas a pedir X láminas por $Y" — un paso de
+     review antes de enviar. UX tipo carrito de e-commerce. Slide-up sheet
+     desde abajo, con botones de WhatsApp directo + Copy fallback. */
+  .oferta-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 2000;
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .oferta-modal-backdrop.open { display: flex; animation: ofertaModalFadeIn 0.2s ease-out; }
+  @keyframes ofertaModalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .oferta-modal {
+    background: #0a0a0a;
+    border-top: 0.5px solid var(--amber);
+    border-radius: 18px 18px 0 0;
+    padding: 22px 18px calc(20px + env(safe-area-inset-bottom));
+    width: 100%;
+    max-width: 560px;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.5), 0 -2px 8px rgba(239,159,39,0.15);
+    animation: ofertaModalSlideUp 0.24s cubic-bezier(0.34, 1.4, 0.64, 1);
+  }
+  @keyframes ofertaModalSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .oferta-modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--amber);
+    margin: 0 0 4px;
+    letter-spacing: 0.3px;
+    text-shadow: 0 0 6px rgba(239,159,39,0.45);
+  }
+  .oferta-modal-subtitle {
+    font-size: 12px;
+    color: var(--text-3);
+    margin: 0 0 18px;
+    letter-spacing: 0.2px;
+  }
+  .oferta-modal-summary {
+    background: var(--bg-2);
+    border: 0.5px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+  }
+  .oferta-modal-summary .big-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 10px;
+    margin-bottom: 8px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .oferta-modal-summary .big-row .lbl { color: var(--text-2); font-size: 13px; }
+  .oferta-modal-summary .big-row .val {
+    color: var(--amber);
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 1;
+    text-shadow: 0 0 6px rgba(239,159,39,0.45);
+  }
+  .oferta-modal-summary .sub-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 5px;
+  }
+  .oferta-modal-summary .sub-row .val {
+    color: var(--text-2);
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  .oferta-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .oferta-modal-btn {
+    display: block;
+    width: 100%;
+    background: var(--bg-2);
+    border: 0.5px solid var(--border);
+    color: var(--text);
+    padding: 14px 18px;
+    border-radius: 100px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+    text-decoration: none;
+    text-align: center;
+    transition: transform 0.1s ease, filter 0.15s ease;
+    box-sizing: border-box;
+  }
+  .oferta-modal-btn:active { transform: scale(0.98); }
+  .oferta-modal-btn.wa {
+    color: var(--green);
+    border-color: var(--green);
+    text-shadow: 0 0 6px rgba(0,214,133,0.55), 0 0 12px rgba(0,214,133,0.3);
+    box-shadow: 0 0 18px rgba(0,214,133,0.2);
+  }
+  .oferta-modal-btn.wa:hover { filter: brightness(1.08); }
+  .oferta-modal-btn.copy { color: var(--text-2); }
+  .oferta-modal-btn.copy.copied {
+    color: var(--green);
+    border-color: var(--green);
+    background: rgba(0,214,133,0.08);
+  }
+  .oferta-modal-cancel {
+    display: block;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text-3);
+    padding: 12px;
+    margin-top: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none;
+  }
+
   footer {
     color: var(--text-3);
     font-size: 11px;
@@ -778,6 +956,20 @@
 <div class="doggos-modal-backdrop" id="doggos-modal-backdrop">
   <img src="https://juank4835.github.io/panini-pacho-2026/doggos.jpg" alt="" class="doggos-modal-img">
   <div class="doggos-modal-cap">Stack sats · Paste cromos</div>
+</div>
+
+<!-- Modal "Confirmar pedido" — slide-up sheet con resumen del carrito,
+     botón WhatsApp directo (si el vendedor configuró su número) + Copy.
+     Se crea aquí en el body para que esté disponible incluso si renderOferta
+     se re-llama. La JS lo abre/cierra agregando .open al backdrop. -->
+<div class="oferta-modal-backdrop" id="oferta-modal-backdrop" role="dialog" aria-modal="true">
+  <div class="oferta-modal">
+    <h3 class="oferta-modal-title">Confirmar pedido</h3>
+    <p class="oferta-modal-subtitle">Revisá tu selección antes de enviarla al vendedor</p>
+    <div class="oferta-modal-summary" id="oferta-modal-summary"></div>
+    <div class="oferta-modal-actions" id="oferta-modal-actions"></div>
+    <button class="oferta-modal-cancel" id="oferta-modal-cancel" type="button">Volver a la selección</button>
+  </div>
 </div>
 
 <script>
@@ -894,12 +1086,15 @@
   }
 
   // === Vista "Oferta personalizada" ===
-  // Cuando la URL trae ?oferta=ID1,ID2,..., en lugar del inventario completo
-  // mostramos solo esos IDs como una propuesta al vecino. Vista compacta,
+  // Cuando la URL trae ?oferta=ID1,ID2,... o ?o=TOKEN, en lugar del inventario
+  // completo mostramos solo esos IDs como propuesta al vecino. Vista compacta,
   // con grid agrupado por Grupo del álbum, total estimado de precio, y un
   // link para ver el inventario completo. Si alguna lámina del set ya no
   // está disponible (el dueño la vendió/usó), se marca como "no disponible".
-  function renderOfertaView(state, equipos, precios, especiales, ofertaIds) {
+  // sellerPhone (opcional): viene del backend con el token. Si está, se
+  // muestra el botón "Enviar por WhatsApp" en el modal de confirmación que
+  // abre wa.me/PHONE con el mensaje pre-llenado.
+  function renderOfertaView(state, equipos, precios, especiales, ofertaIds, sellerPhone) {
     // Construir un map id → status para chequear disponibilidad de cada
     // lámina en la oferta. Una lámina está disponible si el dueño tiene
     // al menos 1 suelta (s>=1) o si está en repetidas (sobras tradeables).
@@ -1040,6 +1235,18 @@
 
     const html =
       '<div class="oferta-view">' +
+        // Top sticky stats bar — siempre visible, refuerza el total como
+        // anchor psicológico. Se actualiza con cada toggle de chip.
+        '<div class="oferta-top-stats" id="oferta-top-stats">' +
+          '<div class="top-stat">' +
+            '<span class="lbl">Seleccionadas</span>' +
+            '<span class="num num-count" id="oferta-top-count">' + nComunesDisp + '</span>' +
+          '</div>' +
+          '<div class="top-stat price">' +
+            '<span class="lbl">Total estimado</span>' +
+            '<span class="num num-price" id="oferta-top-price">$' + fmtMoney(valorEstimadoInicial) + '</span>' +
+          '</div>' +
+        '</div>' +
         '<div class="oferta-hero">' +
           '<div class="oferta-eyebrow">Oferta personalizada</div>' +
           '<h2 class="oferta-title">OFERTA PARA TI</h2>' +
@@ -1048,7 +1255,7 @@
             (nVendidas > 0 ? ' <span class="oferta-vendidas">· ' + nVendidas + ' ya no disponible' + (nVendidas === 1 ? '' : 's') + '</span>' : '') +
             ' · ' + fechaHoy +
           '</div>' +
-          '<div class="oferta-hint">Las comunes ya están marcadas. Tap sobre cualquier lámina para incluirla o quitarla. Cuando termines, copia tu selección.</div>' +
+          '<div class="oferta-hint">Las comunes ya están marcadas. Tap sobre cualquier lámina para incluirla o quitarla. Cuando termines, revisá tu pedido.</div>' +
         '</div>' +
         especialesToggleHtml +
         '<div class="oferta-grid">' + gridHtml + '</div>' +
@@ -1065,7 +1272,7 @@
               '<small>total estimado</small>' +
             '</div>' +
           '</div>' +
-          '<button class="oferta-copy-btn" id="oferta-copy-btn" type="button">Copiar mi selección</button>' +
+          '<button class="oferta-copy-btn" id="oferta-copy-btn" type="button">Revisar pedido</button>' +
         '</div>' +
       '</div>';
 
@@ -1086,14 +1293,30 @@
     // y el vecino las prende con el toggle "Incluir especiales" o tap individual.
     const selected = new Set(availableIds.filter(id => !isSpecial(id, especiales)));
 
+    // currentPriceSum cacheado para detectar cambios y disparar bump anim
+    // del top sticky stats (feedback visual de "tu total cambió").
+    let _lastPriceSum = -1;
     function updateOfertaTotals() {
       let priceSum = 0;
       selected.forEach(id => { priceSum += priceForId(id, precios, especiales); });
       const countEl = document.getElementById('oferta-selected-count');
       const priceEl = document.getElementById('oferta-selected-price');
+      const topCountEl = document.getElementById('oferta-top-count');
+      const topPriceEl = document.getElementById('oferta-top-price');
+      const topStats = document.getElementById('oferta-top-stats');
       const copyBtn = document.getElementById('oferta-copy-btn');
       if (countEl) countEl.textContent = selected.size;
       if (priceEl) priceEl.textContent = '$' + fmtMoney(priceSum);
+      if (topCountEl) topCountEl.textContent = selected.size;
+      if (topPriceEl) topPriceEl.textContent = '$' + fmtMoney(priceSum);
+      // Bump animation cuando el precio cambia (no en el primer render).
+      if (topStats && _lastPriceSum >= 0 && _lastPriceSum !== priceSum) {
+        topStats.classList.remove('bumped');
+        // Reflow para reiniciar la animación
+        void topStats.offsetWidth;
+        topStats.classList.add('bumped');
+      }
+      _lastPriceSum = priceSum;
       if (copyBtn) {
         if (selected.size === 0) {
           copyBtn.setAttribute('disabled', 'disabled');
@@ -1152,102 +1375,181 @@
       };
     }
 
-    // Botón "Copiar mi selección" → mensaje formateado para WhatsApp
+    // === Carrito + Confirmar pedido ===
+    // Construir el mensaje + abrir el modal de confirmación. El vecino ve
+    // un resumen (X láminas · $Y · detalle comunes/especiales) y elige:
+    //   · "Enviar por WhatsApp" — solo si el vendedor configuró su número
+    //   · "Copiar mensaje" — fallback siempre disponible
+    function _buildOrderMessage() {
+      // Construir lista agrupada por equipo en orden del álbum
+      const selectedSorted = Array.from(selected).sort((a, b) => {
+        function key(id) {
+          if (id === '00') return [0, 0, 0];
+          if (id.indexOf('FWC') === 0) {
+            const n = parseInt(id.replace('FWC', ''), 10);
+            return [n <= 8 ? 0 : 9999, 0, n];
+          }
+          const parts = id.split('-');
+          if (parts.length === 2) {
+            const idx = teamIdx[parts[0]] != null ? teamIdx[parts[0]] + 1 : 9998;
+            return [idx, parseInt(parts[1], 10) || 0, 0];
+          }
+          return [9999, 9999, 0];
+        }
+        const ka = key(a), kb = key(b);
+        for (let i = 0; i < ka.length; i++) {
+          if (ka[i] !== kb[i]) return ka[i] - kb[i];
+        }
+        return 0;
+      });
+      const comunesArr = [];
+      const especialesArr = [];
+      selectedSorted.forEach(id => {
+        if (isSpecial(id, especiales)) especialesArr.push(id);
+        else comunesArr.push(id);
+      });
+      function _groupForMsg(idsArr) {
+        const byTeam = {};
+        const teamOrder = [];
+        idsArr.forEach(id => {
+          const team = _ofertaTeamCode(id);
+          if (!byTeam[team]) { byTeam[team] = []; teamOrder.push(team); }
+          byTeam[team].push(_ofertaDisplayNum(id));
+        });
+        return { byTeam: byTeam, teamOrder: teamOrder };
+      }
+      let totalComunes = 0, totalEspeciales = 0;
+      comunesArr.forEach(id => { totalComunes += priceForId(id, precios, especiales); });
+      especialesArr.forEach(id => { totalEspeciales += priceForId(id, precios, especiales); });
+      const priceSum = totalComunes + totalEspeciales;
+      const lines = [
+        'Me interesan estas ' + selected.size + ' láminas de tu oferta:',
+        ''
+      ];
+      if (comunesArr.length > 0) {
+        lines.push('COMUNES (' + comunesArr.length + ')');
+        const g = _groupForMsg(comunesArr);
+        g.teamOrder.forEach(t => lines.push(t + ': ' + g.byTeam[t].join(', ')));
+        lines.push('');
+      }
+      if (especialesArr.length > 0) {
+        lines.push('ESPECIALES (' + especialesArr.length + ')');
+        const g = _groupForMsg(especialesArr);
+        g.teamOrder.forEach(t => lines.push(t + ': ' + g.byTeam[t].join(', ')));
+        lines.push('');
+      }
+      lines.push('Total estimado: $' + fmtMoney(priceSum));
+      if (comunesArr.length > 0 && especialesArr.length > 0) {
+        lines.push('  · Comunes: $' + fmtMoney(totalComunes));
+        lines.push('  · Especiales: $' + fmtMoney(totalEspeciales));
+      }
+      lines.push('');
+      lines.push('¿Las cerramos?');
+      return {
+        msg: lines.join('\n'),
+        nComunes: comunesArr.length,
+        nEspeciales: especialesArr.length,
+        totalComunes: totalComunes,
+        totalEspeciales: totalEspeciales,
+        priceSum: priceSum
+      };
+    }
+
+    function _renderModalContent(orderData) {
+      const summaryEl = document.getElementById('oferta-modal-summary');
+      const actionsEl = document.getElementById('oferta-modal-actions');
+      if (!summaryEl || !actionsEl) return;
+
+      // Resumen: "Vas a pedir X láminas por $Y" + breakdown comunes/especiales
+      let summaryHtml =
+        '<div class="big-row">' +
+          '<span class="lbl">' + selected.size + ' lámina' + (selected.size === 1 ? '' : 's') + '</span>' +
+          '<span class="val">$' + fmtMoney(orderData.priceSum) + '</span>' +
+        '</div>';
+      if (orderData.nComunes > 0 && orderData.nEspeciales > 0) {
+        summaryHtml +=
+          '<div class="sub-row">' +
+            '<span>· ' + orderData.nComunes + ' comunes</span>' +
+            '<span class="val">$' + fmtMoney(orderData.totalComunes) + '</span>' +
+          '</div>' +
+          '<div class="sub-row">' +
+            '<span>· ' + orderData.nEspeciales + ' especiales</span>' +
+            '<span class="val">$' + fmtMoney(orderData.totalEspeciales) + '</span>' +
+          '</div>';
+      }
+      summaryEl.innerHTML = summaryHtml;
+
+      // Acciones: WhatsApp directo (si phone) + Copy siempre. Si hay phone,
+      // WhatsApp es la acción prominente arriba; Copy queda como secondary.
+      let actionsHtml = '';
+      if (sellerPhone && /^\d{8,15}$/.test(sellerPhone)) {
+        const waUrl = 'https://wa.me/' + sellerPhone + '?text=' + encodeURIComponent(orderData.msg);
+        actionsHtml +=
+          '<a class="oferta-modal-btn wa" href="' + waUrl + '" target="_blank" rel="noopener" id="oferta-modal-wa">' +
+            'Enviar por WhatsApp →' +
+          '</a>';
+      }
+      actionsHtml +=
+        '<button class="oferta-modal-btn copy" type="button" id="oferta-modal-copy">' +
+          'Copiar mensaje' +
+        '</button>';
+      actionsEl.innerHTML = actionsHtml;
+
+      // Wire copy button (recreado cada apertura de modal)
+      const copyBtn2 = document.getElementById('oferta-modal-copy');
+      if (copyBtn2) {
+        copyBtn2.onclick = () => {
+          const done = () => {
+            copyBtn2.textContent = '✓ Copiado · pégalo en WhatsApp';
+            copyBtn2.classList.add('copied');
+            setTimeout(() => {
+              copyBtn2.textContent = 'Copiar mensaje';
+              copyBtn2.classList.remove('copied');
+            }, 2400);
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(orderData.msg).then(done, () => fallback());
+          } else {
+            fallback();
+          }
+          function fallback() {
+            const ta = document.createElement('textarea');
+            ta.value = orderData.msg;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); } catch(e) {}
+            document.body.removeChild(ta);
+            done();
+          }
+        };
+      }
+    }
+
+    function _openOrderModal() {
+      if (selected.size === 0) return;
+      const orderData = _buildOrderMessage();
+      _renderModalContent(orderData);
+      const backdrop = document.getElementById('oferta-modal-backdrop');
+      if (backdrop) backdrop.classList.add('open');
+    }
+    function _closeOrderModal() {
+      const backdrop = document.getElementById('oferta-modal-backdrop');
+      if (backdrop) backdrop.classList.remove('open');
+    }
+    // Cerrar modal: tap en backdrop (no el modal interno) o botón "Volver"
+    const modalBackdrop = document.getElementById('oferta-modal-backdrop');
+    if (modalBackdrop) {
+      modalBackdrop.onclick = (ev) => {
+        if (ev.target === modalBackdrop) _closeOrderModal();
+      };
+    }
+    const modalCancelBtn = document.getElementById('oferta-modal-cancel');
+    if (modalCancelBtn) modalCancelBtn.onclick = _closeOrderModal;
+
+    // Botón principal del sticky bar — abre el modal de revisión.
     const copyBtn = document.getElementById('oferta-copy-btn');
     if (copyBtn) {
-      copyBtn.onclick = () => {
-        if (selected.size === 0) return;
-        // Construir lista agrupada por equipo en orden del álbum
-        const selectedSorted = Array.from(selected).sort((a, b) => {
-          function key(id) {
-            if (id === '00') return [0, 0, 0];
-            if (id.indexOf('FWC') === 0) {
-              const n = parseInt(id.replace('FWC', ''), 10);
-              return [n <= 8 ? 0 : 9999, 0, n];
-            }
-            const parts = id.split('-');
-            if (parts.length === 2) {
-              const idx = teamIdx[parts[0]] != null ? teamIdx[parts[0]] + 1 : 9998;
-              return [idx, parseInt(parts[1], 10) || 0, 0];
-            }
-            return [9999, 9999, 0];
-          }
-          const ka = key(a), kb = key(b);
-          for (let i = 0; i < ka.length; i++) {
-            if (ka[i] !== kb[i]) return ka[i] - kb[i];
-          }
-          return 0;
-        });
-        // Separar comunes y especiales — el seller las cobra distinto y le
-        // ayuda saberlo de un vistazo en el mensaje de respuesta.
-        const comunesArr = [];
-        const especialesArr = [];
-        selectedSorted.forEach(id => {
-          if (isSpecial(id, especiales)) especialesArr.push(id);
-          else comunesArr.push(id);
-        });
-        function _groupForMsg(idsArr) {
-          const byTeam = {};
-          const teamOrder = [];
-          idsArr.forEach(id => {
-            const team = _ofertaTeamCode(id);
-            if (!byTeam[team]) { byTeam[team] = []; teamOrder.push(team); }
-            byTeam[team].push(_ofertaDisplayNum(id));
-          });
-          return { byTeam: byTeam, teamOrder: teamOrder };
-        }
-        let totalComunes = 0, totalEspeciales = 0;
-        comunesArr.forEach(id => { totalComunes += priceForId(id, precios, especiales); });
-        especialesArr.forEach(id => { totalEspeciales += priceForId(id, precios, especiales); });
-        const priceSum = totalComunes + totalEspeciales;
-        const lines = [
-          'Me interesan estas ' + selected.size + ' láminas de tu oferta:',
-          ''
-        ];
-        if (comunesArr.length > 0) {
-          lines.push('COMUNES (' + comunesArr.length + ')');
-          const g = _groupForMsg(comunesArr);
-          g.teamOrder.forEach(t => lines.push(t + ': ' + g.byTeam[t].join(', ')));
-          lines.push('');
-        }
-        if (especialesArr.length > 0) {
-          lines.push('ESPECIALES (' + especialesArr.length + ')');
-          const g = _groupForMsg(especialesArr);
-          g.teamOrder.forEach(t => lines.push(t + ': ' + g.byTeam[t].join(', ')));
-          lines.push('');
-        }
-        lines.push('Total estimado: $' + fmtMoney(priceSum));
-        if (comunesArr.length > 0 && especialesArr.length > 0) {
-          lines.push('  · Comunes: $' + fmtMoney(totalComunes));
-          lines.push('  · Especiales: $' + fmtMoney(totalEspeciales));
-        }
-        lines.push('');
-        lines.push('¿Las cerramos?');
-        const msg = lines.join('\n');
-        // Copy al clipboard con fallback de textarea
-        const done = () => {
-          copyBtn.textContent = '✓ Copiado · pégalo en WhatsApp';
-          copyBtn.classList.add('copied');
-          setTimeout(() => {
-            copyBtn.textContent = 'Copiar mi selección';
-            copyBtn.classList.remove('copied');
-          }, 2800);
-        };
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(msg).then(done, () => fallback(msg));
-        } else {
-          fallback(msg);
-        }
-        function fallback(text) {
-          const ta = document.createElement('textarea');
-          ta.value = text;
-          document.body.appendChild(ta);
-          ta.select();
-          try { document.execCommand('copy'); } catch(e) {}
-          document.body.removeChild(ta);
-          done();
-        }
-      };
+      copyBtn.onclick = _openOrderModal;
     }
     updateOfertaTotals();
   }
@@ -1592,7 +1894,7 @@
         try {
           const ofertaData = await loadOfertaByToken(ofertaToken);
           if (ofertaData && ofertaData.ok && Array.isArray(ofertaData.ids) && ofertaData.ids.length > 0) {
-            renderOfertaView(data.state || {}, equipos, data.precios || {}, data.especiales || {}, ofertaData.ids);
+            renderOfertaView(data.state || {}, equipos, data.precios || {}, data.especiales || {}, ofertaData.ids, ofertaData.phone || '');
             return;
           }
           throw new Error(ofertaData && ofertaData.error === 'not_found'

@@ -112,7 +112,13 @@ function doGet(e) {
     if (raw) {
       try {
         const data = JSON.parse(raw);
-        payload = JSON.stringify({ ok: true, ids: data.ids || [], ts: data.ts || 0 });
+        payload = JSON.stringify({
+          ok: true,
+          ids: data.ids || [],
+          phone: data.phone || '',
+          greeting: data.greeting || '',
+          ts: data.ts || 0
+        });
       } catch (_) {
         payload = JSON.stringify({ ok: false, error: 'corrupted' });
       }
@@ -973,12 +979,35 @@ function importFinanzas(obj) {
  * Cleanup automático: al crear, purga ofertas mayores a 30 días para
  * mantener el storage de PropertiesService dentro de su quota (~500KB).
  */
-function createOferta(ids) {
-  if (!Array.isArray(ids) || ids.length === 0) throw new Error('ids requeridos');
-  const cleaned = ids
+function createOferta(payload) {
+  // Backward compat: si recibimos un array, asumimos {ids: array} sin phone
+  // ni greeting. Versiones anteriores de la app pasaban solo el array.
+  if (Array.isArray(payload)) {
+    payload = { ids: payload };
+  }
+  if (!payload || !Array.isArray(payload.ids) || payload.ids.length === 0) {
+    throw new Error('ids requeridos');
+  }
+  const cleaned = payload.ids
     .filter(function(id) { return typeof id === 'string' && id.length > 0 && id.length < 20; })
     .slice(0, 500);
   if (cleaned.length === 0) throw new Error('ids vacíos');
+
+  // Phone del vendedor (opcional). Solo dígitos, 8-15 chars. Si está vacío
+  // o inválido, la página pública mostrará solo "Copiar mensaje" en vez
+  // del botón "Enviar por WhatsApp". El número se guarda con la oferta
+  // (no global) para que cada oferta pueda tener un phone distinto si el
+  // vendedor cambia su número o usa números temporales.
+  let phone = '';
+  if (typeof payload.phone === 'string') {
+    phone = payload.phone.replace(/\D/g, '').slice(0, 15);
+    if (phone.length < 8) phone = '';
+  }
+  // Saludo opcional (max 60 chars) — para personalizar la página del vecino.
+  let greeting = '';
+  if (typeof payload.greeting === 'string') {
+    greeting = payload.greeting.slice(0, 60).trim();
+  }
 
   const props = PropertiesService.getScriptProperties();
 
@@ -1013,6 +1042,8 @@ function createOferta(ids) {
 
   props.setProperty('OFERTA_' + token, JSON.stringify({
     ids: cleaned,
+    phone: phone,
+    greeting: greeting,
     ts: Date.now()
   }));
 

@@ -9881,6 +9881,38 @@
         const ids = aliveGiveChips.map(c => c.dataset.cxId).filter(Boolean);
         if (ids.length === 0) return;
 
+        // Phone del vendedor: leído de localStorage. Si es la primera vez,
+        // promptea pidiéndolo (saltable). Una vez configurado, va con cada
+        // oferta para que la página pública muestre "Enviar por WhatsApp"
+        // como CTA principal del vecino.
+        let whatsappPhone = '';
+        try {
+          whatsappPhone = localStorage.getItem('panini_seller_whatsapp') || '';
+          if (!whatsappPhone && localStorage.getItem('panini_whatsapp_skipped') !== '1') {
+            const input = window.prompt(
+              'Configurá tu WhatsApp (con código de país, ej. 573001234567).\n' +
+              'El vecino podrá tocar "Enviar por WhatsApp" en la página y te llega el mensaje directo.\n' +
+              'Saltable — dejá vacío para no configurarlo.'
+            );
+            if (input !== null) {
+              const cleaned = input.replace(/\D/g, '');
+              if (cleaned.length >= 8 && cleaned.length <= 15) {
+                whatsappPhone = cleaned;
+                localStorage.setItem('panini_seller_whatsapp', whatsappPhone);
+              } else if (input.trim() === '') {
+                localStorage.setItem('panini_whatsapp_skipped', '1');
+              } else {
+                // Número inválido — no marcar como skipped para que vuelva
+                // a preguntar la próxima vez.
+                alert('Número inválido. Necesita 8 a 15 dígitos (con código de país).');
+              }
+            } else {
+              // Usuario canceló — marcar skip para no preguntar de nuevo
+              localStorage.setItem('panini_whatsapp_skipped', '1');
+            }
+          }
+        } catch (_) {}
+
         // Compresión vía backend: pedimos al server un token corto que apunta
         // a la lista de IDs en su storage. La URL final queda ~50 chars en
         // vez de 1000+. El vecino solo ve cambios/?o=TOKEN — los IDs no se
@@ -9892,7 +9924,9 @@
 
         let ofertaUrl;
         try {
-          const r = await gsRun('createOferta', ids);
+          // Payload con phone — el backend lo guarda con la oferta y la
+          // página pública lo lee para el botón "Enviar por WhatsApp".
+          const r = await gsRun('createOferta', { ids: ids, phone: whatsappPhone });
           if (r && r.token) {
             ofertaUrl = 'https://juank4835.github.io/panini-pacho-2026/cambios/?o=' + r.token;
           } else {
