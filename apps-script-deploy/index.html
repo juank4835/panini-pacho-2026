@@ -13051,7 +13051,7 @@
   const GS_RETRY_SAFE = new Set([
     'pullState', 'pullFinanzas', 'publica', 'getStats',
     'addFinMovimiento', 'deleteFinMovimiento',
-    'setFinPrecios', 'setFinEspeciales',
+    'setFinPrecios', 'setFinEspeciales', 'setFinDescuentos',
     'importFinanzas', 'importState'
   ]);
   // Backoff exponencial: ms de espera ANTES del intento N (índice 0 = pre
@@ -14068,9 +14068,17 @@
     return (finanzasState && finanzasState.precios && finanzasState.precios[cat]) || 0;
   }
   function _finSave() {
-    try { localStorage.setItem(STORAGE_FIN_KEY, JSON.stringify(finanzasState)); } catch(e) {}
+    try {
+      const ds = (finanzasState && Array.isArray(finanzasState.descuentos))
+        ? finanzasState.descuentos.length : '?';
+      console.log('[FIN] _finSave called · descuentos.length=' + ds + ' · stack:', new Error().stack);
+      localStorage.setItem(STORAGE_FIN_KEY, JSON.stringify(finanzasState));
+    } catch(e) {
+      console.error('[FIN] _finSave FAILED:', e);
+    }
   }
   let finanzasState = _finLoad();
+  console.log('[FIN] Initial load · descuentos=' + JSON.stringify(finanzasState.descuentos));
 
   // Tab activo en la lista de Movimientos. 4 vistas, mutuamente excluyentes:
   //   'plata'        → solo compra/venta (movs con dinero real)
@@ -14247,21 +14255,30 @@
           if (!_finPendingHas(m.id)) _finPendingAdd(m);
         });
         const mergedMovs = serverMovs.concat(pendingLocalMovs);
-        // Preservar `descuentos` del estado local — es client-only (viaja con
-        // la oferta, no con el estado del seller en backend). Antes este
-        // reassign los borraba en cada sync (BUG: los tiers desaparecían
-        // al cerrar/abrir la app porque pullFinanzas sobreescribía).
-        const preservedDescuentos = (finanzasState && Array.isArray(finanzasState.descuentos))
+        // Descuentos: el server es authoritative. Si el server los tiene,
+        // los usamos. Si no (servidor viejo sin descuentos), preservamos lo
+        // local — el próximo _finPushDescuentos los subirá. Esto cubre el
+        // caso crítico de eviction de localStorage de iOS Safari: los datos
+        // sobreviven en el backend y vuelven al reabrir la app.
+        const serverDescuentos = Array.isArray(r.value.descuentos) ? r.value.descuentos : null;
+        const localDescuentos = (finanzasState && Array.isArray(finanzasState.descuentos))
           ? finanzasState.descuentos
           : [];
+        const resolvedDescuentos = serverDescuentos != null ? serverDescuentos : localDescuentos;
         finanzasState = {
           v: r.value.v || 1,
           precios: Object.assign({}, def.precios, r.value.precios || {}),
           especiales: (r.value.especiales && typeof r.value.especiales === 'object') ? r.value.especiales : {},
-          descuentos: preservedDescuentos,
+          descuentos: resolvedDescuentos,
           movimientos: mergedMovs,
         };
         _finSave();
+        // Si el server no tiene descuentos pero local sí, pusheamos para
+        // sincronizar (caso de migración: usuario en versión vieja sin
+        // backend sync, ahora upgradeado).
+        if (serverDescuentos == null && localDescuentos.length > 0 && typeof _finPushDescuentos === 'function') {
+          _finPushDescuentos(localDescuentos);
+        }
         if (tabActiva === 'finanzas') _finRefreshDashboard();
         // Reintentar push de los pendientes — al traer datos del server quizás
         // recuperamos conectividad después de un offline.
@@ -14279,6 +14296,15 @@
       const r = await gsRun('setFinPrecios', precios);
       if (r && r.finVersion != null) lastFinVersion = r.finVersion;
     } catch (e) { console.warn('setFinPrecios failed', e); }
+  }
+  // Push de descuentos por volumen al backend — crítico porque iOS Safari
+  // evicta localStorage cuando matás la pestaña, así que sin esto los
+  // descuentos se perdían al cerrar/abrir la app. Ahora viven en server.
+  async function _finPushDescuentos(descuentos) {
+    try {
+      const r = await gsRun('setFinDescuentos', descuentos);
+      if (r && r.finVersion != null) lastFinVersion = r.finVersion;
+    } catch (e) { console.warn('setFinDescuentos failed', e); }
   }
   async function _finPushEspeciales(especiales) {
     try {
@@ -14587,6 +14613,39 @@
     const tiersActivos = (finanzasState && Array.isArray(finanzasState.descuentos))
       ? finanzasState.descuentos
       : [];
+    // DEBUG: leer también lo que está en localStorage RIGHT NOW, no en
+    // memoria. Si difiere de tiersActivos sabremos que la app no está
+    // re-leyendo desde storage tras los cambios.
+    let storageTiers = [];
+    let storageRawSnippet = '';
+    try {
+      const raw = localStorage.getItem(STORAGE_FIN_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && Array.isArray(parsed.descuentos)) {
+          storageTiers = parsed.descuentos;
+        }
+        storageRawSnippet = 'desc en localStorage: ' + JSON.stringify(parsed.descuentos || null);
+      } else {
+        storageRawSnippet = 'localStorage VACÍO para key ' + STORAGE_FIN_KEY;
+      }
+    } catch (e) {
+      storageRawSnippet = 'localStorage corrupto: ' + e.message;
+    }
+    const memCount = tiersActivos.length;
+    const storageCount = storageTiers.length;
+    const mismatched = memCount !== storageCount;
+    // Línea de DEBUG visible (temporal, para diagnosticar el bug)
+    html += '<div style="margin: 4px 0 0; padding: 6px 10px; background: ' +
+      (mismatched ? 'rgba(255,71,87,0.12)' : 'rgba(74,158,255,0.06)') +
+      '; border: 0.5px solid ' + (mismatched ? 'var(--danger)' : 'rgba(74,158,255,0.4)') +
+      '; border-radius: 6px; font-family: \'JetBrains Mono\', Menlo, monospace; font-size: 10px; color: ' +
+      (mismatched ? 'var(--danger)' : 'var(--text-3)') +
+      '; word-break: break-all;">' +
+      'DEBUG · mem: ' + memCount + ' tiers · storage: ' + storageCount + ' tiers' +
+      (mismatched ? ' ⚠ DESINCRONIZADO' : ' ✓') +
+      '<br>' + storageRawSnippet +
+      '</div>';
     if (tiersActivos.length > 0) {
       const tiersHtml = tiersActivos.map(d => {
         return '<span style="color:var(--green);font-weight:700;">' +
@@ -15434,12 +15493,18 @@
     return dedup;
   }
 
-  // Auto-save: parse rows, guarda en finanzasState + localStorage, actualiza
+  // Auto-save: parse rows, guarda en finanzasState + localStorage, push al
+  // backend (crítico — sin esto se pierde tras eviction de iOS), actualiza
   // el indicator visible. Idempotente — se puede llamar muchas veces.
   function _finDescuentosAutoSave() {
     const tiers = _finDescuentosParseValidRows();
     finanzasState.descuentos = tiers;
     _finSave();
+    // Push al backend (async, no bloquea UI). Sin esto, iOS Safari evicta
+    // el localStorage al matar la app y pierde los descuentos.
+    if (typeof _finPushDescuentos === 'function') {
+      _finPushDescuentos(tiers);
+    }
     const status = document.getElementById('fin-desc-autosave-status');
     if (status) {
       status.textContent = tiers.length > 0

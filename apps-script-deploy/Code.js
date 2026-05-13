@@ -796,7 +796,7 @@ function _bumpFinVersion(props) {
   return v;
 }
 function _emptyFinanzas() {
-  return { v: 1, precios: {}, especiales: {}, movimientos: [] };
+  return { v: 1, precios: {}, especiales: {}, descuentos: [], movimientos: [] };
 }
 
 /**
@@ -838,6 +838,49 @@ function setFinEspeciales(especiales) {
       if (typeof k === 'string' && k && !isNaN(n) && n >= 0) cleaned[k] = n;
     }
     cur.especiales = cleaned;
+    _writeFinanzas(props, cur);
+    const v = _bumpFinVersion(props);
+    return { ok: true, finVersion: v, value: cur };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Reemplaza el array de descuentos por volumen. El vendedor edita los
+ * tiers en el modal de Finanzas y se persisten acá para sobrevivir a
+ * la eviction de localStorage de iOS Safari (en celulares que matan
+ * la pestaña la app perdía la config local).
+ *
+ * Last-write-wins: el cliente envía el array completo y el server lo
+ * guarda tal cual (tras validación). Bumpea finVersion para que las
+ * otras instancias lo pulleen vía pullFinanzas.
+ */
+function setFinDescuentos(descuentos) {
+  if (!Array.isArray(descuentos)) throw new Error('descuentos debe ser array');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const cur = _readFinanzas(props) || _emptyFinanzas();
+    // Validar y limpiar: minQty entero >= 1, descuento 1-99 (puede ser float),
+    // max 10 tiers. Dedup por minQty (último gana). Sort ascendente.
+    const cleaned = descuentos
+      .map(function(d) {
+        if (!d || typeof d !== 'object') return null;
+        const minQty = parseInt(d.minQty, 10);
+        const pct = parseFloat(d.descuento);
+        if (!isFinite(minQty) || minQty < 1) return null;
+        if (!isFinite(pct) || pct <= 0 || pct >= 100) return null;
+        return { minQty: minQty, descuento: pct };
+      })
+      .filter(Boolean)
+      .slice(0, 10);
+    const map = {};
+    cleaned.forEach(function(d) { map[d.minQty] = d; });
+    const dedup = Object.keys(map).map(function(k) { return map[k]; });
+    dedup.sort(function(a, b) { return a.minQty - b.minQty; });
+    cur.descuentos = dedup;
     _writeFinanzas(props, cur);
     const v = _bumpFinVersion(props);
     return { ok: true, finVersion: v, value: cur };
