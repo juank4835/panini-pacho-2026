@@ -117,6 +117,7 @@ function doGet(e) {
           ids: data.ids || [],
           phone: data.phone || '',
           greeting: data.greeting || '',
+          descuentos: Array.isArray(data.descuentos) ? data.descuentos : [],
           ts: data.ts || 0
         });
       } catch (_) {
@@ -1008,6 +1009,26 @@ function createOferta(payload) {
   if (typeof payload.greeting === 'string') {
     greeting = payload.greeting.slice(0, 60).trim();
   }
+  // Descuentos por volumen — array de tiers ordenado por minQty ascendente:
+  //   [{ minQty: 50, descuento: 10 }, { minQty: 100, descuento: 20 }]
+  // El % aplica solo a comunes (jugadores), no a especiales. El tier se
+  // dispara con la cantidad TOTAL seleccionada (comunes + especiales) para
+  // motivar al vecino a subir el carrito completo. Max 10 tiers.
+  let descuentos = [];
+  if (Array.isArray(payload.descuentos)) {
+    descuentos = payload.descuentos
+      .map(function(d) {
+        if (!d || typeof d !== 'object') return null;
+        const minQty = parseInt(d.minQty, 10);
+        const pct = parseFloat(d.descuento);
+        if (!isFinite(minQty) || minQty < 1) return null;
+        if (!isFinite(pct) || pct <= 0 || pct >= 100) return null;
+        return { minQty: minQty, descuento: pct };
+      })
+      .filter(Boolean)
+      .sort(function(a, b) { return a.minQty - b.minQty; })
+      .slice(0, 10);
+  }
 
   const props = PropertiesService.getScriptProperties();
 
@@ -1044,6 +1065,7 @@ function createOferta(payload) {
     ids: cleaned,
     phone: phone,
     greeting: greeting,
+    descuentos: descuentos,
     ts: Date.now()
   }));
 

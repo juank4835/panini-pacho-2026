@@ -6765,6 +6765,27 @@
   </div>
 </div>
 
+<!-- Modal de descuentos por volumen (Finanzas).
+     El vendedor define tiers: ej. 50+ láminas -10%, 100+ láminas -20%.
+     El descuento se aplica solo a las comunes (no a especiales) cuando
+     el vecino selecciona >=minQty láminas TOTALES en la página oferta.
+     Empuja al vecino a subir el carrito completo para destrabar el siguiente
+     tier — clásica táctica e-commerce de "casi llegas al envío gratis". -->
+<div class="fin-sheet-backdrop" id="fin-descuentos-backdrop">
+  <div class="fin-sheet">
+    <div class="fin-sheet-handle"></div>
+    <div class="fin-sheet-header">
+      <h2>% Descuentos por volumen</h2>
+      <p>Tiers que se aplican al subtotal de comunes cuando el vecino selecciona muchas láminas. Las especiales mantienen su precio fijo.</p>
+    </div>
+    <div class="fin-sheet-body" id="fin-descuentos-body"></div>
+    <div class="fin-sheet-footer">
+      <button class="fin-btn-save" id="fin-descuentos-save">Guardar descuentos</button>
+      <button class="fin-btn-cancel" id="fin-descuentos-cancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal de movimientos (Finanzas) -->
 <div class="fin-sheet-backdrop" id="fin-mov-backdrop">
   <div class="fin-sheet">
@@ -9922,11 +9943,23 @@
         btn.setAttribute('disabled', 'disabled');
         btn.textContent = 'Generando link…';
 
+        // Descuentos por volumen configurados en Finanzas → viajan con la
+        // oferta para que la página pública los aplique sobre la selección
+        // del vecino en vivo. Vacío = sin descuentos (todo precio base).
+        const descuentosTiers = (finanzasState && Array.isArray(finanzasState.descuentos))
+          ? finanzasState.descuentos
+          : [];
+
         let ofertaUrl;
         try {
-          // Payload con phone — el backend lo guarda con la oferta y la
-          // página pública lo lee para el botón "Enviar por WhatsApp".
-          const r = await gsRun('createOferta', { ids: ids, phone: whatsappPhone });
+          // Payload con phone + descuentos — el backend lo guarda con la
+          // oferta y la página pública lo lee para "Enviar por WhatsApp"
+          // y aplicar tiers de descuento sobre la selección.
+          const r = await gsRun('createOferta', {
+            ids: ids,
+            phone: whatsappPhone,
+            descuentos: descuentosTiers
+          });
           if (r && r.token) {
             ofertaUrl = 'https://juank4835.github.io/panini-pacho-2026/cambios/?o=' + r.token;
           } else {
@@ -13941,6 +13974,13 @@
       // del precio de jugador. Se sincroniza con el backend igual que
       // precios.
       especiales: {},
+      // Descuentos por volumen — tiers que se aplican a la cantidad total
+      // seleccionada en la oferta. Solo afecta el subtotal de comunes (no
+      // las especiales, que mantienen su precio fijo). Sorteado ascendente
+      // por minQty al guardar. Vacío por default — el vendedor lo configura
+      // desde el modal de Descuentos en Finanzas.
+      // Ej: [{ minQty: 50, descuento: 10 }, { minQty: 100, descuento: 20 }]
+      descuentos: [],
       movimientos: [
         { id: 'm_seed_album', tipo: 'compra', subtipo: 'album', qty: 1, precio: 50000, fecha: '2026-04-15', nota: 'Compra inicial' },
         { id: 'm_seed_cajas', tipo: 'compra', subtipo: 'caja', qty: 2, precio: 520000, fecha: '2026-04-20', nota: 'Compra inicial' },
@@ -13959,6 +13999,7 @@
         v: parsed.v || 1,
         precios: Object.assign({}, def.precios, parsed.precios || {}),
         especiales: (parsed.especiales && typeof parsed.especiales === 'object') ? parsed.especiales : {},
+        descuentos: Array.isArray(parsed.descuentos) ? parsed.descuentos : [],
         movimientos: Array.isArray(parsed.movimientos) ? parsed.movimientos : def.movimientos,
       };
     } catch (e) {
@@ -14466,6 +14507,7 @@
       '<div class="fin-pg-actions">' +
         '<button type="button" data-fin-precios title="Editar precios">⚙</button>' +
         '<button type="button" data-fin-especiales title="Especiales">★</button>' +
+        '<button type="button" data-fin-descuentos title="Descuentos por volumen">%</button>' +
         '<button class="primary" type="button" id="fin-add-mov">+ Registrar</button>' +
       '</div>' +
     '</div>';
@@ -14951,6 +14993,10 @@
     document.querySelectorAll('[data-fin-especiales]').forEach(el => {
       el.onclick = () => _finEspecialesOpen();
     });
+    // % Descuentos por volumen
+    document.querySelectorAll('[data-fin-descuentos]').forEach(el => {
+      el.onclick = () => _finDescuentosOpen();
+    });
     // Borrar movimiento — solo borra el registro de finanzas (sin tocar
     // inventario). Útil cuando registraste un mov manual erróneo o querés
     // limpiar histórico sin reversar movimientos físicos.
@@ -15233,6 +15279,134 @@
     };
     const cancel = document.getElementById('fin-especiales-cancel');
     if (cancel) cancel.onclick = () => _finEspecialesClose();
+  }
+
+  // === Modal de descuentos por volumen ===========================
+  // El vendedor configura tiers: "Desde N láminas → -X% en comunes".
+  // Patrón clónico del modal de especiales: lista editable de rows
+  // con minQty + descuento + botón quitar, + "Agregar tier" abajo.
+  // Al guardar: parse, valida, sortea por minQty ascendente, push al
+  // localStorage. No se hace push al backend porque los descuentos
+  // viajan con cada oferta (createOferta payload).
+  function _finDescuentosOpen() {
+    const bd = document.getElementById('fin-descuentos-backdrop');
+    if (!bd) return;
+    _finDescuentosRender();
+    bd.classList.add('open');
+  }
+  function _finDescuentosClose() {
+    const bd = document.getElementById('fin-descuentos-backdrop');
+    if (bd) bd.classList.remove('open');
+  }
+  function _finDescuentosRowHtml(minQty, descuento) {
+    const qtyStr = (minQty || '').toString();
+    const pctStr = (descuento || '').toString();
+    return '<div class="fin-esp-row" data-desc-row>' +
+      '<div class="fin-esp-row-inputs">' +
+        '<input type="number" class="fin-esp-id fin-desc-qty" placeholder="Desde N láminas" min="1" value="' + qtyStr + '" style="text-align:right;">' +
+        '<div class="fin-esp-row-price">' +
+          '<input type="number" class="fin-esp-precio fin-desc-pct" inputmode="decimal" placeholder="%" min="1" max="99" step="0.5" value="' + pctStr + '" style="padding-left:10px;">' +
+          '<span class="fin-esp-prefix" style="left:auto;right:10px;">%</span>' +
+        '</div>' +
+        '<button type="button" class="fin-esp-del" aria-label="Quitar tier">✕</button>' +
+      '</div>' +
+      '<div class="fin-esp-row-label" data-desc-preview>' +
+        ((minQty && descuento) ? '↳ Llevando ' + minQty + '+ láminas: −' + descuento + '% en comunes' : '↳ Configura N y %') +
+      '</div>' +
+    '</div>';
+  }
+  function _finDescuentosRender() {
+    const body = document.getElementById('fin-descuentos-body');
+    if (!body) return;
+    const desc = (finanzasState && Array.isArray(finanzasState.descuentos)) ? finanzasState.descuentos : [];
+    let html = '<div id="fin-desc-list">';
+    desc.forEach(d => { html += _finDescuentosRowHtml(d.minQty, d.descuento); });
+    html += '</div>';
+    html += '<button type="button" class="fin-esp-add" id="fin-desc-add-row">+ Agregar tier de descuento</button>';
+    html += '<div style="margin-top:14px;padding:12px 14px;background:var(--bg-2);border-radius:8px;font-size:11.5px;color:var(--text-3);line-height:1.5;">' +
+      '<b style="color:var(--text-2);">Cómo funciona:</b><br>' +
+      'El descuento solo afecta el subtotal de <b>comunes</b>. Las especiales mantienen su precio. ' +
+      'El tier se dispara cuando el vecino selecciona ≥ N láminas en TOTAL en la página de oferta.<br><br>' +
+      '<b style="color:var(--text-2);">Ejemplo recomendado:</b><br>' +
+      '50 → 10% &nbsp;·&nbsp; 100 → 20%' +
+      '</div>';
+    body.innerHTML = html;
+  }
+  function _finDescuentosBind() {
+    const bd = document.getElementById('fin-descuentos-backdrop');
+    if (!bd) return;
+    bd.onclick = (e) => { if (e.target === bd) _finDescuentosClose(); };
+    bd.addEventListener('click', (e) => {
+      const t = e.target;
+      if (!t) return;
+      if (t.classList && t.classList.contains('fin-esp-del') &&
+          t.closest('[data-desc-row]')) {
+        t.closest('[data-desc-row]').remove();
+      } else if (t.id === 'fin-desc-add-row') {
+        const list = document.getElementById('fin-desc-list');
+        if (list) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = _finDescuentosRowHtml('', '');
+          list.appendChild(tmp.firstChild);
+          const newInput = list.lastElementChild.querySelector('.fin-desc-qty');
+          if (newInput) newInput.focus();
+        }
+      }
+    });
+    // Preview en vivo al editar los inputs
+    bd.addEventListener('input', (e) => {
+      const t = e.target;
+      if (!t || !t.classList) return;
+      if (!t.classList.contains('fin-desc-qty') && !t.classList.contains('fin-desc-pct')) return;
+      const row = t.closest('[data-desc-row]');
+      if (!row) return;
+      const qty = parseInt(row.querySelector('.fin-desc-qty').value, 10);
+      const pct = parseFloat(row.querySelector('.fin-desc-pct').value);
+      const preview = row.querySelector('[data-desc-preview]');
+      if (!preview) return;
+      if (isFinite(qty) && qty > 0 && isFinite(pct) && pct > 0 && pct < 100) {
+        preview.innerHTML = '↳ Llevando <b>' + qty + '+</b> láminas: <b>−' + pct + '%</b> en comunes';
+      } else {
+        preview.textContent = '↳ Configura N y %';
+      }
+    });
+    const save = document.getElementById('fin-descuentos-save');
+    if (save) save.onclick = () => {
+      const nuevos = [];
+      const errores = [];
+      document.querySelectorAll('#fin-desc-list [data-desc-row]').forEach(row => {
+        const qty = parseInt(row.querySelector('.fin-desc-qty').value, 10);
+        const pct = parseFloat(row.querySelector('.fin-desc-pct').value);
+        if (!isFinite(qty) && !isFinite(pct)) return; // row vacía
+        if (!isFinite(qty) || qty < 1) { errores.push('cantidad inválida'); return; }
+        if (!isFinite(pct) || pct <= 0 || pct >= 100) { errores.push('% inválido (debe ser 1-99)'); return; }
+        nuevos.push({ minQty: qty, descuento: pct });
+      });
+      // Detectar duplicados de minQty (quedaría con un solo tier por umbral)
+      const seen = new Set();
+      const dedup = [];
+      nuevos.forEach(d => {
+        if (seen.has(d.minQty)) {
+          errores.push('umbral ' + d.minQty + ' duplicado');
+        } else {
+          seen.add(d.minQty);
+          dedup.push(d);
+        }
+      });
+      if (errores.length > 0) {
+        alert('Errores:\n  · ' + errores.join('\n  · ') + '\n\nCorrigí y reintentá.');
+        return;
+      }
+      // Sortear ascendente por minQty (para que la lógica de tier matching
+      // sea predecible en la página oferta)
+      dedup.sort((a, b) => a.minQty - b.minQty);
+      finanzasState.descuentos = dedup;
+      _finSave();
+      _finDescuentosClose();
+      _finRefreshDashboard();
+    };
+    const cancel = document.getElementById('fin-descuentos-cancel');
+    if (cancel) cancel.onclick = () => _finDescuentosClose();
   }
 
   // === Modal de movimientos (Fase 2C) =============================
@@ -15733,6 +15907,7 @@
     bindGroupSelector();
     _finPreciosBind();
     _finEspecialesBind();
+    _finDescuentosBind();
     _finMovBind();
     bindCompactSelectSheet();
     bindDoggosModal();

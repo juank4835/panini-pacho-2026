@@ -850,6 +850,64 @@
     -webkit-appearance: none;
   }
 
+  /* Banner de descuento — aparece arriba del bottom sticky cuando el
+     vendedor configuró tiers. Verde si hay descuento aplicado, ámbar/hint
+     si está cerca del próximo tier. Empuja al vecino a subir cantidad. */
+  .oferta-descuento-hint {
+    max-width: 520px;
+    margin: 0 auto 8px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.2px;
+    line-height: 1.45;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .oferta-descuento-hint.applied {
+    background: rgba(0,214,133,0.08);
+    border: 0.5px solid rgba(0,214,133,0.5);
+    color: var(--green);
+    text-shadow: 0 0 6px rgba(0,214,133,0.3);
+  }
+  .oferta-descuento-hint.next {
+    background: var(--bg-2);
+    border: 0.5px dashed rgba(239,159,39,0.55);
+    color: var(--text-2);
+  }
+  .oferta-descuento-hint.next b {
+    color: var(--amber);
+    text-shadow: 0 0 6px rgba(239,159,39,0.4);
+  }
+  /* Strikethrough del precio original cuando hay descuento aplicado */
+  .oferta-stat-price .old-price,
+  .oferta-top-stats .old-price {
+    display: block;
+    font-size: 10px;
+    color: var(--text-3);
+    text-decoration: line-through;
+    text-decoration-color: rgba(255,255,255,0.3);
+    font-weight: 500;
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+  /* Badge -X% al lado del precio */
+  .oferta-discount-badge {
+    display: inline-block;
+    background: rgba(0,214,133,0.15);
+    color: var(--green);
+    border: 0.5px solid rgba(0,214,133,0.4);
+    padding: 2px 7px;
+    border-radius: 100px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    margin-left: 6px;
+    vertical-align: middle;
+    text-shadow: 0 0 4px rgba(0,214,133,0.4);
+  }
+
   footer {
     color: var(--text-3);
     font-size: 11px;
@@ -1094,7 +1152,35 @@
   // sellerPhone (opcional): viene del backend con el token. Si está, se
   // muestra el botón "Enviar por WhatsApp" en el modal de confirmación que
   // abre wa.me/PHONE con el mensaje pre-llenado.
-  function renderOfertaView(state, equipos, precios, especiales, ofertaIds, sellerPhone) {
+  // descuentos (opcional): array de tiers [{minQty, descuento}] sorteado
+  // ascendente. Se aplica al subtotal de COMUNES cuando la cantidad total
+  // seleccionada >= minQty. El % más alto que aplique gana.
+  function renderOfertaView(state, equipos, precios, especiales, ofertaIds, sellerPhone, descuentos) {
+    // Normalizar descuentos (siempre array, sorted ascending por minQty)
+    const _descuentos = (Array.isArray(descuentos) ? descuentos : [])
+      .filter(d => d && typeof d === 'object' && isFinite(d.minQty) && isFinite(d.descuento))
+      .sort((a, b) => a.minQty - b.minQty);
+
+    // Calcular tier vigente y próximo tier (para hint motivacional).
+    // Retorna { pctVigente, nextTier (or null), faltaPara }
+    function _computeDiscountState(nSelected) {
+      if (_descuentos.length === 0) return { pctVigente: 0, nextTier: null, faltaPara: 0 };
+      let pctVigente = 0;
+      let nextTier = null;
+      for (let i = 0; i < _descuentos.length; i++) {
+        if (nSelected >= _descuentos[i].minQty) {
+          if (_descuentos[i].descuento > pctVigente) pctVigente = _descuentos[i].descuento;
+        } else if (!nextTier) {
+          // Primer tier no alcanzado → es el "siguiente"
+          nextTier = _descuentos[i];
+        }
+      }
+      return {
+        pctVigente: pctVigente,
+        nextTier: nextTier,
+        faltaPara: nextTier ? nextTier.minQty - nSelected : 0
+      };
+    }
     // Construir un map id → status para chequear disponibilidad de cada
     // lámina en la oferta. Una lámina está disponible si el dueño tiene
     // al menos 1 suelta (s>=1) o si está en repetidas (sobras tradeables).
@@ -1262,6 +1348,11 @@
         '<a class="oferta-cta" href="' + SHARE_URL + '">Ver inventario completo →</a>' +
         '<div class="oferta-sticky-spacer"></div>' +
         '<div class="oferta-sticky-bar">' +
+          // Hint de descuento — aparece dinámicamente cuando hay tiers
+          // configurados (vacío hasta entonces; updateOfertaTotals lo llena).
+          (_descuentos.length > 0
+            ? '<div class="oferta-descuento-hint next" id="oferta-descuento-hint"></div>'
+            : '') +
           '<div class="oferta-sticky-stats">' +
             '<div class="oferta-stat-count">' +
               '<b id="oferta-selected-count">' + nComunesDisp + '</b>' +
@@ -1293,30 +1384,108 @@
     // y el vecino las prende con el toggle "Incluir especiales" o tap individual.
     const selected = new Set(availableIds.filter(id => !isSpecial(id, especiales)));
 
+    // Calcula totales del carrito con desglose comunes/especiales y
+    // descuento por volumen aplicado. Devuelve todo lo que necesita el UI.
+    function _computeTotals() {
+      let totalComunes = 0, totalEspeciales = 0;
+      let nComunesSel = 0, nEspecialesSel = 0;
+      selected.forEach(id => {
+        const p = priceForId(id, precios, especiales);
+        if (isSpecial(id, especiales)) {
+          nEspecialesSel++;
+          totalEspeciales += p;
+        } else {
+          nComunesSel++;
+          totalComunes += p;
+        }
+      });
+      const subTotal = totalComunes + totalEspeciales;
+      const discState = _computeDiscountState(selected.size);
+      const descPesos = totalComunes * (discState.pctVigente / 100);
+      const finalTotal = subTotal - descPesos;
+      return {
+        nComunes: nComunesSel,
+        nEspeciales: nEspecialesSel,
+        totalComunes: totalComunes,
+        totalEspeciales: totalEspeciales,
+        subTotal: subTotal,
+        pctVigente: discState.pctVigente,
+        descPesos: descPesos,
+        nextTier: discState.nextTier,
+        faltaPara: discState.faltaPara,
+        finalTotal: finalTotal
+      };
+    }
+
     // currentPriceSum cacheado para detectar cambios y disparar bump anim
     // del top sticky stats (feedback visual de "tu total cambió").
     let _lastPriceSum = -1;
     function updateOfertaTotals() {
-      let priceSum = 0;
-      selected.forEach(id => { priceSum += priceForId(id, precios, especiales); });
+      const totals = _computeTotals();
       const countEl = document.getElementById('oferta-selected-count');
       const priceEl = document.getElementById('oferta-selected-price');
       const topCountEl = document.getElementById('oferta-top-count');
       const topPriceEl = document.getElementById('oferta-top-price');
       const topStats = document.getElementById('oferta-top-stats');
       const copyBtn = document.getElementById('oferta-copy-btn');
+      const hintEl = document.getElementById('oferta-descuento-hint');
       if (countEl) countEl.textContent = selected.size;
-      if (priceEl) priceEl.textContent = '$' + fmtMoney(priceSum);
       if (topCountEl) topCountEl.textContent = selected.size;
-      if (topPriceEl) topPriceEl.textContent = '$' + fmtMoney(priceSum);
+
+      // Precio mostrado: si hay descuento aplicado, mostrar precio tachado +
+      // precio final + badge -X%. Si no, solo el precio final (= subTotal).
+      const hasDiscount = totals.pctVigente > 0;
+      if (priceEl) {
+        if (hasDiscount) {
+          priceEl.innerHTML =
+            '<span class="old-price">$' + fmtMoney(totals.subTotal) + '</span>' +
+            '$' + fmtMoney(totals.finalTotal) +
+            '<span class="oferta-discount-badge">−' + totals.pctVigente + '%</span>';
+        } else {
+          priceEl.textContent = '$' + fmtMoney(totals.finalTotal);
+        }
+      }
+      if (topPriceEl) {
+        if (hasDiscount) {
+          topPriceEl.innerHTML =
+            '<span class="old-price">$' + fmtMoney(totals.subTotal) + '</span>' +
+            '$' + fmtMoney(totals.finalTotal);
+        } else {
+          topPriceEl.textContent = '$' + fmtMoney(totals.finalTotal);
+        }
+      }
+
+      // Banner de descuento: aplicado (verde) | próximo tier (ámbar) | hidden
+      if (hintEl) {
+        if (hasDiscount && totals.nextTier) {
+          // Descuento aplicado Y hay siguiente tier → mostrar ambos
+          hintEl.className = 'oferta-descuento-hint applied';
+          hintEl.innerHTML =
+            '−' + totals.pctVigente + '% aplicado · ahorrás $' + fmtMoney(totals.descPesos) +
+            '<br><span style="font-weight:500;opacity:0.85;color:var(--text-2);">' +
+            'Sumá ' + totals.faltaPara + ' más para destrabar −' + totals.nextTier.descuento + '%</span>';
+        } else if (hasDiscount) {
+          // Descuento aplicado, no más tiers
+          hintEl.className = 'oferta-descuento-hint applied';
+          hintEl.innerHTML = '−' + totals.pctVigente + '% por volumen · ahorrás $' + fmtMoney(totals.descPesos);
+        } else if (totals.nextTier) {
+          // Sin descuento todavía, mostrar próximo tier
+          hintEl.className = 'oferta-descuento-hint next';
+          hintEl.innerHTML =
+            'Sumá <b>' + totals.faltaPara + ' más</b> para destrabar <b>−' + totals.nextTier.descuento + '%</b> en las comunes';
+        } else {
+          hintEl.style.display = 'none';
+        }
+      }
+
       // Bump animation cuando el precio cambia (no en el primer render).
-      if (topStats && _lastPriceSum >= 0 && _lastPriceSum !== priceSum) {
+      if (topStats && _lastPriceSum >= 0 && _lastPriceSum !== totals.finalTotal) {
         topStats.classList.remove('bumped');
         // Reflow para reiniciar la animación
         void topStats.offsetWidth;
         topStats.classList.add('bumped');
       }
-      _lastPriceSum = priceSum;
+      _lastPriceSum = totals.finalTotal;
       if (copyBtn) {
         if (selected.size === 0) {
           copyBtn.setAttribute('disabled', 'disabled');
@@ -1421,7 +1590,12 @@
       let totalComunes = 0, totalEspeciales = 0;
       comunesArr.forEach(id => { totalComunes += priceForId(id, precios, especiales); });
       especialesArr.forEach(id => { totalEspeciales += priceForId(id, precios, especiales); });
-      const priceSum = totalComunes + totalEspeciales;
+      const subTotal = totalComunes + totalEspeciales;
+      // Aplicar descuento por volumen sobre las comunes
+      const discState = _computeDiscountState(selected.size);
+      const descPesos = totalComunes * (discState.pctVigente / 100);
+      const finalTotal = subTotal - descPesos;
+
       const lines = [
         'Me interesan estas ' + selected.size + ' láminas de tu oferta:',
         ''
@@ -1438,10 +1612,21 @@
         g.teamOrder.forEach(t => lines.push(t + ': ' + g.byTeam[t].join(', ')));
         lines.push('');
       }
-      lines.push('Total estimado: $' + fmtMoney(priceSum));
-      if (comunesArr.length > 0 && especialesArr.length > 0) {
-        lines.push('  · Comunes: $' + fmtMoney(totalComunes));
-        lines.push('  · Especiales: $' + fmtMoney(totalEspeciales));
+      // Si hay descuento aplicado, desglosamos antes del total
+      if (discState.pctVigente > 0) {
+        lines.push('Subtotal: $' + fmtMoney(subTotal));
+        if (comunesArr.length > 0 && especialesArr.length > 0) {
+          lines.push('  · Comunes: $' + fmtMoney(totalComunes));
+          lines.push('  · Especiales: $' + fmtMoney(totalEspeciales));
+        }
+        lines.push('Descuento por volumen (' + discState.pctVigente + '% en comunes): −$' + fmtMoney(descPesos));
+        lines.push('Total final: $' + fmtMoney(finalTotal));
+      } else {
+        lines.push('Total estimado: $' + fmtMoney(finalTotal));
+        if (comunesArr.length > 0 && especialesArr.length > 0) {
+          lines.push('  · Comunes: $' + fmtMoney(totalComunes));
+          lines.push('  · Especiales: $' + fmtMoney(totalEspeciales));
+        }
       }
       lines.push('');
       lines.push('¿Las cerramos?');
@@ -1451,7 +1636,10 @@
         nEspeciales: especialesArr.length,
         totalComunes: totalComunes,
         totalEspeciales: totalEspeciales,
-        priceSum: priceSum
+        subTotal: subTotal,
+        pctVigente: discState.pctVigente,
+        descPesos: descPesos,
+        priceSum: finalTotal  // Mantengo `priceSum` para backward compat con _renderModalContent
       };
     }
 
@@ -1461,11 +1649,25 @@
       if (!summaryEl || !actionsEl) return;
 
       // Resumen: "Vas a pedir X láminas por $Y" + breakdown comunes/especiales
-      let summaryHtml =
-        '<div class="big-row">' +
-          '<span class="lbl">' + selected.size + ' lámina' + (selected.size === 1 ? '' : 's') + '</span>' +
-          '<span class="val">$' + fmtMoney(orderData.priceSum) + '</span>' +
-        '</div>';
+      // Si hay descuento aplicado, mostramos subtotal tachado + descuento + total final
+      const hasDiscount = orderData.pctVigente > 0;
+      let summaryHtml = '';
+      if (hasDiscount) {
+        summaryHtml +=
+          '<div class="big-row">' +
+            '<span class="lbl">' + selected.size + ' lámina' + (selected.size === 1 ? '' : 's') + '</span>' +
+            '<span class="val">' +
+              '<span class="old-price" style="font-size:12px;display:block;">$' + fmtMoney(orderData.subTotal) + '</span>' +
+              '$' + fmtMoney(orderData.priceSum) +
+            '</span>' +
+          '</div>';
+      } else {
+        summaryHtml +=
+          '<div class="big-row">' +
+            '<span class="lbl">' + selected.size + ' lámina' + (selected.size === 1 ? '' : 's') + '</span>' +
+            '<span class="val">$' + fmtMoney(orderData.priceSum) + '</span>' +
+          '</div>';
+      }
       if (orderData.nComunes > 0 && orderData.nEspeciales > 0) {
         summaryHtml +=
           '<div class="sub-row">' +
@@ -1475,6 +1677,13 @@
           '<div class="sub-row">' +
             '<span>· ' + orderData.nEspeciales + ' especiales</span>' +
             '<span class="val">$' + fmtMoney(orderData.totalEspeciales) + '</span>' +
+          '</div>';
+      }
+      if (hasDiscount) {
+        summaryHtml +=
+          '<div class="sub-row" style="color:var(--green);font-weight:600;">' +
+            '<span>· Descuento por volumen (−' + orderData.pctVigente + '%)</span>' +
+            '<span class="val" style="color:var(--green);">−$' + fmtMoney(orderData.descPesos) + '</span>' +
           '</div>';
       }
       summaryEl.innerHTML = summaryHtml;
@@ -1894,7 +2103,7 @@
         try {
           const ofertaData = await loadOfertaByToken(ofertaToken);
           if (ofertaData && ofertaData.ok && Array.isArray(ofertaData.ids) && ofertaData.ids.length > 0) {
-            renderOfertaView(data.state || {}, equipos, data.precios || {}, data.especiales || {}, ofertaData.ids, ofertaData.phone || '');
+            renderOfertaView(data.state || {}, equipos, data.precios || {}, data.especiales || {}, ofertaData.ids, ofertaData.phone || '', Array.isArray(ofertaData.descuentos) ? ofertaData.descuentos : []);
             return;
           }
           throw new Error(ofertaData && ofertaData.error === 'not_found'
