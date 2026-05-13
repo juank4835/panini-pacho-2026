@@ -206,6 +206,51 @@
     padding: 6px 0;
     font-style: italic;
   }
+  /* Variante para tiers de descuento por volumen — mismo layout pero
+     acento verde en vez de ámbar, y badge con el % en lugar de precio. */
+  .descuentos-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 5px 0;
+    font-size: 12px;
+    border-bottom: 0.5px solid var(--bg-3);
+    gap: 8px;
+  }
+  .descuentos-row:last-child { border-bottom: 0; }
+  .descuentos-row .qty {
+    color: var(--text-2);
+    font-weight: 500;
+    font-family: inherit;
+  }
+  .descuentos-row .qty b {
+    color: var(--text);
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-weight: 700;
+  }
+  .descuentos-row .pct {
+    color: var(--green);
+    font-weight: 700;
+    text-shadow: 0 0 4px rgba(0,214,133,0.45);
+    font-family: "JetBrains Mono", Menlo, monospace;
+    white-space: nowrap;
+  }
+  .descuentos-row .unit {
+    color: var(--text-3);
+    font-size: 10.5px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    margin-left: auto;
+    padding-right: 6px;
+  }
+  .descuentos-hint {
+    color: var(--text-3);
+    font-size: 10.5px;
+    font-family: inherit;
+    padding: 6px 0 2px;
+    line-height: 1.45;
+    border-bottom: 0.5px solid var(--bg-3);
+    margin-bottom: 4px;
+  }
 
   /* Botón primario "Copiar faltantes + repetidas" — estilo LED outline +
      glow, mismo formato cyberpunk que los botones del app principal
@@ -1859,7 +1904,7 @@
     updateOfertaTotals();
   }
 
-  function render(state, equipos, precios, especiales) {
+  function render(state, equipos, precios, especiales, descuentos) {
     // Stats globales
     const allItems = [];
     introStickers.forEach(s => allItems.push(s));
@@ -1921,6 +1966,35 @@
       '<summary>Precios de referencia</summary>' +
       (preciosRows || '<div class="precios-empty">Sin precios cargados todavía.</div>') +
     '</details>';
+
+    // Panel "Compras al por mayor" — muestra los tiers de descuento por
+    // volumen configurados por el vendedor en Finanzas. Aparece solo si
+    // hay tiers Y un precio base de "jugador" (que es el unitario al que
+    // se aplica el descuento). Cuando el vendedor edita los tiers o el
+    // precio base en la app, esta sección se actualiza automáticamente
+    // porque el endpoint público los lee del backend en cada pull.
+    const tiersList = Array.isArray(descuentos) ? descuentos : [];
+    const basePriceJugador = (precios && typeof precios.jugador === 'number' && precios.jugador > 0)
+      ? precios.jugador
+      : 0;
+    if (tiersList.length > 0 && basePriceJugador > 0) {
+      // Sort ascendente por minQty (defensive — el backend ya lo guarda así)
+      const sortedTiers = tiersList.slice().sort((a, b) => a.minQty - b.minQty);
+      const tiersRowsHtml = sortedTiers.map(d => {
+        const unitConDesc = Math.round(basePriceJugador * (1 - d.descuento / 100));
+        return '<div class="descuentos-row">' +
+          '<span class="qty">Desde <b>' + d.minQty + '</b> láminas</span>' +
+          '<span class="unit">$' + fmtMoney(unitConDesc) + ' c/u</span>' +
+          '<span class="pct">−' + d.descuento + '%</span>' +
+        '</div>';
+      }).join('');
+      const subtitleCount = sortedTiers.length === 1 ? '1 nivel' : sortedTiers.length + ' niveles';
+      html += '<details class="precios-panel">' +
+        '<summary>Compras al por mayor · <span style="color:var(--green);font-weight:700;">' + subtitleCount + '</span></summary>' +
+        '<div class="descuentos-hint">Aplica solo al precio de jugadores comunes ($' + fmtMoney(basePriceJugador) + ' c/u base). Las especiales (escudos, equipos, FWC, estrellas, 00) mantienen su precio.</div>' +
+        tiersRowsHtml +
+      '</details>';
+    }
 
     html += '<button class="btn-share-main" id="btn-share">Copiar faltantes + repetidas</button>' +
       '<div class="share-hint">El mensaje queda listo para pegar en WhatsApp / Telegram. Tocá ↻ arriba para traer los últimos datos del álbum.</div>';
@@ -2217,7 +2291,7 @@
       if (ofertaIds && ofertaIds.length > 0) {
         renderOfertaView(data.state || {}, equipos, data.precios || {}, data.especiales || {}, ofertaIds);
       } else {
-        render(data.state || {}, equipos, data.precios || {}, data.especiales || {});
+        render(data.state || {}, equipos, data.precios || {}, data.especiales || {}, Array.isArray(data.descuentos) ? data.descuentos : []);
       }
     } catch (e) {
       document.getElementById('content').innerHTML =

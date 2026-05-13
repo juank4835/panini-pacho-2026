@@ -63,11 +63,14 @@ function doGet(e) {
     const ordenRaw = props.getProperty(ORDEN_KEY);
     if (ordenRaw) { try { orden = JSON.parse(ordenRaw); } catch (_) {} }
     const version = parseInt(props.getProperty(VERSION_KEY) || '0', 10);
-    // Incluir precios + especiales para que la vista pública pueda mostrar
-    // valor de repetidas, costo de faltantes y la tabla de referencia por
-    // categoría. Read-only — el endpoint sigue sin permitir mutaciones.
+    // Incluir precios + especiales + descuentos para que la vista pública
+    // pueda mostrar valor de repetidas, costo de faltantes, tabla de
+    // referencia por categoría, y la sección de "Compras al por mayor"
+    // que muestra los tiers de descuento por volumen configurados en
+    // Finanzas. Read-only — el endpoint sigue sin permitir mutaciones.
     let precios = {};
     let especiales = {};
+    let descuentos = [];
     const finRaw = props.getProperty(FIN_KEY);
     if (finRaw) {
       try {
@@ -75,12 +78,13 @@ function doGet(e) {
         if (fin && typeof fin === 'object') {
           if (fin.precios && typeof fin.precios === 'object') precios = fin.precios;
           if (fin.especiales && typeof fin.especiales === 'object') especiales = fin.especiales;
+          if (Array.isArray(fin.descuentos)) descuentos = fin.descuentos;
         }
       } catch (_) {}
     }
     // Soporte JSONP para evitar problemas de CORS al consumir desde
     // GitHub Pages. Si viene ?callback=fn, devolvemos JS; si no, JSON puro.
-    const payload = JSON.stringify({ ok: true, version: version, state: all, orden: orden, precios: precios, especiales: especiales });
+    const payload = JSON.stringify({ ok: true, version: version, state: all, orden: orden, precios: precios, especiales: especiales, descuentos: descuentos });
     if (e.parameter.callback) {
       const cb = String(e.parameter.callback).replace(/[^a-zA-Z0-9_$]/g, '');
       return ContentService
