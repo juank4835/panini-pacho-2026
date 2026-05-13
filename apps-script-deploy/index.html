@@ -5170,6 +5170,12 @@
     transition: background 0.15s ease;
   }
   .fin-esp-add:active { background: var(--bg-3); }
+  /* Status del auto-save en el modal de descuentos. En estado normal
+     es gris discreto; al guardar se enciende en verde por ~1.4s. */
+  #fin-desc-autosave-status.saved {
+    color: var(--green) !important;
+    text-shadow: 0 0 6px rgba(0,214,133,0.4);
+  }
   .fin-pr-total {
     display: flex;
     justify-content: space-between;
@@ -6769,8 +6775,8 @@
      El vendedor define tiers: ej. 50+ láminas -10%, 100+ láminas -20%.
      El descuento se aplica solo a las comunes (no a especiales) cuando
      el vecino selecciona >=minQty láminas TOTALES en la página oferta.
-     Empuja al vecino a subir el carrito completo para destrabar el siguiente
-     tier — clásica táctica e-commerce de "casi llegas al envío gratis". -->
+     AUTO-SAVE en vivo: cada tecla guarda. El botón "Listo" es por
+     usabilidad pero no es la única vía de persistencia. -->
 <div class="fin-sheet-backdrop" id="fin-descuentos-backdrop">
   <div class="fin-sheet">
     <div class="fin-sheet-handle"></div>
@@ -6780,8 +6786,9 @@
     </div>
     <div class="fin-sheet-body" id="fin-descuentos-body"></div>
     <div class="fin-sheet-footer">
-      <button class="fin-btn-save" id="fin-descuentos-save">Guardar descuentos</button>
-      <button class="fin-btn-cancel" id="fin-descuentos-cancel">Cancelar</button>
+      <div id="fin-desc-autosave-status" style="text-align:center;font-size:11.5px;color:var(--text-3);margin-bottom:8px;transition:opacity 0.3s, color 0.3s;letter-spacing:0.3px;">Guardado automático activado</div>
+      <button class="fin-btn-save" id="fin-descuentos-save">Listo</button>
+      <button class="fin-btn-cancel" id="fin-descuentos-cancel">Cerrar</button>
     </div>
   </div>
 </div>
@@ -15398,9 +15405,53 @@
       '</div>';
     body.innerHTML = html;
   }
+  // Parse + dedup + sort de rows del modal. Devuelve tiers válidos solo.
+  // Filas con valores incompletos o inválidos se ignoran silenciosamente
+  // (auto-save no es destructivo: solo guarda lo que está completo y bien).
+  function _finDescuentosParseValidRows() {
+    const tiers = [];
+    document.querySelectorAll('#fin-desc-list [data-desc-row]').forEach(row => {
+      const qty = parseInt(row.querySelector('.fin-desc-qty').value, 10);
+      const pct = parseFloat(row.querySelector('.fin-desc-pct').value);
+      if (!isFinite(qty) || qty < 1) return;
+      if (!isFinite(pct) || pct <= 0 || pct >= 100) return;
+      tiers.push({ minQty: qty, descuento: pct });
+    });
+    // Dedup por minQty (último gana)
+    const map = {};
+    tiers.forEach(d => { map[d.minQty] = d; });
+    const dedup = Object.values(map);
+    // Sort ascendente por minQty
+    dedup.sort((a, b) => a.minQty - b.minQty);
+    return dedup;
+  }
+
+  // Auto-save: parse rows, guarda en finanzasState + localStorage, actualiza
+  // el indicator visible. Idempotente — se puede llamar muchas veces.
+  function _finDescuentosAutoSave() {
+    const tiers = _finDescuentosParseValidRows();
+    finanzasState.descuentos = tiers;
+    _finSave();
+    const status = document.getElementById('fin-desc-autosave-status');
+    if (status) {
+      status.textContent = tiers.length > 0
+        ? '✓ Guardado · ' + tiers.length + ' tier' + (tiers.length === 1 ? '' : 's') + ' activo' + (tiers.length === 1 ? '' : 's')
+        : '✓ Sin tiers activos';
+      status.classList.add('saved');
+      clearTimeout(_finDescStatusFadeTimer);
+      _finDescStatusFadeTimer = setTimeout(() => {
+        if (status) status.classList.remove('saved');
+      }, 1400);
+    }
+  }
+  let _finDescAutoSaveTimer = null;
+  let _finDescStatusFadeTimer = null;
+
   function _finDescuentosBind() {
     const bd = document.getElementById('fin-descuentos-backdrop');
     if (!bd) return;
+    // Tap en backdrop o cancel cierra (auto-save ya pasó al tipear, así que
+    // los datos están persistidos sin importar cómo cierre el usuario).
     bd.onclick = (e) => { if (e.target === bd) _finDescuentosClose(); };
     bd.addEventListener('click', (e) => {
       const t = e.target;
@@ -15408,6 +15459,8 @@
       if (t.classList && t.classList.contains('fin-esp-del') &&
           t.closest('[data-desc-row]')) {
         t.closest('[data-desc-row]').remove();
+        // Auto-save al borrar fila — el cambio se persiste inmediatamente
+        _finDescuentosAutoSave();
       } else if (t.id === 'fin-desc-add-row') {
         const list = document.getElementById('fin-desc-list');
         if (list) {
@@ -15416,80 +15469,53 @@
           list.appendChild(tmp.firstChild);
           const newInput = list.lastElementChild.querySelector('.fin-desc-qty');
           if (newInput) newInput.focus();
+          // No auto-save al agregar (la fila está vacía, no hay tier válido)
         }
       }
     });
-    // Preview en vivo al editar los inputs
+    // Preview en vivo al editar + AUTO-SAVE debounced. Cada tecla dispara
+    // un setTimeout corto (250ms) — si el usuario sigue tecleando, se
+    // resetea. Cuando para, se guarda. Esto significa que aunque cierre
+    // la app de forma brusca después de tipear, los datos quedan en
+    // localStorage sin necesidad de tocar "Guardar descuentos".
     bd.addEventListener('input', (e) => {
       const t = e.target;
       if (!t || !t.classList) return;
       if (!t.classList.contains('fin-desc-qty') && !t.classList.contains('fin-desc-pct')) return;
       const row = t.closest('[data-desc-row]');
-      if (!row) return;
-      const qty = parseInt(row.querySelector('.fin-desc-qty').value, 10);
-      const pct = parseFloat(row.querySelector('.fin-desc-pct').value);
-      const preview = row.querySelector('[data-desc-preview]');
-      if (!preview) return;
-      if (isFinite(qty) && qty > 0 && isFinite(pct) && pct > 0 && pct < 100) {
-        preview.innerHTML = '↳ Llevando <b>' + qty + '+</b> láminas: <b>−' + pct + '%</b> en comunes';
-      } else {
-        preview.textContent = '↳ Configura N y %';
-      }
-    });
-    const save = document.getElementById('fin-descuentos-save');
-    if (save) save.onclick = () => {
-      const nuevos = [];
-      const errores = [];
-      document.querySelectorAll('#fin-desc-list [data-desc-row]').forEach(row => {
+      if (row) {
         const qty = parseInt(row.querySelector('.fin-desc-qty').value, 10);
         const pct = parseFloat(row.querySelector('.fin-desc-pct').value);
-        if (!isFinite(qty) && !isFinite(pct)) return; // row vacía
-        if (!isFinite(qty) || qty < 1) { errores.push('cantidad inválida'); return; }
-        if (!isFinite(pct) || pct <= 0 || pct >= 100) { errores.push('% inválido (debe ser 1-99)'); return; }
-        nuevos.push({ minQty: qty, descuento: pct });
-      });
-      // Detectar duplicados de minQty (quedaría con un solo tier por umbral)
-      const seen = new Set();
-      const dedup = [];
-      nuevos.forEach(d => {
-        if (seen.has(d.minQty)) {
-          errores.push('umbral ' + d.minQty + ' duplicado');
-        } else {
-          seen.add(d.minQty);
-          dedup.push(d);
+        const preview = row.querySelector('[data-desc-preview]');
+        if (preview) {
+          if (isFinite(qty) && qty > 0 && isFinite(pct) && pct > 0 && pct < 100) {
+            preview.innerHTML = '↳ Llevando <b>' + qty + '+</b> láminas: <b>−' + pct + '%</b> en comunes';
+          } else {
+            preview.textContent = '↳ Configura N y %';
+          }
         }
-      });
-      if (errores.length > 0) {
-        alert('Errores:\n  · ' + errores.join('\n  · ') + '\n\nCorrigí y reintentá.');
-        return;
       }
-      // Sortear ascendente por minQty (para que la lógica de tier matching
-      // sea predecible en la página oferta)
-      dedup.sort((a, b) => a.minQty - b.minQty);
-      finanzasState.descuentos = dedup;
-      _finSave();
-      // Verificar write a localStorage (defensive — si falla, alert visible)
-      let verified = false;
-      try {
-        const reread = JSON.parse(localStorage.getItem(STORAGE_FIN_KEY) || '{}');
-        verified = Array.isArray(reread.descuentos) && reread.descuentos.length === dedup.length;
-      } catch (_) {}
-      if (!verified) {
-        alert('⚠ No se pudo guardar a localStorage. ¿Estás en modo privado? Intenta de nuevo.');
-        return;
-      }
-      // Feedback visible: confirmación con los tiers guardados
-      if (dedup.length > 0) {
-        const summary = dedup.map(d => d.minQty + '+ → −' + d.descuento + '%').join('  ·  ');
-        alert('✓ Guardado:  ' + summary);
-      } else {
-        alert('✓ Descuentos eliminados (sin tiers activos)');
-      }
+      // Auto-save debounced (250ms)
+      clearTimeout(_finDescAutoSaveTimer);
+      _finDescAutoSaveTimer = setTimeout(_finDescuentosAutoSave, 250);
+    });
+    // "Guardar descuentos" — flush + close. Como auto-save ya se ejecutó
+    // mientras tipeaba, este botón es más bien un "Listo" visible.
+    const save = document.getElementById('fin-descuentos-save');
+    if (save) save.onclick = () => {
+      clearTimeout(_finDescAutoSaveTimer);
+      _finDescuentosAutoSave(); // flush por si hay un timer pendiente
       _finDescuentosClose();
       _finRefreshDashboard();
     };
     const cancel = document.getElementById('fin-descuentos-cancel');
-    if (cancel) cancel.onclick = () => _finDescuentosClose();
+    if (cancel) cancel.onclick = () => {
+      // Flush para asegurar consistencia antes de cerrar
+      clearTimeout(_finDescAutoSaveTimer);
+      _finDescuentosAutoSave();
+      _finDescuentosClose();
+      _finRefreshDashboard();
+    };
   }
 
   // === Modal de movimientos (Fase 2C) =============================
