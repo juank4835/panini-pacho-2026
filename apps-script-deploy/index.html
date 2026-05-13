@@ -14566,6 +14566,28 @@
       ' · ' + totalAlbum + ' láminas catalogadas' +
     '</div>';
 
+    // Banner de tiers activos — diagnóstico visible. Si hay descuentos
+    // configurados, los mostramos como chip. Si no, mostramos un hint
+    // tappeable que abre el modal de descuentos.
+    const tiersActivos = (finanzasState && Array.isArray(finanzasState.descuentos))
+      ? finanzasState.descuentos
+      : [];
+    if (tiersActivos.length > 0) {
+      const tiersHtml = tiersActivos.map(d => {
+        return '<span style="color:var(--green);font-weight:700;">' +
+          d.minQty + '+ → −' + d.descuento + '%' +
+          '</span>';
+      }).join(' &nbsp;·&nbsp; ');
+      html += '<div style="margin: 8px 0 0; padding: 8px 12px; background: rgba(0,214,133,0.08); border: 0.5px solid rgba(0,214,133,0.35); border-radius: 8px; font-size: 12px; color: var(--text-2); cursor: pointer;" data-fin-descuentos>' +
+        '<span style="color:var(--text-3);">Descuentos por volumen:</span> ' + tiersHtml +
+        '<span style="float:right;color:var(--text-3);font-size:10px;">tap para editar</span>' +
+      '</div>';
+    } else {
+      html += '<div style="margin: 8px 0 0; padding: 8px 12px; background: var(--bg-2); border: 0.5px dashed var(--border); border-radius: 8px; font-size: 12px; color: var(--text-3); cursor: pointer; text-align: center;" data-fin-descuentos>' +
+        'Sin descuentos por volumen configurados — <b style="color:var(--amber);">tap para añadir</b>' +
+      '</div>';
+    }
+
     // Hero metric — recuperación proyectada
     const trendCls = trendPct >= 0 ? '' : 'neg';
     const trendArrow = trendPct >= 0 ? '▲' : '▼';
@@ -15446,6 +15468,23 @@
       dedup.sort((a, b) => a.minQty - b.minQty);
       finanzasState.descuentos = dedup;
       _finSave();
+      // Verificar write a localStorage (defensive — si falla, alert visible)
+      let verified = false;
+      try {
+        const reread = JSON.parse(localStorage.getItem(STORAGE_FIN_KEY) || '{}');
+        verified = Array.isArray(reread.descuentos) && reread.descuentos.length === dedup.length;
+      } catch (_) {}
+      if (!verified) {
+        alert('⚠ No se pudo guardar a localStorage. ¿Estás en modo privado? Intenta de nuevo.');
+        return;
+      }
+      // Feedback visible: confirmación con los tiers guardados
+      if (dedup.length > 0) {
+        const summary = dedup.map(d => d.minQty + '+ → −' + d.descuento + '%').join('  ·  ');
+        alert('✓ Guardado:  ' + summary);
+      } else {
+        alert('✓ Descuentos eliminados (sin tiers activos)');
+      }
       _finDescuentosClose();
       _finRefreshDashboard();
     };
