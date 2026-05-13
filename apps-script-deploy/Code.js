@@ -63,9 +63,24 @@ function doGet(e) {
     const ordenRaw = props.getProperty(ORDEN_KEY);
     if (ordenRaw) { try { orden = JSON.parse(ordenRaw); } catch (_) {} }
     const version = parseInt(props.getProperty(VERSION_KEY) || '0', 10);
+    // Incluir precios + especiales para que la vista pública pueda mostrar
+    // valor de repetidas, costo de faltantes y la tabla de referencia por
+    // categoría. Read-only — el endpoint sigue sin permitir mutaciones.
+    let precios = {};
+    let especiales = {};
+    const finRaw = props.getProperty(FIN_KEY);
+    if (finRaw) {
+      try {
+        const fin = JSON.parse(finRaw);
+        if (fin && typeof fin === 'object') {
+          if (fin.precios && typeof fin.precios === 'object') precios = fin.precios;
+          if (fin.especiales && typeof fin.especiales === 'object') especiales = fin.especiales;
+        }
+      } catch (_) {}
+    }
     // Soporte JSONP para evitar problemas de CORS al consumir desde
     // GitHub Pages. Si viene ?callback=fn, devolvemos JS; si no, JSON puro.
-    const payload = JSON.stringify({ ok: true, version: version, state: all, orden: orden });
+    const payload = JSON.stringify({ ok: true, version: version, state: all, orden: orden, precios: precios, especiales: especiales });
     if (e.parameter.callback) {
       const cb = String(e.parameter.callback).replace(/[^a-zA-Z0-9_$]/g, '');
       return ContentService
@@ -75,6 +90,40 @@ function doGet(e) {
     return ContentService
       .createTextOutput(payload)
       .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // GET de oferta por token: la app generó una oferta corta con
+  // createOferta(ids) y compartió un link tipo ?o=TOKEN. La página pública
+  // hace fetch a este endpoint para resolver el token a la lista de IDs.
+  // Es JSONP para evitar CORS (cambios/ corre en juank4835.github.io).
+  if (e && e.parameter && e.parameter.action === 'oferta' && e.parameter.token) {
+    const props = PropertiesService.getScriptProperties();
+    const token = String(e.parameter.token).replace(/[^a-zA-Z0-9]/g, '').slice(0, 32);
+    if (!token) {
+      const payload = JSON.stringify({ ok: false, error: 'invalid_token' });
+      if (e.parameter.callback) {
+        const cb = String(e.parameter.callback).replace(/[^a-zA-Z0-9_$]/g, '');
+        return ContentService.createTextOutput(cb + '(' + payload + ');').setMimeType(ContentService.MimeType.JAVASCRIPT);
+      }
+      return ContentService.createTextOutput(payload).setMimeType(ContentService.MimeType.JSON);
+    }
+    const raw = props.getProperty('OFERTA_' + token);
+    let payload;
+    if (raw) {
+      try {
+        const data = JSON.parse(raw);
+        payload = JSON.stringify({ ok: true, ids: data.ids || [], ts: data.ts || 0 });
+      } catch (_) {
+        payload = JSON.stringify({ ok: false, error: 'corrupted' });
+      }
+    } else {
+      payload = JSON.stringify({ ok: false, error: 'not_found' });
+    }
+    if (e.parameter.callback) {
+      const cb = String(e.parameter.callback).replace(/[^a-zA-Z0-9_$]/g, '');
+      return ContentService.createTextOutput(cb + '(' + payload + ');').setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService.createTextOutput(payload).setMimeType(ContentService.MimeType.JSON);
   }
 
   // Dump completo del estado per-item (admin). Útil para diagnóstico y
@@ -740,7 +789,7 @@ function _bumpFinVersion(props) {
   return v;
 }
 function _emptyFinanzas() {
-  return { v: 1, precios: {}, movimientos: [] };
+  return { v: 1, precios: {}, especiales: {}, movimientos: [] };
 }
 
 /**
@@ -758,6 +807,33 @@ function pullFinanzas(sinceFinVersion) {
     }
     const value = _readFinanzas(props);
     return { unchanged: false, finVersion: currentVersion, value: value };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Reemplaza el mapa completo de precios especiales por id.
+ * Llamado cuando el usuario edita la lista en el sheet "★ Especiales".
+ * Last-write-wins: el cliente envía el mapa completo y el server lo guarda
+ * tal cual. Bumpea finVersion para que las otras instancias lo pulleen.
+ */
+function setFinEspeciales(especiales) {
+  if (!especiales || typeof especiales !== 'object') throw new Error('especiales debe ser objeto');
+  const lock = LockService.getScriptLock();
+  lock.waitLock(5000);
+  try {
+    const props = PropertiesService.getScriptProperties();
+    const cur = _readFinanzas(props) || _emptyFinanzas();
+    const cleaned = {};
+    for (const k in especiales) {
+      const n = parseInt(especiales[k], 10);
+      if (typeof k === 'string' && k && !isNaN(n) && n >= 0) cleaned[k] = n;
+    }
+    cur.especiales = cleaned;
+    _writeFinanzas(props, cur);
+    const v = _bumpFinVersion(props);
+    return { ok: true, finVersion: v, value: cur };
   } finally {
     lock.releaseLock();
   }
@@ -797,11 +873,14 @@ function setFinPrecios(precios) {
 function addFinMovimiento(mov) {
   if (!mov || typeof mov !== 'object') throw new Error('mov debe ser objeto');
   if (typeof mov.id !== 'string' || !mov.id) throw new Error('mov.id requerido');
-  if (mov.tipo !== 'compra' && mov.tipo !== 'venta') throw new Error('mov.tipo invalido');
+  if (mov.tipo !== 'compra' && mov.tipo !== 'venta' && mov.tipo !== 'intercambio' && mov.tipo !== 'ajuste') throw new Error('mov.tipo invalido');
   const qty = parseInt(mov.qty, 10);
   const precio = parseInt(mov.precio, 10);
-  if (isNaN(qty) || qty <= 0) throw new Error('mov.qty debe ser > 0');
+  if (isNaN(qty) || qty < 0) throw new Error('mov.qty debe ser >= 0');
   if (isNaN(precio) || precio < 0) throw new Error('mov.precio debe ser >= 0');
+  if (mov.tipo === 'compra' || mov.tipo === 'venta') {
+    if (qty <= 0) throw new Error('mov.qty debe ser > 0');
+  }
 
   const lock = LockService.getScriptLock();
   lock.waitLock(5000);
@@ -813,7 +892,7 @@ function addFinMovimiento(mov) {
       const v = parseInt(props.getProperty(FIN_VERSION_KEY) || '0', 10);
       return { ok: true, finVersion: v, value: cur, duplicate: true };
     }
-    cur.movimientos.push({
+    const persisted = {
       id: mov.id,
       tipo: mov.tipo,
       subtipo: typeof mov.subtipo === 'string' ? mov.subtipo : '',
@@ -821,7 +900,15 @@ function addFinMovimiento(mov) {
       precio: precio,
       fecha: typeof mov.fecha === 'string' ? mov.fecha : '',
       nota: typeof mov.nota === 'string' ? mov.nota : '',
-    });
+    };
+    if (Array.isArray(mov.laminaIds)) persisted.laminaIds = mov.laminaIds.filter(x => typeof x === 'string');
+    if (Array.isArray(mov.inventoryOps)) {
+      persisted.inventoryOps = mov.inventoryOps
+        .filter(op => op && typeof op.id === 'string' && typeof op.delta === 'number')
+        .map(op => ({ id: op.id, delta: op.delta }));
+    }
+    if (typeof mov.description === 'string' && mov.description) persisted.description = mov.description;
+    cur.movimientos.push(persisted);
     _writeFinanzas(props, cur);
     const v = _bumpFinVersion(props);
     return { ok: true, finVersion: v, value: cur };
@@ -863,8 +950,9 @@ function importFinanzas(obj) {
     const cleaned = {
       v: 1,
       precios: obj.precios && typeof obj.precios === 'object' ? obj.precios : {},
+      especiales: obj.especiales && typeof obj.especiales === 'object' ? obj.especiales : {},
       movimientos: Array.isArray(obj.movimientos) ? obj.movimientos.filter(m =>
-        m && typeof m.id === 'string' && (m.tipo === 'compra' || m.tipo === 'venta')
+        m && typeof m.id === 'string' && (m.tipo === 'compra' || m.tipo === 'venta' || m.tipo === 'intercambio' || m.tipo === 'ajuste')
       ) : [],
     };
     _writeFinanzas(props, cleaned);
@@ -873,6 +961,62 @@ function importFinanzas(obj) {
   } finally {
     lock.releaseLock();
   }
+}
+
+/**
+ * Crea una oferta personalizada con un token corto. La app llama esta
+ * función para compartir una lista de láminas con un vecino sin pegarle
+ * 1000+ chars de URL — devuelve un token de 6 chars (ej. "Xy7k9p") que
+ * se usa en la URL pública como ?o=TOKEN. La página pública resuelve el
+ * token vía el endpoint doGet con ?action=oferta&token=...
+ *
+ * Cleanup automático: al crear, purga ofertas mayores a 30 días para
+ * mantener el storage de PropertiesService dentro de su quota (~500KB).
+ */
+function createOferta(ids) {
+  if (!Array.isArray(ids) || ids.length === 0) throw new Error('ids requeridos');
+  const cleaned = ids
+    .filter(function(id) { return typeof id === 'string' && id.length > 0 && id.length < 20; })
+    .slice(0, 500);
+  if (cleaned.length === 0) throw new Error('ids vacíos');
+
+  const props = PropertiesService.getScriptProperties();
+
+  // Cleanup: purgar ofertas > 30 días para que el storage no se llene.
+  const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+  const allKeys = props.getKeys();
+  let cleaned_count = 0;
+  for (let i = 0; i < allKeys.length; i++) {
+    const key = allKeys[i];
+    if (key.indexOf('OFERTA_') !== 0) continue;
+    try {
+      const raw = props.getProperty(key);
+      const data = raw ? JSON.parse(raw) : null;
+      if (data && data.ts && data.ts < cutoff) {
+        props.deleteProperty(key);
+        cleaned_count++;
+      }
+    } catch (_) {}
+  }
+
+  // Generar token único de 6 chars base36. Reintentar hasta 5 veces si
+  // hay colisión (probabilidad: ~1 en 2 billones, prácticamente nunca).
+  let token = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const candidate = Math.random().toString(36).slice(2, 8);
+    if (candidate.length === 6 && !props.getProperty('OFERTA_' + candidate)) {
+      token = candidate;
+      break;
+    }
+  }
+  if (!token) throw new Error('No se pudo generar token único');
+
+  props.setProperty('OFERTA_' + token, JSON.stringify({
+    ids: cleaned,
+    ts: Date.now()
+  }));
+
+  return { token: token, count: cleaned.length, cleanup: cleaned_count };
 }
 
 // ===== Utilidades de mantenimiento =====
@@ -893,4 +1037,251 @@ function debugMigrate() {
   _migrateIfNeeded(props);
   Logger.log('Migración aplicada. Estado actual:');
   Logger.log(JSON.stringify(props.getProperties(), null, 2));
+}
+
+// ===== Parser de mensajes de intercambio con IA (Anthropic Claude Haiku) =====
+//
+// El parser heurístico (`parseFriendMessage` en index.html) cubre el formato
+// estándar pero falla con la cola larga: emojis, banderas, listas pegadas de
+// otras apps, formatos en otros idiomas, etc.
+//
+// Esta función envía el mensaje crudo a Claude Haiku que devuelve JSON con la
+// estructura idéntica a la del parser heurístico. El frontend la prefiere y
+// cae al parser local si falla (no hay API key, error de red, JSON inválido).
+//
+// Setup: agregar la API key en Script Properties con nombre 'ANTHROPIC_KEY'.
+// Costo aprox por cruce: $0.001-0.002 con Haiku. Latencia: ~1-1.5s.
+
+const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
+const ANTHROPIC_MODEL = 'claude-haiku-4-5-20251001';
+const ANTHROPIC_KEY_PROP = 'ANTHROPIC_KEY';
+
+function parseFriendMessageAI(repesText, faltasText) {
+  // Compat: si recibimos UN solo arg (formato combinado viejo "TENGO...\nME FALTAN..."),
+  // lo separamos por headers antes de procesar. Nuevos clientes llaman con dos args.
+  if (typeof faltasText === 'undefined' && typeof repesText === 'string') {
+    const split = _splitCombinedInput(repesText);
+    repesText = split.repes;
+    faltasText = split.faltas;
+  }
+
+  const hasRepes = repesText && typeof repesText === 'string' && repesText.trim();
+  const hasFaltas = faltasText && typeof faltasText === 'string' && faltasText.trim();
+
+  if (!hasRepes && !hasFaltas) {
+    return {
+      faltan: {}, repetidas: {}, errors: ['Mensaje vacío'],
+      totalFaltan: 0, totalRepetidas: 0, aiUsed: false
+    };
+  }
+
+  const apiKey = PropertiesService.getScriptProperties().getProperty(ANTHROPIC_KEY_PROP);
+  if (!apiKey) {
+    throw new Error('Configurá ANTHROPIC_KEY en Script Properties para usar el parser con IA. ' +
+                    'Apps Script → Project Settings → Script Properties → Add Property.');
+  }
+
+  const result = {
+    faltan: {}, repetidas: {}, errors: [],
+    totalFaltan: 0, totalRepetidas: 0, aiUsed: true
+  };
+
+  // Procesamos cada sección por separado: dos llamadas a Claude más pequeñas
+  // y enfocadas en vez de una grande con dos secciones. Más rápido y robusto
+  // para listas masivas (300+ cromos por sección no caben en una sola respuesta).
+  if (hasRepes) {
+    Logger.log('parseFriendMessageAI: procesando repetidas (' + repesText.length + ' chars)');
+    const repesItems = _parseSectionAI(repesText, 'repetidas', apiKey);
+    Logger.log('parseFriendMessageAI: repetidas → ' + Object.keys(repesItems).length + ' items extraídos');
+    for (const id in repesItems) {
+      const qty = parseInt(repesItems[id], 10) || 1;
+      result.repetidas[id] = qty;
+      result.totalRepetidas += qty;
+    }
+  }
+  if (hasFaltas) {
+    Logger.log('parseFriendMessageAI: procesando faltantes (' + faltasText.length + ' chars)');
+    const faltasItems = _parseSectionAI(faltasText, 'faltantes', apiKey);
+    Logger.log('parseFriendMessageAI: faltantes → ' + Object.keys(faltasItems).length + ' items extraídos');
+    for (const id in faltasItems) {
+      result.faltan[id] = 1;
+      result.totalFaltan++;
+    }
+  }
+
+  return result;
+}
+
+/** Separa el formato combinado legacy ("TENGO PARA CAMBIAR:\n...\nME FALTAN:\n...")
+ *  en dos cadenas independientes — para compat con clientes viejos. */
+function _splitCombinedInput(text) {
+  const lines = text.split(/\r?\n/);
+  let mode = null;
+  const repes = [], faltas = [];
+  for (const ln of lines) {
+    const t = ln.trim();
+    if (!t) continue;
+    const low = t.toLowerCase();
+    const isHead = !t.match(/^[A-Za-z]{2,8}\s*:/);
+    if (isHead) {
+      if (low.indexOf('falta') >= 0) { mode = 'falta'; continue; }
+      if (low.indexOf('tengo') >= 0 || low.indexOf('cambiar') >= 0 ||
+          low.indexOf('repetida') >= 0 || low.indexOf('intercamb') >= 0 ||
+          low.indexOf('suelta') >= 0) { mode = 'rep'; continue; }
+    }
+    if (mode === 'rep') repes.push(t);
+    else if (mode === 'falta') faltas.push(t);
+    else repes.push(t); // sin header asumimos repetidas
+  }
+  return { repes: repes.join('\n'), faltas: faltas.join('\n') };
+}
+
+/** Llama a Claude para parsear UNA sección (repetidas O faltantes).
+ *  Devuelve { id: qty } con los IDs canónicos. */
+function _parseSectionAI(text, sectionType, apiKey) {
+  const prompt = _buildAISectionPrompt(text, sectionType);
+
+  let response;
+  try {
+    response = UrlFetchApp.fetch(ANTHROPIC_API_URL, {
+      method: 'post',
+      contentType: 'application/json',
+      headers: {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01'
+      },
+      payload: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: 8192,
+        messages: [{ role: 'user', content: prompt }]
+      }),
+      muteHttpExceptions: true
+    });
+  } catch (err) {
+    throw new Error('Error de red llamando Claude (' + sectionType + '): ' +
+                    (err && err.message ? err.message : err));
+  }
+
+  const code = response.getResponseCode();
+  const bodyText = response.getContentText();
+  if (code !== 200) {
+    throw new Error('Claude API HTTP ' + code + ' (' + sectionType + '): ' + bodyText.slice(0, 300));
+  }
+
+  let body;
+  try {
+    body = JSON.parse(bodyText);
+  } catch (err) {
+    throw new Error('Respuesta no-JSON de Claude (' + sectionType + '): ' + bodyText.slice(0, 200));
+  }
+  const aiText = (body && body.content && body.content[0] && body.content[0].text) || '';
+  Logger.log('Claude response length (' + sectionType + '): ' + aiText.length + ' chars');
+
+  let jsonStr = aiText.trim();
+  const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+  if (jsonMatch) jsonStr = jsonMatch[0];
+  let parsed;
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch (err) {
+    throw new Error('Claude devolvió JSON inválido (' + sectionType + '): ' + aiText.slice(0, 200));
+  }
+
+  // Espera shape: { "items": { "ID": qty, ... } }
+  return (parsed && parsed.items && typeof parsed.items === 'object') ? parsed.items : {};
+}
+
+function _buildAISectionPrompt(text, sectionType) {
+  // 48 códigos FIFA del Mundial 2026, en el mismo orden que `equiposDefault`
+  // en el frontend. Si cambia el catálogo, actualizar aquí también.
+  const teamCodes = 'MEX, RSA, KOR, CZE, CAN, BIH, QAT, SUI, BRA, MAR, HAI, SCO, ' +
+                    'USA, PAR, AUS, TUR, GER, CUW, CIV, ECU, NED, JPN, SWE, TUN, ' +
+                    'BEL, EGY, IRN, NZL, ESP, CPV, KSA, URU, FRA, SEN, IRQ, NOR, ' +
+                    'ARG, ALG, AUT, JOR, POR, COD, UZB, COL, ENG, CRO, GHA, PAN';
+
+  const sectionLabel = sectionType === 'repetidas'
+    ? 'duplicates the person has TO GIVE / TRADE / OFFER'
+    : 'stickers the person is MISSING and WANTS to receive';
+
+  const qtyRule = sectionType === 'repetidas'
+    ? 'Quantity is 1 per item by default. Higher when explicit ("×3", "x3", "(2)", "3x", "(×2)") ' +
+      'or when same item repeats. A line prefix "xN:" or "×N:" applies N to ALL items on that line.'
+    : 'Quantity is always 1 for missing stickers (you either need it or you don\'t — no multipliers).';
+
+  return (
+    'You parse Panini Mundial 2026 sticker album lists and extract sticker IDs.\n' +
+    'This list represents ' + sectionLabel + '.\n\n' +
+    'Output ONLY this JSON (no markdown, no commentary, no explanation):\n' +
+    '{"items": {"BRA-7": 2, "COL-3": 1, "FWC5": 1}}\n\n' +
+    'Sticker ID formats:\n' +
+    '- "00"\n' +
+    '- "FWC1" through "FWC19" (NO hyphen — FWC1-FWC8 are intro, FWC9-FWC19 are history)\n' +
+    '- "<TEAM>-<N>" where N = 1..20 (hyphen is the standard team-number separator)\n\n' +
+    'The 48 valid team codes (use ONLY these):\n' +
+    teamCodes + '\n\n' +
+    'Map country names in any language to the right code (Brazil/Brasil/Brésil → BRA, ' +
+    'España/Spain → ESP, Países Bajos/Netherlands/Holanda → NED, Sudáfrica/South Africa → RSA, ' +
+    'Corea del Sur/South Korea → KOR, Rep. Checa/Czech → CZE, Cabo Verde → CPV, ' +
+    'Arabia Saudita → KSA, Costa de Marfil/Ivory Coast → CIV, Curazao/Curacao → CUW, ' +
+    'Estados Unidos/USA → USA, Inglaterra/England → ENG, Escocia/Scotland → SCO, ' +
+    'Argelia/Algeria → ALG, RD Congo → COD, Panamá/Panama → PAN, etc.). ' +
+    'If you cannot match a country to one of the 48 codes above, skip the item.\n\n' +
+    'SPECIAL FORMATS to handle (common in Panini app exports and trading groups):\n\n' +
+    '1. COMPACT CODES (team code immediately followed by number, no separator):\n' +
+    '   "MEX10" → "MEX-10". "BRA7" → "BRA-7". "KOR3" → "KOR-3".\n' +
+    '   Always output with the hyphen.\n\n' +
+    '2. RANGES (em-dash "—" or hyphen "-" between two codes of the same team or FWC):\n' +
+    '   "FWC3-FWC4" or "FWC3—FWC4" expands to FWC3 AND FWC4 (both items).\n' +
+    '   "KOR15-KOR16" expands to KOR-15 AND KOR-16.\n' +
+    '   "AUS4-AUS8" expands inclusive: AUS-4, AUS-5, AUS-6, AUS-7, AUS-8 (5 items).\n' +
+    '   IMPORTANT: only applies when both sides of the dash are valid codes. ' +
+    '"BRA-3" alone is one sticker, not a range.\n\n' +
+    '3. MULTIPLIER PREFIX (line starts with "xN:" or "×N:"):\n' +
+    '   "x1: A, B, C" → A, B, C each quantity 1\n' +
+    '   "x2: BRA-3, COL-7" → BRA-3 and COL-7 each quantity 2\n' +
+    '   Applies to ALL items on that line until a new prefix or section break.\n\n' +
+    '4. IGNORE preambles, titles, and metadata that are not items:\n' +
+    '   - Document titles ("Panini WC 2026 Album", "Mi lista", "Cromos Duplicados", "Cromos Faltantes")\n' +
+    '   - Counts in parentheses ("(182)", "(352)", "Total: 182 cromos")\n' +
+    '   - Section header words ("TENGO PARA CAMBIAR", "ME FALTAN", "REPETIDAS", "FALTANTES")\n' +
+    '   - Dates, timestamps, greetings ("Hola!", "Hey")\n' +
+    '   - Standalone emojis used decoratively\n\n' +
+    qtyRule + '\n\n' +
+    'Skip any item you cannot confidently identify with one of the valid IDs above.\n' +
+    'Extract EVERY item — do not summarize or truncate. Even if the list has hundreds of items, output them all.\n\n' +
+    'List to parse:\n' +
+    '---\n' +
+    text + '\n' +
+    '---'
+  );
+}
+
+/** Test rápido del parser AI desde el editor de Apps Script. */
+function debugAIParse() {
+  const sample =
+    'Hola hermano, te paso mi lista 🇧🇷⚽\n\n' +
+    'Tengo para cambiar:\n' +
+    'Brasil: 3, 7 (×2)\n' +
+    'Colombia: 15\n\n' +
+    'Me faltan:\n' +
+    'Argentina 12, Mexico 4';
+  const r = parseFriendMessageAI(sample);
+  Logger.log(JSON.stringify(r, null, 2));
+}
+
+/** Test del formato oficial de Panini App: "x1:" prefix, rangos con guión/em-dash,
+ *  códigos compactos sin separador, todo en una línea gigante. */
+function debugAIParseHard() {
+  const sample =
+    'Panini WC 2026 Album — Cromos Duplicados (182)\n' +
+    'x1: 00, FWC3—FWC4, FWC9—FWC10, FWC12, FWC16, FWC18, MEX10, MEX14, ' +
+    'RSA5, RSA7, RSA16, RSA18, KOR3, KOR5, KOR7, KOR10, KOR13, KOR15-KOR16, ' +
+    'CZE19, CAN3, CAN7-CAN8, BIH3-BIH4, BIH15-BIH16, BIH18, QAT13, QAT18, QAT20, ' +
+    'SUI1, SUI4, SUI6, SUI8, SUI17, BRA8, BRA14, BRA18, MAR2, MAR6, MAR10, ' +
+    'MAR14, MAR18, HAI13, HAI19, PAR2, AUS4-AUS8, AUS10-AUS12, AUS18, ' +
+    'TUR4, TUR6-TUR7, GER8, GER12, GER16, GER20';
+  const r = parseFriendMessageAI(sample);
+  Logger.log('Total faltan: ' + r.totalFaltan + '  ·  Total repetidas: ' + r.totalRepetidas);
+  Logger.log('IDs en repetidas: ' + Object.keys(r.repetidas).sort().join(', '));
+  Logger.log(JSON.stringify(r, null, 2));
 }

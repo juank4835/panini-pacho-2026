@@ -1534,6 +1534,44 @@
     return cat !== 'jugador';
   }
 
+  // Resuelve ?o=TOKEN via JSONP al backend. Devuelve array de IDs si existe.
+  // Diferente al parser de ?oferta= (que es totalmente client-side). Acá el
+  // server tiene la lista guardada y devuelve los IDs por token corto.
+  function loadOfertaByToken(token) {
+    return new Promise((resolve, reject) => {
+      const cbName = 'paniniOfertaCb_' + Date.now();
+      let timeout;
+      window[cbName] = (data) => {
+        clearTimeout(timeout);
+        delete window[cbName];
+        resolve(data);
+      };
+      const script = document.createElement('script');
+      script.src = APPS_SCRIPT_URL + '?action=oferta&token=' + encodeURIComponent(token) +
+        '&callback=' + cbName + '&_=' + Date.now();
+      script.onerror = () => {
+        clearTimeout(timeout);
+        delete window[cbName];
+        reject(new Error('No se pudo resolver el link de la oferta'));
+      };
+      document.body.appendChild(script);
+      timeout = setTimeout(() => {
+        delete window[cbName];
+        reject(new Error('Timeout (15s) al resolver la oferta'));
+      }, 15000);
+    });
+  }
+
+  // Detecta ?o=TOKEN en la URL — formato corto via backend.
+  function _parseOfertaTokenParam() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const t = params.get('o');
+      if (!t) return null;
+      return /^[a-zA-Z0-9]{4,32}$/.test(t) ? t : null;
+    } catch (_) { return null; }
+  }
+
   async function init() {
     document.getElementById('content').innerHTML =
       '<div class="loading"><div class="spinner"></div><div>Cargando estado…</div></div>';
@@ -1542,6 +1580,32 @@
       if (!data || !data.ok) throw new Error('Respuesta inválida');
       let equipos = equiposDefault;
       if (data.orden && Array.isArray(data.orden) && data.orden.length === 48) equipos = data.orden;
+
+      // Tres caminos de render:
+      //   1) ?o=TOKEN → fetch al backend, resolver, render oferta personalizada
+      //   2) ?oferta=ids,... → render directo (legacy + URL larga)
+      //   3) sin params → inventario completo (vista normal)
+      const ofertaToken = _parseOfertaTokenParam();
+      if (ofertaToken) {
+        document.getElementById('content').innerHTML =
+          '<div class="loading"><div class="spinner"></div><div>Cargando oferta personalizada…</div></div>';
+        try {
+          const ofertaData = await loadOfertaByToken(ofertaToken);
+          if (ofertaData && ofertaData.ok && Array.isArray(ofertaData.ids) && ofertaData.ids.length > 0) {
+            renderOfertaView(data.state || {}, equipos, data.precios || {}, data.especiales || {}, ofertaData.ids);
+            return;
+          }
+          throw new Error(ofertaData && ofertaData.error === 'not_found'
+            ? 'El link de la oferta expiró o no existe. Pídele al remitente que la regenere.'
+            : 'No se pudo cargar la oferta. Intentá refrescar la página.');
+        } catch (e) {
+          document.getElementById('content').innerHTML =
+            '<div class="errstate">⚠ ' + (e.message || 'Error al cargar la oferta') +
+            '<br><br><a href="' + SHARE_URL + '">Ver inventario completo →</a></div>';
+          return;
+        }
+      }
+
       const ofertaIds = _parseOfertaParam();
       if (ofertaIds && ofertaIds.length > 0) {
         renderOfertaView(data.state || {}, equipos, data.precios || {}, data.especiales || {}, ofertaIds);
