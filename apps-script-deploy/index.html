@@ -14247,10 +14247,18 @@
           if (!_finPendingHas(m.id)) _finPendingAdd(m);
         });
         const mergedMovs = serverMovs.concat(pendingLocalMovs);
+        // Preservar `descuentos` del estado local — es client-only (viaja con
+        // la oferta, no con el estado del seller en backend). Antes este
+        // reassign los borraba en cada sync (BUG: los tiers desaparecían
+        // al cerrar/abrir la app porque pullFinanzas sobreescribía).
+        const preservedDescuentos = (finanzasState && Array.isArray(finanzasState.descuentos))
+          ? finanzasState.descuentos
+          : [];
         finanzasState = {
           v: r.value.v || 1,
           precios: Object.assign({}, def.precios, r.value.precios || {}),
           especiales: (r.value.especiales && typeof r.value.especiales === 'object') ? r.value.especiales : {},
+          descuentos: preservedDescuentos,
           movimientos: mergedMovs,
         };
         _finSave();
@@ -15951,10 +15959,16 @@
             // versión del servidor (que no los tenía).
             if (incomingFin) {
               const def = _finDefaults();
+              // Si el backup incluye descuentos, usar esos; si no, preservar
+              // los locales actuales. Antes este reassign los borraba (BUG).
+              const importedDescuentos = Array.isArray(incomingFin.descuentos)
+                ? incomingFin.descuentos
+                : ((finanzasState && Array.isArray(finanzasState.descuentos)) ? finanzasState.descuentos : []);
               finanzasState = {
                 v: incomingFin.v || 1,
                 precios: Object.assign({}, def.precios, incomingFin.precios || {}),
                 especiales: (incomingFin.especiales && typeof incomingFin.especiales === 'object') ? incomingFin.especiales : {},
+                descuentos: importedDescuentos,
                 movimientos: Array.isArray(incomingFin.movimientos) ? incomingFin.movimientos : [],
               };
               _finSave();
