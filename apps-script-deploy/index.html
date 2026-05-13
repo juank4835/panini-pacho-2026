@@ -5987,16 +5987,19 @@
   }
 
   /* Action bar sticky al pie del bottom-sheet de intercambios — layout en 2
-     filas: arriba van los secundarios (Reset / Balancear / Compartir), abajo
-     el primario único (Comprar / Vender / Cruzar). Antes era una sola fila
-     pero con 3 secundarios + 1 primario se desbordaba horizontalmente. La
-     wrap-policy: secundarios comparten row 1 con flex:1 (se reparten ancho),
-     el primario fuerza row 2 con flex-basis:100%. */
+     filas para maximizar usabilidad y tap target del primario:
+       Row 1 (secundarios, comparten ancho): Reset / Balancear / Compartir
+       Row 2 (primario único, full-width): Cruzar / Vender / Comprar
+     El primario es la acción principal (cerrar la transacción) y merece su
+     propia fila con tap target grande. Los secundarios son utilitarios:
+     compactos, equal-share, ellipsis si no caben.
+     wrap-policy: secundarios `flex:1 1 0` se reparten ancho, primario
+     `flex:0 0 100%` fuerza wrap a row 2 (no puede compartir línea). */
   #intercambio-sheet-body .cx-sticky {
     position: sticky;
     bottom: 0;
     margin: 16px -16px 0;
-    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+    padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px));
     background: rgba(26,26,26,0.94);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
@@ -6006,17 +6009,23 @@
     gap: 8px;
     z-index: 5;
   }
-  #intercambio-sheet-body .cx-sticky .cx-btn { min-width: 0; }
+  #intercambio-sheet-body .cx-sticky .cx-btn { min-width: 0; margin: 0; }
   #intercambio-sheet-body .cx-sticky .cx-btn.secondary {
     flex: 1 1 0;
-    padding: 11px 6px;
-    font-size: 12px;
+    flex-basis: 0;
+    padding: 10px 6px;
+    font-size: 12.5px;
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
   #intercambio-sheet-body .cx-sticky .cx-btn.primary {
-    flex: 1 1 100%;
+    flex: 0 0 100%;
+    width: 100%;
+    font-size: 15px;
+    padding: 14px 16px;
+    letter-spacing: 0.3px;
   }
 
   /* Acciones del cruce de listas (Reset / Confirmar cambio) — outline + glow,
