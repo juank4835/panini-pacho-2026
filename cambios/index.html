@@ -707,6 +707,21 @@
   }
   .oferta-top-stats .num-count { color: var(--text); }
   .oferta-top-stats .num-price { color: var(--amber); text-shadow: 0 0 6px rgba(239,159,39,0.45); }
+  /* Subtitle bajo el num — para mostrar "$X c/u común" o info auxiliar. */
+  .oferta-top-stats .num-sub {
+    color: var(--text-3);
+    font-size: 10.5px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-weight: 500;
+    margin-top: 4px;
+    letter-spacing: 0.2px;
+    line-height: 1;
+  }
+  .oferta-top-stats .num-sub.with-discount {
+    color: var(--green);
+    text-shadow: 0 0 4px rgba(0,214,133,0.3);
+    font-weight: 700;
+  }
   @keyframes ofertaPulse {
     0% { transform: scale(1); }
     40% { transform: scale(1.12); }
@@ -1323,6 +1338,9 @@
       '<div class="oferta-view">' +
         // Top sticky stats bar — siempre visible, refuerza el total como
         // anchor psicológico. Se actualiza con cada toggle de chip.
+        // Subtitle "$X c/u común" bajo el total hace explícito el precio
+        // unitario tras descuento → así el comprador ve EXACTAMENTE cuánto
+        // le sale cada lámina (info más accionable que el total bruto).
         '<div class="oferta-top-stats" id="oferta-top-stats">' +
           '<div class="top-stat">' +
             '<span class="lbl">Seleccionadas</span>' +
@@ -1331,6 +1349,9 @@
           '<div class="top-stat price">' +
             '<span class="lbl">Total estimado</span>' +
             '<span class="num num-price" id="oferta-top-price">$' + fmtMoney(valorEstimadoInicial) + '</span>' +
+            '<span class="num-sub" id="oferta-top-unit">' +
+              (precios && precios.jugador ? '$' + fmtMoney(precios.jugador) + ' c/u común' : '') +
+            '</span>' +
           '</div>' +
         '</div>' +
         '<div class="oferta-hero">' +
@@ -1360,7 +1381,9 @@
             '</div>' +
             '<div class="oferta-stat-price">' +
               '<b id="oferta-selected-price">$' + fmtMoney(valorEstimadoInicial) + '</b>' +
-              '<small>total estimado</small>' +
+              '<small id="oferta-selected-unit">' +
+                (precios && precios.jugador ? '$' + fmtMoney(precios.jugador) + ' por lámina común' : 'total estimado') +
+              '</small>' +
             '</div>' +
           '</div>' +
           '<button class="oferta-copy-btn" id="oferta-copy-btn" type="button">Revisar pedido</button>' +
@@ -1403,6 +1426,13 @@
       const discState = _computeDiscountState(selected.size);
       const descPesos = totalComunes * (discState.pctVigente / 100);
       const finalTotal = subTotal - descPesos;
+      // Precio unitario común después del descuento. Como todas las comunes
+      // (jugadores no especiales) comparten el mismo precio base, la div
+      // (totalComunes - descPesos) / nComunesSel = precio jugador con desc.
+      // Si no hay comunes seleccionadas, queda en 0 (UI lo oculta).
+      const precioComunUnitario = nComunesSel > 0
+        ? Math.round((totalComunes - descPesos) / nComunesSel)
+        : 0;
       return {
         nComunes: nComunesSel,
         nEspeciales: nEspecialesSel,
@@ -1413,7 +1443,8 @@
         descPesos: descPesos,
         nextTier: discState.nextTier,
         faltaPara: discState.faltaPara,
-        finalTotal: finalTotal
+        finalTotal: finalTotal,
+        precioComunUnitario: precioComunUnitario
       };
     }
 
@@ -1424,8 +1455,10 @@
       const totals = _computeTotals();
       const countEl = document.getElementById('oferta-selected-count');
       const priceEl = document.getElementById('oferta-selected-price');
+      const unitEl = document.getElementById('oferta-selected-unit');
       const topCountEl = document.getElementById('oferta-top-count');
       const topPriceEl = document.getElementById('oferta-top-price');
+      const topUnitEl = document.getElementById('oferta-top-unit');
       const topStats = document.getElementById('oferta-top-stats');
       const copyBtn = document.getElementById('oferta-copy-btn');
       const hintEl = document.getElementById('oferta-descuento-hint');
@@ -1455,21 +1488,63 @@
         }
       }
 
+      // Subtitle de precio unitario: muestra "$X c/u común" o (si discount)
+      // "$X c/u común antes $Y" — el comprador ve EXACTAMENTE cuánto le
+      // sale cada lámina, no solo el bulk total.
+      const precioBaseComun = (precios && precios.jugador) ? precios.jugador : 0;
+      let unitLabelLong = '';   // versión para el footer "por lámina común"
+      let unitLabelShort = '';  // versión compacta "$X c/u común" para top stats
+      if (totals.precioComunUnitario > 0) {
+        if (hasDiscount) {
+          unitLabelLong = '$' + fmtMoney(totals.precioComunUnitario) + ' por lámina común (antes $' + fmtMoney(precioBaseComun) + ')';
+          unitLabelShort = '$' + fmtMoney(totals.precioComunUnitario) + ' c/u común';
+        } else {
+          unitLabelLong = '$' + fmtMoney(totals.precioComunUnitario) + ' por lámina común';
+          unitLabelShort = '$' + fmtMoney(totals.precioComunUnitario) + ' c/u común';
+        }
+      } else if (precioBaseComun > 0) {
+        // No hay comunes seleccionadas pero hay precio configurado
+        unitLabelLong = '$' + fmtMoney(precioBaseComun) + ' por lámina común';
+        unitLabelShort = '$' + fmtMoney(precioBaseComun) + ' c/u común';
+      } else {
+        unitLabelLong = 'total estimado';
+      }
+      if (unitEl) unitEl.textContent = unitLabelLong;
+      if (topUnitEl) {
+        topUnitEl.textContent = unitLabelShort;
+        if (hasDiscount) topUnitEl.classList.add('with-discount');
+        else topUnitEl.classList.remove('with-discount');
+      }
+
       // Banner de descuento: aplicado (verde) | próximo tier (ámbar) | hidden
+      // Mostramos el PRECIO UNITARIO que destrabás — es lo más concreto y
+      // accionable: "Suma 5 más para bajar a $900 c/u" pega más fuerte que
+      // un % abstracto.
       if (hintEl) {
+        // Para mostrar a qué precio unitario quedaría el común con el
+        // próximo tier (motiva al cliente con un número concreto)
+        const nextUnitPrice = (totals.nextTier && precioBaseComun > 0)
+          ? Math.round(precioBaseComun * (1 - totals.nextTier.descuento / 100))
+          : 0;
         if (hasDiscount && totals.nextTier) {
-          // Descuento aplicado Y hay siguiente tier → mostrar ambos
           hintEl.className = 'oferta-descuento-hint applied';
           hintEl.innerHTML =
-            '−' + totals.pctVigente + '% aplicado · ahorrás $' + fmtMoney(totals.descPesos) +
-            '<br><span style="font-weight:500;opacity:0.85;color:var(--text-2);">' +
-            'Sumá ' + totals.faltaPara + ' más para destrabar −' + totals.nextTier.descuento + '%</span>';
+            '−' + totals.pctVigente + '% aplicado · ahora a <b>$' + fmtMoney(totals.precioComunUnitario) + ' c/u común</b>' +
+            (nextUnitPrice > 0
+              ? '<br><span style="font-weight:500;opacity:0.85;color:var(--text-2);">' +
+                'Sumá ' + totals.faltaPara + ' más para bajar a $' + fmtMoney(nextUnitPrice) + ' c/u (−' + totals.nextTier.descuento + '%)</span>'
+              : '');
         } else if (hasDiscount) {
-          // Descuento aplicado, no más tiers
           hintEl.className = 'oferta-descuento-hint applied';
-          hintEl.innerHTML = '−' + totals.pctVigente + '% por volumen · ahorrás $' + fmtMoney(totals.descPesos);
+          hintEl.innerHTML =
+            '−' + totals.pctVigente + '% por volumen · ahora a <b>$' + fmtMoney(totals.precioComunUnitario) + ' c/u común</b>' +
+            ' · ahorrás $' + fmtMoney(totals.descPesos);
+        } else if (totals.nextTier && nextUnitPrice > 0) {
+          hintEl.className = 'oferta-descuento-hint next';
+          hintEl.innerHTML =
+            'Sumá <b>' + totals.faltaPara + ' más</b> para bajar a <b>$' + fmtMoney(nextUnitPrice) + ' c/u común</b> (−' + totals.nextTier.descuento + '%)';
         } else if (totals.nextTier) {
-          // Sin descuento todavía, mostrar próximo tier
+          // Fallback si no tenemos precioBaseComun (no debería pasar)
           hintEl.className = 'oferta-descuento-hint next';
           hintEl.innerHTML =
             'Sumá <b>' + totals.faltaPara + ' más</b> para destrabar <b>−' + totals.nextTier.descuento + '%</b> en las comunes';
@@ -1595,6 +1670,10 @@
       const discState = _computeDiscountState(selected.size);
       const descPesos = totalComunes * (discState.pctVigente / 100);
       const finalTotal = subTotal - descPesos;
+      // Precio unitario común tras descuento (lo más accionable en el msg)
+      const precioComunUnitario = comunesArr.length > 0
+        ? Math.round((totalComunes - descPesos) / comunesArr.length)
+        : 0;
 
       const lines = [
         'Me interesan estas ' + selected.size + ' láminas de tu oferta:',
@@ -1621,11 +1700,17 @@
         }
         lines.push('Descuento por volumen (' + discState.pctVigente + '% en comunes): −$' + fmtMoney(descPesos));
         lines.push('Total final: $' + fmtMoney(finalTotal));
+        if (precioComunUnitario > 0) {
+          lines.push('Precio por lámina común: $' + fmtMoney(precioComunUnitario) + ' c/u');
+        }
       } else {
         lines.push('Total estimado: $' + fmtMoney(finalTotal));
         if (comunesArr.length > 0 && especialesArr.length > 0) {
           lines.push('  · Comunes: $' + fmtMoney(totalComunes));
           lines.push('  · Especiales: $' + fmtMoney(totalEspeciales));
+        }
+        if (precioComunUnitario > 0) {
+          lines.push('Precio por lámina común: $' + fmtMoney(precioComunUnitario) + ' c/u');
         }
       }
       lines.push('');
@@ -1639,6 +1724,7 @@
         subTotal: subTotal,
         pctVigente: discState.pctVigente,
         descPesos: descPesos,
+        precioComunUnitario: precioComunUnitario,
         priceSum: finalTotal  // Mantengo `priceSum` para backward compat con _renderModalContent
       };
     }
@@ -1666,6 +1752,16 @@
           '<div class="big-row">' +
             '<span class="lbl">' + selected.size + ' lámina' + (selected.size === 1 ? '' : 's') + '</span>' +
             '<span class="val">$' + fmtMoney(orderData.priceSum) + '</span>' +
+          '</div>';
+      }
+      // Línea de precio unitario (lo más accionable para el cliente)
+      if (orderData.precioComunUnitario > 0) {
+        summaryHtml +=
+          '<div class="sub-row" style="font-weight:600;color:var(--text-2);">' +
+            '<span>Precio por lámina común</span>' +
+            '<span class="val" style="color:' + (hasDiscount ? 'var(--green)' : 'var(--text-2)') + ';">' +
+              '$' + fmtMoney(orderData.precioComunUnitario) + ' c/u' +
+            '</span>' +
           '</div>';
       }
       if (orderData.nComunes > 0 && orderData.nEspeciales > 0) {
