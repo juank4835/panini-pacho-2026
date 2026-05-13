@@ -366,6 +366,159 @@
   /* Refresh button standalone eliminado — ahora vive como .refresh-mini
      en el header (al lado del subtitle). */
 
+  /* === Vista "Oferta personalizada" (cuando llega un link con ?oferta=) === */
+  .oferta-view {
+    max-width: 520px;
+    margin: 0 auto;
+  }
+  .oferta-hero {
+    text-align: center;
+    padding: 20px 16px 24px;
+    margin-bottom: 14px;
+    background: linear-gradient(180deg, rgba(239,159,39,0.08), transparent);
+    border: 0.5px solid rgba(239,159,39,0.4);
+    border-radius: 14px;
+    box-shadow: 0 0 0 1px rgba(239,159,39,0.1), 0 0 22px rgba(239,159,39,0.15);
+  }
+  .oferta-eyebrow {
+    color: var(--text-3);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    margin-bottom: 6px;
+  }
+  .oferta-title {
+    margin: 0 0 10px;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 1px;
+    text-shadow:
+      0 0 8px rgba(239,159,39,0.6),
+      0 0 16px rgba(239,159,39,0.35),
+      0 0 28px rgba(239,159,39,0.18);
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  .oferta-meta {
+    color: var(--text-2);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .oferta-meta b { color: var(--text); font-weight: 700; }
+  .oferta-vendidas { color: var(--danger); opacity: 0.85; }
+  .oferta-grid {
+    margin-bottom: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .oferta-group-banner {
+    background: var(--bg-2);
+    color: var(--amber);
+    padding: 6px 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    border-radius: 6px;
+    margin-top: 8px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  .oferta-group-banner:first-child { margin-top: 0; }
+  .oferta-group-body {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    align-items: center;
+    padding: 6px 4px;
+    font-family: "JetBrains Mono", Menlo, monospace;
+  }
+  .oferta-team-label {
+    background: var(--bg-2);
+    color: var(--text-2);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    margin-left: 4px;
+  }
+  .oferta-team-label:first-child { margin-left: 0; }
+  .oferta-grid .cell {
+    width: 32px; height: 32px;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 11px;
+    border-radius: 50%;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .oferta-grid .cell.rep {
+    background: var(--amber);
+    box-shadow: 0 0 8px rgba(239,159,39,0.35), 0 0 0 0.5px rgba(239,159,39,0.5);
+  }
+  .oferta-grid .cell.sold {
+    background: var(--bg-3);
+    color: var(--text-3);
+    opacity: 0.45;
+    text-decoration: line-through;
+  }
+  .oferta-total {
+    background: var(--bg-2);
+    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+  }
+  .oferta-total-row.main {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 14px;
+    color: var(--text-2);
+  }
+  .oferta-total-row.main b {
+    color: var(--amber);
+    font-size: 22px;
+    font-weight: 700;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    text-shadow: 0 0 6px rgba(239,159,39,0.45);
+  }
+  .oferta-total-sub {
+    color: var(--text-3);
+    font-size: 10.5px;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+  .oferta-cta {
+    display: block;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto 8px;
+    text-align: center;
+    background: var(--bg-2);
+    color: var(--text-2);
+    border: 0.5px solid var(--border);
+    padding: 11px 12px;
+    border-radius: 100px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    letter-spacing: 0.2px;
+    transition: color 0.15s, border-color 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  }
+  .oferta-cta:hover {
+    color: var(--amber);
+    border-color: rgba(239,159,39,0.5);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25), 0 0 12px rgba(239,159,39,0.18);
+  }
+
   footer {
     color: var(--text-3);
     font-size: 11px;
@@ -585,6 +738,148 @@
   function fmtMoney(n) {
     n = Math.round(n || 0);
     return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+
+  // === Vista "Oferta personalizada" ===
+  // Cuando la URL trae ?oferta=ID1,ID2,..., en lugar del inventario completo
+  // mostramos solo esos IDs como una propuesta al vecino. Vista compacta,
+  // con grid agrupado por Grupo del álbum, total estimado de precio, y un
+  // link para ver el inventario completo. Si alguna lámina del set ya no
+  // está disponible (el dueño la vendió/usó), se marca como "no disponible".
+  function renderOfertaView(state, equipos, precios, especiales, ofertaIds) {
+    // Construir un map id → status para chequear disponibilidad de cada
+    // lámina en la oferta. Una lámina está disponible si el dueño tiene
+    // al menos 1 suelta (s>=1) o si está en repetidas (sobras tradeables).
+    function _isAvailable(id) {
+      const s = state[id];
+      if (!s) return false;
+      const p = parseInt(s.p, 10) || 0;
+      const su = parseInt(s.s, 10) || 0;
+      // Disponible = al menos una copia "tradeable" (suelta sin pegar, o
+      // repetida con extras). Si solo está pegada (p=1, s=0) NO está libre.
+      return su >= 1;
+    }
+
+    // Categoría + grupo del álbum por id (mismo criterio que render normal).
+    function _ofertaGroupLetter(id) {
+      if (id === '00') return 'INTRO';
+      if (id.indexOf('FWC') === 0) {
+        const n = parseInt(id.replace('FWC', ''), 10);
+        return n <= 8 ? 'INTRO' : 'HISTORY';
+      }
+      const parts = id.split('-');
+      if (parts.length === 2) {
+        const eq = equipos.find(e => e.code === parts[0]);
+        return eq ? eq.grupo : '?';
+      }
+      return '?';
+    }
+    function _ofertaTeamCode(id) {
+      if (id === '00') return 'INTRO';
+      if (id.indexOf('FWC') === 0) {
+        const n = parseInt(id.replace('FWC', ''), 10);
+        return n <= 8 ? 'INTRO' : 'HIST';
+      }
+      const parts = id.split('-');
+      return parts.length === 2 ? parts[0] : '?';
+    }
+    function _ofertaDisplayNum(id) {
+      if (id.indexOf('FWC') === 0) return id; // FWC1, FWC9 — mostrar entero
+      if (id === '00') return '00';
+      const parts = id.split('-');
+      return parts.length === 2 ? parts[1] : id;
+    }
+    // Agrupar IDs por Grupo, dentro de cada grupo por equipo, dentro de
+    // cada equipo por número de lámina ascendente.
+    const teamIdx = {};
+    equipos.forEach((eq, i) => { teamIdx[eq.code] = i; });
+    const sortedIds = ofertaIds.slice().sort((a, b) => {
+      function key(id) {
+        if (id === '00') return [0, 0, 0];
+        if (id.indexOf('FWC') === 0) {
+          const n = parseInt(id.replace('FWC', ''), 10);
+          return [n <= 8 ? 0 : 9999, 0, n];
+        }
+        const parts = id.split('-');
+        if (parts.length === 2) {
+          const idx = teamIdx[parts[0]] != null ? teamIdx[parts[0]] + 1 : 9998;
+          return [idx, parseInt(parts[1], 10) || 0, 0];
+        }
+        return [9999, 9999, 0];
+      }
+      const ka = key(a), kb = key(b);
+      for (let i = 0; i < ka.length; i++) {
+        if (ka[i] !== kb[i]) return ka[i] - kb[i];
+      }
+      return 0;
+    });
+
+    let nDisponibles = 0;
+    let valorEstimado = 0;
+    let nVendidas = 0;
+    sortedIds.forEach(id => {
+      if (_isAvailable(id)) {
+        nDisponibles++;
+        valorEstimado += priceForId(id, precios, especiales);
+      } else {
+        nVendidas++;
+      }
+    });
+    const totalIds = ofertaIds.length;
+    const fechaHoy = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long' });
+
+    // Render del grid con grupos y equipos
+    let gridHtml = '';
+    let currentGroup = null;
+    let currentTeam = null;
+    sortedIds.forEach(id => {
+      const grupo = _ofertaGroupLetter(id);
+      const team = _ofertaTeamCode(id);
+      if (grupo !== currentGroup) {
+        if (currentGroup !== null) gridHtml += '</div>';
+        const grupoLabel = grupo === 'INTRO' || grupo === 'HISTORY' ? grupo : 'Grupo ' + grupo;
+        gridHtml += '<div class="oferta-group-banner">' + grupoLabel + '</div>';
+        gridHtml += '<div class="oferta-group-body">';
+        currentGroup = grupo;
+        currentTeam = null;
+      }
+      if (team !== currentTeam) {
+        gridHtml += '<span class="oferta-team-label">' + team + '</span>';
+        currentTeam = team;
+      }
+      const available = _isAvailable(id);
+      const cellCls = available ? 'cell rep' : 'cell sold';
+      const isLongId = id.indexOf('FWC') === 0;
+      const styleAttr = isLongId ? ' style="font-size:8px;"' : '';
+      gridHtml += '<div class="' + cellCls + '"' + styleAttr + '>' + _ofertaDisplayNum(id) + '</div>';
+    });
+    if (currentGroup !== null) gridHtml += '</div>';
+
+    const html =
+      '<div class="oferta-view">' +
+        '<div class="oferta-hero">' +
+          '<div class="oferta-eyebrow">Oferta personalizada</div>' +
+          '<h2 class="oferta-title">OFERTA PARA TI</h2>' +
+          '<div class="oferta-meta">' +
+            '<b>' + nDisponibles + '</b> lámina' + (nDisponibles === 1 ? '' : 's') + ' disponible' + (nDisponibles === 1 ? '' : 's') +
+            (nVendidas > 0 ? ' <span class="oferta-vendidas">· ' + nVendidas + ' ya no disponible' + (nVendidas === 1 ? '' : 's') + '</span>' : '') +
+            ' · ' + fechaHoy +
+          '</div>' +
+        '</div>' +
+        '<div class="oferta-grid">' + gridHtml + '</div>' +
+        '<div class="oferta-total">' +
+          '<div class="oferta-total-row main">' +
+            '<span>Total estimado</span>' +
+            '<b>$' + fmtMoney(valorEstimado) + '</b>' +
+          '</div>' +
+          '<div class="oferta-total-sub">Precio base por categoría · cambios y volumen negociables</div>' +
+        '</div>' +
+        '<a class="oferta-cta" href="' + SHARE_URL + '">Ver inventario completo →</a>' +
+      '</div>';
+
+    document.getElementById('content').innerHTML = html;
+    document.getElementById('subtitle').textContent =
+      'Oferta de ' + totalIds + ' láminas · ' + fechaHoy;
   }
 
   function render(state, equipos, precios, especiales) {
@@ -822,6 +1117,18 @@
     }
   }
 
+  // Detecta el parámetro ?oferta=CSV de IDs y devuelve array. Si no hay
+  // query param, devuelve null y se renderiza el inventario completo.
+  function _parseOfertaParam() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const raw = params.get('oferta');
+      if (!raw) return null;
+      const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
+      return ids.length > 0 ? ids : null;
+    } catch (_) { return null; }
+  }
+
   async function init() {
     document.getElementById('content').innerHTML =
       '<div class="loading"><div class="spinner"></div><div>Cargando estado…</div></div>';
@@ -830,7 +1137,12 @@
       if (!data || !data.ok) throw new Error('Respuesta inválida');
       let equipos = equiposDefault;
       if (data.orden && Array.isArray(data.orden) && data.orden.length === 48) equipos = data.orden;
-      render(data.state || {}, equipos, data.precios || {}, data.especiales || {});
+      const ofertaIds = _parseOfertaParam();
+      if (ofertaIds && ofertaIds.length > 0) {
+        renderOfertaView(data.state || {}, equipos, data.precios || {}, data.especiales || {}, ofertaIds);
+      } else {
+        render(data.state || {}, equipos, data.precios || {}, data.especiales || {});
+      }
     } catch (e) {
       document.getElementById('content').innerHTML =
         '<div class="errstate">⚠ ' + (e.message || 'Error al cargar') +
