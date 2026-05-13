@@ -487,6 +487,51 @@
     opacity: 0.45;
     text-decoration: line-through;
   }
+  /* Toggle "Incluir especiales" — botón verde LED por encima del grid.
+     Estados: outline (default = especiales NO seleccionadas) o filled
+     (.active = todas las especiales seleccionadas). */
+  .oferta-toggle-especiales {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto 12px;
+    padding: 10px 16px;
+    background: var(--bg-2);
+    color: var(--green);
+    border: 0.5px solid var(--green);
+    border-radius: 100px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    text-shadow: 0 0 4px rgba(0,214,133,0.4);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3), 0 0 10px rgba(0,214,133,0.25);
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+    -webkit-appearance: none;
+  }
+  .oferta-toggle-especiales:active { transform: scale(0.98); }
+  .oferta-toggle-especiales .toggle-label::before {
+    content: '+ ';
+    opacity: 0.7;
+  }
+  .oferta-toggle-especiales .toggle-detail {
+    color: var(--text-3);
+    font-weight: 500;
+    font-size: 11px;
+    text-shadow: none;
+  }
+  .oferta-toggle-especiales.active {
+    background: var(--green);
+    color: #003420;
+    text-shadow: none;
+  }
+  .oferta-toggle-especiales.active .toggle-label::before { content: '✓ '; }
+  .oferta-toggle-especiales.active .toggle-detail {
+    color: rgba(0,52,32,0.7);
+  }
   /* Hint debajo del header explicando la mecánica tap-to-toggle */
   .oferta-hint {
     margin-top: 10px;
@@ -923,16 +968,27 @@
     });
 
     let nDisponibles = 0;
-    let valorEstimado = 0;
     let nVendidas = 0;
+    let nEspecialesDisp = 0;
+    let valorEspecialesDisp = 0;
+    let valorComunesDisp = 0;
     sortedIds.forEach(id => {
       if (_isAvailable(id)) {
         nDisponibles++;
-        valorEstimado += priceForId(id, precios, especiales);
+        const p = priceForId(id, precios, especiales);
+        if (isSpecial(id, especiales)) {
+          nEspecialesDisp++;
+          valorEspecialesDisp += p;
+        } else {
+          valorComunesDisp += p;
+        }
       } else {
         nVendidas++;
       }
     });
+    // Valor inicial estimado = solo comunes (especiales arrancan deseleccionadas)
+    const valorEstimadoInicial = valorComunesDisp;
+    const nComunesDisp = nDisponibles - nEspecialesDisp;
     const totalIds = ofertaIds.length;
     const fechaHoy = new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'long' });
 
@@ -956,16 +1012,31 @@
         currentTeam = team;
       }
       const available = _isAvailable(id);
-      // Solo las disponibles son seleccionables. Default = selected (asumimos
-      // que al vecino le interesa todo lo que se ofrece, deselecciona lo que no).
-      // Las "sold" salen tachadas y no son tappables.
-      const cellCls = available ? 'cell rep selected' : 'cell sold';
+      const isSpec = isSpecial(id, especiales);
+      // Solo las disponibles son seleccionables. Default: COMUNES selected,
+      // ESPECIALES unselected (estrellas/FWC/escudos/equipos/00 valen mucho
+      // más, mejor que el vecino opte explícitamente con el toggle de arriba).
+      let cellCls = 'cell sold';
+      if (available) {
+        cellCls = isSpec ? 'cell rep unselected' : 'cell rep selected';
+      }
       const isLongId = id.indexOf('FWC') === 0;
       const styleAttr = isLongId ? ' style="font-size:8px;"' : '';
       const tap = available ? ' data-oferta-id="' + id + '"' : '';
-      gridHtml += '<div class="' + cellCls + '"' + tap + styleAttr + '>' + _ofertaDisplayNum(id) + '</div>';
+      const specAttr = (available && isSpec) ? ' data-oferta-special="1"' : '';
+      gridHtml += '<div class="' + cellCls + '"' + tap + specAttr + styleAttr + '>' + _ofertaDisplayNum(id) + '</div>';
     });
     if (currentGroup !== null) gridHtml += '</div>';
+
+    // Toggle de especiales: si la oferta incluye especiales, mostramos un
+    // botón verde arriba del grid que selecciona/deselecciona todas las
+    // especiales de un tap. Si no hay especiales en la oferta, no aparece.
+    const especialesToggleHtml = nEspecialesDisp > 0
+      ? '<button class="oferta-toggle-especiales" id="oferta-toggle-especiales" type="button">' +
+          '<span class="toggle-label">Incluir especiales</span>' +
+          '<span class="toggle-detail">' + nEspecialesDisp + ' · valor $' + fmtMoney(valorEspecialesDisp) + '</span>' +
+        '</button>'
+      : '';
 
     const html =
       '<div class="oferta-view">' +
@@ -977,19 +1048,20 @@
             (nVendidas > 0 ? ' <span class="oferta-vendidas">· ' + nVendidas + ' ya no disponible' + (nVendidas === 1 ? '' : 's') + '</span>' : '') +
             ' · ' + fechaHoy +
           '</div>' +
-          '<div class="oferta-hint">Tap sobre las láminas para seleccionar o deseleccionar. Cuando termines, copia tu selección y envíasela de vuelta.</div>' +
+          '<div class="oferta-hint">Las comunes ya están marcadas. Tap sobre cualquier lámina para incluirla o quitarla. Cuando termines, copia tu selección.</div>' +
         '</div>' +
+        especialesToggleHtml +
         '<div class="oferta-grid">' + gridHtml + '</div>' +
         '<a class="oferta-cta" href="' + SHARE_URL + '">Ver inventario completo →</a>' +
         '<div class="oferta-sticky-spacer"></div>' +
         '<div class="oferta-sticky-bar">' +
           '<div class="oferta-sticky-stats">' +
             '<div class="oferta-stat-count">' +
-              '<b id="oferta-selected-count">' + nDisponibles + '</b>' +
+              '<b id="oferta-selected-count">' + nComunesDisp + '</b>' +
               '<small>de ' + nDisponibles + ' seleccionada' + (nDisponibles === 1 ? '' : 's') + '</small>' +
             '</div>' +
             '<div class="oferta-stat-price">' +
-              '<b id="oferta-selected-price">$' + fmtMoney(valorEstimado) + '</b>' +
+              '<b id="oferta-selected-price">$' + fmtMoney(valorEstimadoInicial) + '</b>' +
               '<small>total estimado</small>' +
             '</div>' +
           '</div>' +
@@ -1003,8 +1075,16 @@
 
     // === Interactividad: toggle por chip + actualización en vivo ===
     const availableIds = [];
-    sortedIds.forEach(id => { if (_isAvailable(id)) availableIds.push(id); });
-    const selected = new Set(availableIds); // por default: todas seleccionadas
+    const especialesIds = [];
+    sortedIds.forEach(id => {
+      if (_isAvailable(id)) {
+        availableIds.push(id);
+        if (isSpecial(id, especiales)) especialesIds.push(id);
+      }
+    });
+    // Default: solo COMUNES seleccionadas. Especiales arrancan deseleccionadas
+    // y el vecino las prende con el toggle "Incluir especiales" o tap individual.
+    const selected = new Set(availableIds.filter(id => !isSpecial(id, especiales)));
 
     function updateOfertaTotals() {
       let priceSum = 0;
@@ -1020,6 +1100,14 @@
         } else {
           copyBtn.removeAttribute('disabled');
         }
+      }
+      // Si todas las especiales están seleccionadas, el toggle se ve "activo"
+      // (verde lleno). Si están deseleccionadas, queda en outline.
+      const toggleBtn = document.getElementById('oferta-toggle-especiales');
+      if (toggleBtn && especialesIds.length > 0) {
+        const allSpecSelected = especialesIds.every(id => selected.has(id));
+        if (allSpecSelected) toggleBtn.classList.add('active');
+        else toggleBtn.classList.remove('active');
       }
     }
 
@@ -1038,6 +1126,31 @@
         updateOfertaTotals();
       };
     });
+
+    // Toggle "Incluir especiales" — selecciona/deselecciona todas las
+    // especiales de un tap, con feedback visual en cada chip.
+    const toggleEspBtn = document.getElementById('oferta-toggle-especiales');
+    if (toggleEspBtn && especialesIds.length > 0) {
+      toggleEspBtn.onclick = () => {
+        const allSelected = especialesIds.every(id => selected.has(id));
+        if (allSelected) {
+          // Deseleccionar todas las especiales
+          especialesIds.forEach(id => selected.delete(id));
+          document.querySelectorAll('[data-oferta-special]').forEach(el => {
+            el.classList.remove('selected');
+            el.classList.add('unselected');
+          });
+        } else {
+          // Seleccionar todas las especiales
+          especialesIds.forEach(id => selected.add(id));
+          document.querySelectorAll('[data-oferta-special]').forEach(el => {
+            el.classList.add('selected');
+            el.classList.remove('unselected');
+          });
+        }
+        updateOfertaTotals();
+      };
+    }
 
     // Botón "Copiar mi selección" → mensaje formateado para WhatsApp
     const copyBtn = document.getElementById('oferta-copy-btn');
@@ -1065,24 +1178,49 @@
           }
           return 0;
         });
-        const byTeam = {};
-        const teamOrder = [];
+        // Separar comunes y especiales — el seller las cobra distinto y le
+        // ayuda saberlo de un vistazo en el mensaje de respuesta.
+        const comunesArr = [];
+        const especialesArr = [];
         selectedSorted.forEach(id => {
-          const team = _ofertaTeamCode(id);
-          if (!byTeam[team]) { byTeam[team] = []; teamOrder.push(team); }
-          byTeam[team].push(_ofertaDisplayNum(id));
+          if (isSpecial(id, especiales)) especialesArr.push(id);
+          else comunesArr.push(id);
         });
-        let priceSum = 0;
-        selected.forEach(id => { priceSum += priceForId(id, precios, especiales); });
+        function _groupForMsg(idsArr) {
+          const byTeam = {};
+          const teamOrder = [];
+          idsArr.forEach(id => {
+            const team = _ofertaTeamCode(id);
+            if (!byTeam[team]) { byTeam[team] = []; teamOrder.push(team); }
+            byTeam[team].push(_ofertaDisplayNum(id));
+          });
+          return { byTeam: byTeam, teamOrder: teamOrder };
+        }
+        let totalComunes = 0, totalEspeciales = 0;
+        comunesArr.forEach(id => { totalComunes += priceForId(id, precios, especiales); });
+        especialesArr.forEach(id => { totalEspeciales += priceForId(id, precios, especiales); });
+        const priceSum = totalComunes + totalEspeciales;
         const lines = [
           'Me interesan estas ' + selected.size + ' láminas de tu oferta:',
           ''
         ];
-        teamOrder.forEach(t => {
-          lines.push(t + ': ' + byTeam[t].join(', '));
-        });
-        lines.push('');
+        if (comunesArr.length > 0) {
+          lines.push('COMUNES (' + comunesArr.length + ')');
+          const g = _groupForMsg(comunesArr);
+          g.teamOrder.forEach(t => lines.push(t + ': ' + g.byTeam[t].join(', ')));
+          lines.push('');
+        }
+        if (especialesArr.length > 0) {
+          lines.push('ESPECIALES (' + especialesArr.length + ')');
+          const g = _groupForMsg(especialesArr);
+          g.teamOrder.forEach(t => lines.push(t + ': ' + g.byTeam[t].join(', ')));
+          lines.push('');
+        }
         lines.push('Total estimado: $' + fmtMoney(priceSum));
+        if (comunesArr.length > 0 && especialesArr.length > 0) {
+          lines.push('  · Comunes: $' + fmtMoney(totalComunes));
+          lines.push('  · Especiales: $' + fmtMoney(totalEspeciales));
+        }
         lines.push('');
         lines.push('¿Las cerramos?');
         const msg = lines.join('\n');
@@ -1349,16 +1487,51 @@
     }
   }
 
-  // Detecta el parámetro ?oferta=CSV de IDs y devuelve array. Si no hay
-  // query param, devuelve null y se renderiza el inventario completo.
+  // Detecta el parámetro ?oferta= y parsea a un array de IDs completos.
+  // Soporta dos sintaxis (la compresa ahorra ~30-40% en URLs largas):
+  //   Vieja:      MEX-20,RSA-8,RSA-9,RSA-11,RSA-20,KOR-12,...
+  //   Comprimida: MEX-20,RSA-8,9,11,20,KOR-12,13,...
+  // En la comprimida, un token sin guión y numérico hereda el último equipo
+  // visto. Las láminas especiales standalone (00, FWC1-19) se reconocen y
+  // resetean el "equipo actual" para evitar parseos incorrectos.
   function _parseOfertaParam() {
     try {
       const params = new URLSearchParams(window.location.search);
       const raw = params.get('oferta');
       if (!raw) return null;
-      const ids = raw.split(',').map(s => s.trim()).filter(Boolean);
+      const tokens = raw.split(',').map(s => s.trim()).filter(Boolean);
+      const ids = [];
+      let currentTeam = null;
+      tokens.forEach(token => {
+        if (token === '00') {
+          ids.push('00');
+          currentTeam = null;
+        } else if (/^FWC\d+$/.test(token)) {
+          ids.push(token);
+          currentTeam = null;
+        } else if (token.indexOf('-') >= 0) {
+          const dashIdx = token.indexOf('-');
+          const code = token.substring(0, dashIdx);
+          const num = token.substring(dashIdx + 1);
+          if (code && num) {
+            currentTeam = code;
+            ids.push(code + '-' + num);
+          }
+        } else if (/^\d+$/.test(token) && currentTeam) {
+          ids.push(currentTeam + '-' + token);
+        }
+      });
       return ids.length > 0 ? ids : null;
     } catch (_) { return null; }
+  }
+  // Detecta si una lámina es "especial" (no jugador común). Especiales:
+  // Lámina 00, estrellas, FWC, escudos (#1 de cada equipo), equipos (#13).
+  // También cuenta como especial cualquier id con precio override en
+  // `especiales` (ej. Messi, jugadores estrella personalizados).
+  function isSpecial(id, especiales) {
+    if (especiales && typeof especiales[id] === 'number' && especiales[id] >= 0) return true;
+    const cat = categoryOf(id);
+    return cat !== 'jugador';
   }
 
   async function init() {
