@@ -9955,12 +9955,23 @@
         // `url` separado para que WhatsApp la muestre como preview card
         // (no duplicada con el texto). Para clipboard fallback, sí
         // necesitamos incluirla.
-        const shareTextBody = 'Te puedo dar ' + ids.length + ' láminas de tu lista de faltantes' +
-          (nEspecialesShare > 0
-            ? ' (' + nComunesShare + ' comunes + ' + nEspecialesShare + ' especiales — actívalas en el link)'
-            : '') +
-          '. Valor base comunes: $' + _fmtMoney(valorComunesShare) +
-          '. Selecciona las que quieras y envíame tu lista.';
+        //
+        // Precio por unidad (no total) — el total cambia según lo que el
+        // vecino seleccione, pero el precio por lámina es info accionable
+        // y estable. Las especiales tienen precios distintos cada una, así
+        // que solo se menciona "precios en el link" si las hay.
+        let parteCantidad = 'Te puedo dar ' + ids.length + ' láminas de tu lista de faltantes';
+        if (nEspecialesShare > 0 && nComunesShare > 0) {
+          parteCantidad += ' (' + nComunesShare + ' comunes + ' + nEspecialesShare + ' especiales — actívalas en el link)';
+        }
+        let partePrecio = '';
+        if (nComunesShare > 0) {
+          const unitPrice = Math.round(valorComunesShare / nComunesShare);
+          partePrecio = '. Precio: $' + _fmtMoney(unitPrice) + ' por lámina' + (nEspecialesShare > 0 ? ' común' : '');
+        } else if (nEspecialesShare > 0) {
+          partePrecio = '. Precios en el link';
+        }
+        const shareTextBody = parteCantidad + partePrecio + '. Selecciona las que quieras y envíame tu lista.';
         const shareTitle = 'Oferta de ' + ids.length + ' láminas';
 
         try {
