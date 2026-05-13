@@ -5987,14 +5987,13 @@
   }
 
   /* Action bar sticky al pie del bottom-sheet de intercambios — layout en 2
-     filas para maximizar usabilidad y tap target del primario:
-       Row 1 (secundarios, comparten ancho): Reset / Balancear / Compartir
-       Row 2 (primario único, full-width): Cruzar / Vender / Comprar
-     El primario es la acción principal (cerrar la transacción) y merece su
-     propia fila con tap target grande. Los secundarios son utilitarios:
-     compactos, equal-share, ellipsis si no caben.
-     wrap-policy: secundarios `flex:1 1 0` se reparten ancho, primario
-     `flex:0 0 100%` fuerza wrap a row 2 (no puede compartir línea). */
+     filas EXPLICITAS (HTML estructurado con sub-rows). Antes intentamos
+     flex-wrap pero era impredecible en Safari iOS / WebKit. Ahora dos
+     containers separados garantizan el layout:
+       .cx-sticky-row-secondary → Reset / Balancear / Compartir (comparten ancho)
+       .cx-sticky-row-primary   → un solo botón (Cruzar / Vender / Comprar)
+     El parent es flex-direction:column, así las dos filas se apilan vertical
+     siempre. Dentro de cada row, los buttons usan flex:1 horizontal. */
   #intercambio-sheet-body .cx-sticky {
     position: sticky;
     bottom: 0;
@@ -6005,14 +6004,18 @@
     -webkit-backdrop-filter: blur(10px);
     border-top: 0.5px solid var(--border);
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: 8px;
     z-index: 5;
   }
-  #intercambio-sheet-body .cx-sticky .cx-btn { min-width: 0; margin: 0; }
-  #intercambio-sheet-body .cx-sticky .cx-btn.secondary {
+  #intercambio-sheet-body .cx-sticky-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+  #intercambio-sheet-body .cx-sticky-row .cx-btn { min-width: 0; margin: 0; }
+  #intercambio-sheet-body .cx-sticky-row-secondary .cx-btn {
     flex: 1 1 0;
-    flex-basis: 0;
     padding: 10px 6px;
     font-size: 12.5px;
     font-weight: 600;
@@ -6020,8 +6023,8 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  #intercambio-sheet-body .cx-sticky .cx-btn.primary {
-    flex: 0 0 100%;
+  #intercambio-sheet-body .cx-sticky-row-primary .cx-btn {
+    flex: 1 1 auto;
     width: 100%;
     font-size: 15px;
     padding: 14px 16px;
@@ -8869,12 +8872,24 @@
       _cxRenderSection(giveItems, 'give', opts) +
       _cxRenderSection(receiveItems, 'receive', opts) +
       '<div class="cx-sticky" data-cx-sticky>' +
-        '<button class="cx-btn secondary" type="button" data-cx-reset>Reset</button>' +
-        '<button class="cx-btn secondary" type="button" data-cx-balance title="Sugerir trato justo por categoría">Balancear</button>' +
-        '<button class="cx-btn secondary" type="button" data-cx-share-oferta title="Compartir oferta personalizada con el vecino" hidden>Compartir oferta</button>' +
-        '<button class="cx-btn primary cx-btn-blue" type="button" data-cx-comprar hidden>Comprar (0) · $0</button>' +
-        '<button class="cx-btn primary cx-btn-green" type="button" data-cx-vender hidden>Vender (0) · $0</button>' +
-        '<button class="cx-btn primary" type="button" data-cx-confirm disabled>Cruzar (0 ↔ 0)</button>' +
+        // Row 1: secundarios (utilitarios). Comparten ancho via flex:1.
+        // Compartir está hidden por defecto, aparece sólo si "Le das" tiene
+        // chips vivos. Los visibles se reparten el ancho automáticamente.
+        '<div class="cx-sticky-row cx-sticky-row-secondary">' +
+          '<button class="cx-btn secondary" type="button" data-cx-reset>Reset</button>' +
+          '<button class="cx-btn secondary" type="button" data-cx-balance title="Sugerir trato justo por categoría">Balancear</button>' +
+          '<button class="cx-btn secondary" type="button" data-cx-share-oferta title="Compartir oferta personalizada con el vecino" hidden>Compartir</button>' +
+        '</div>' +
+        // Row 2: primario. Sólo UNO visible a la vez (exclusivos por modo):
+        //   Comprar (azul) si solo "Recibes" tiene chips
+        //   Vender (verde) si solo "Le das" tiene chips
+        //   Cruzar (ámbar) si ambos lados tienen chips
+        // El visible toma width:100% — tap target grande, prominente.
+        '<div class="cx-sticky-row cx-sticky-row-primary">' +
+          '<button class="cx-btn primary cx-btn-blue" type="button" data-cx-comprar hidden>Comprar (0) · $0</button>' +
+          '<button class="cx-btn primary cx-btn-green" type="button" data-cx-vender hidden>Vender (0) · $0</button>' +
+          '<button class="cx-btn primary" type="button" data-cx-confirm disabled>Cruzar (0 ↔ 0)</button>' +
+        '</div>' +
       '</div>' +
       '<div class="cx-tx-form" data-cx-tx-form hidden></div>' +
       '<div class="cx-apply-banner" data-cx-banner>' +
