@@ -5986,7 +5986,12 @@
     font-style: italic;
   }
 
-  /* Action bar sticky al pie del bottom-sheet de intercambios */
+  /* Action bar sticky al pie del bottom-sheet de intercambios — layout en 2
+     filas: arriba van los secundarios (Reset / Balancear / Compartir), abajo
+     el primario único (Comprar / Vender / Cruzar). Antes era una sola fila
+     pero con 3 secundarios + 1 primario se desbordaba horizontalmente. La
+     wrap-policy: secundarios comparten row 1 con flex:1 (se reparten ancho),
+     el primario fuerza row 2 con flex-basis:100%. */
   #intercambio-sheet-body .cx-sticky {
     position: sticky;
     bottom: 0;
@@ -5997,13 +6002,21 @@
     -webkit-backdrop-filter: blur(10px);
     border-top: 0.5px solid var(--border);
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     z-index: 5;
   }
-  #intercambio-sheet-body .cx-sticky .cx-btn { flex: 1; min-width: 0; }
+  #intercambio-sheet-body .cx-sticky .cx-btn { min-width: 0; }
   #intercambio-sheet-body .cx-sticky .cx-btn.secondary {
-    flex: 0 0 auto;
-    padding: 12px 18px;
+    flex: 1 1 0;
+    padding: 11px 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #intercambio-sheet-body .cx-sticky .cx-btn.primary {
+    flex: 1 1 100%;
   }
 
   /* Acciones del cruce de listas (Reset / Confirmar cambio) — outline + glow,
@@ -9699,7 +9712,7 @@
       const btnShareOferta = container.querySelector('[data-cx-share-oferta]');
       if (btnShareOferta) {
         if (aliveGive > 0) {
-          btnShareOferta.textContent = 'Compartir oferta (' + aliveGive + ')';
+          btnShareOferta.textContent = 'Compartir (' + aliveGive + ')';
           btnShareOferta.removeAttribute('hidden');
         } else {
           btnShareOferta.setAttribute('hidden', 'hidden');
