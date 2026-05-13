@@ -14068,17 +14068,9 @@
     return (finanzasState && finanzasState.precios && finanzasState.precios[cat]) || 0;
   }
   function _finSave() {
-    try {
-      const ds = (finanzasState && Array.isArray(finanzasState.descuentos))
-        ? finanzasState.descuentos.length : '?';
-      console.log('[FIN] _finSave called · descuentos.length=' + ds + ' · stack:', new Error().stack);
-      localStorage.setItem(STORAGE_FIN_KEY, JSON.stringify(finanzasState));
-    } catch(e) {
-      console.error('[FIN] _finSave FAILED:', e);
-    }
+    try { localStorage.setItem(STORAGE_FIN_KEY, JSON.stringify(finanzasState)); } catch(e) {}
   }
   let finanzasState = _finLoad();
-  console.log('[FIN] Initial load · descuentos=' + JSON.stringify(finanzasState.descuentos));
 
   // Tab activo en la lista de Movimientos. 4 vistas, mutuamente excluyentes:
   //   'plata'        → solo compra/venta (movs con dinero real)
@@ -14607,45 +14599,11 @@
       ' · ' + totalAlbum + ' láminas catalogadas' +
     '</div>';
 
-    // Banner de tiers activos — diagnóstico visible. Si hay descuentos
-    // configurados, los mostramos como chip. Si no, mostramos un hint
-    // tappeable que abre el modal de descuentos.
+    // Banner de tiers activos. Si hay descuentos configurados, chip verde.
+    // Si no, hint ámbar tappeable que abre el modal.
     const tiersActivos = (finanzasState && Array.isArray(finanzasState.descuentos))
       ? finanzasState.descuentos
       : [];
-    // DEBUG: leer también lo que está en localStorage RIGHT NOW, no en
-    // memoria. Si difiere de tiersActivos sabremos que la app no está
-    // re-leyendo desde storage tras los cambios.
-    let storageTiers = [];
-    let storageRawSnippet = '';
-    try {
-      const raw = localStorage.getItem(STORAGE_FIN_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (parsed && Array.isArray(parsed.descuentos)) {
-          storageTiers = parsed.descuentos;
-        }
-        storageRawSnippet = 'desc en localStorage: ' + JSON.stringify(parsed.descuentos || null);
-      } else {
-        storageRawSnippet = 'localStorage VACÍO para key ' + STORAGE_FIN_KEY;
-      }
-    } catch (e) {
-      storageRawSnippet = 'localStorage corrupto: ' + e.message;
-    }
-    const memCount = tiersActivos.length;
-    const storageCount = storageTiers.length;
-    const mismatched = memCount !== storageCount;
-    // Línea de DEBUG visible (temporal, para diagnosticar el bug)
-    html += '<div style="margin: 4px 0 0; padding: 6px 10px; background: ' +
-      (mismatched ? 'rgba(255,71,87,0.12)' : 'rgba(74,158,255,0.06)') +
-      '; border: 0.5px solid ' + (mismatched ? 'var(--danger)' : 'rgba(74,158,255,0.4)') +
-      '; border-radius: 6px; font-family: \'JetBrains Mono\', Menlo, monospace; font-size: 10px; color: ' +
-      (mismatched ? 'var(--danger)' : 'var(--text-3)') +
-      '; word-break: break-all;">' +
-      'DEBUG · mem: ' + memCount + ' tiers · storage: ' + storageCount + ' tiers' +
-      (mismatched ? ' ⚠ DESINCRONIZADO' : ' ✓') +
-      '<br>' + storageRawSnippet +
-      '</div>';
     if (tiersActivos.length > 0) {
       const tiersHtml = tiersActivos.map(d => {
         return '<span style="color:var(--green);font-weight:700;">' +
