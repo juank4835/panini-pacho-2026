@@ -457,15 +457,123 @@
     color: #fff;
     flex-shrink: 0;
   }
-  .oferta-grid .cell.rep {
+  /* Bolitas tappables (tienen data-oferta-id) — cursor pointer + tap target */
+  .oferta-grid .cell[data-oferta-id] {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.1s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  }
+  .oferta-grid .cell[data-oferta-id]:active { transform: scale(0.92); }
+  /* Estado: seleccionado (default) — ámbar pleno con glow */
+  .oferta-grid .cell.rep.selected {
     background: var(--amber);
     box-shadow: 0 0 8px rgba(239,159,39,0.35), 0 0 0 0.5px rgba(239,159,39,0.5);
+    color: #fff;
   }
+  /* Estado: deseleccionado — outline gris sin glow, número dim */
+  .oferta-grid .cell.rep.unselected {
+    background: transparent;
+    color: var(--text-3);
+    border: 1px solid var(--text-3);
+    box-shadow: none;
+    opacity: 0.55;
+  }
+  /* Estado: ya vendida (no tappable) — gris tachado */
   .oferta-grid .cell.sold {
     background: var(--bg-3);
     color: var(--text-3);
     opacity: 0.45;
     text-decoration: line-through;
+  }
+  /* Hint debajo del header explicando la mecánica tap-to-toggle */
+  .oferta-hint {
+    margin-top: 10px;
+    color: var(--text-3);
+    font-size: 11px;
+    line-height: 1.5;
+    font-style: italic;
+    padding: 0 8px;
+  }
+  /* Spacer para que el contenido no quede tapado por la sticky bar */
+  .oferta-sticky-spacer { height: 120px; }
+  /* Sticky bar al pie con contador + total + botón Copiar */
+  .oferta-sticky-bar {
+    position: fixed;
+    left: 0; right: 0;
+    bottom: 0;
+    z-index: 100;
+    background: rgba(0,0,0,0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 0.5px solid var(--border);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  }
+  .oferta-sticky-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .oferta-stat-count, .oferta-stat-price {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .oferta-stat-price { text-align: right; }
+  .oferta-stat-count b, .oferta-stat-price b {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: "JetBrains Mono", Menlo, monospace;
+    line-height: 1;
+  }
+  .oferta-stat-count b { color: var(--text); }
+  .oferta-stat-price b {
+    color: var(--amber);
+    text-shadow: 0 0 6px rgba(239,159,39,0.45);
+  }
+  .oferta-stat-count small, .oferta-stat-price small {
+    color: var(--text-3);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  /* Botón "Copiar mi selección" — estilo LED cyberpunk verde */
+  .oferta-copy-btn {
+    display: block;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+    background: var(--bg-2);
+    color: var(--green);
+    border: 0.5px solid var(--green);
+    padding: 13px 18px;
+    border-radius: 100px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    text-shadow: 0 0 6px rgba(0,214,133,0.55), 0 0 12px rgba(0,214,133,0.3);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4), 0 0 12px rgba(0,214,133,0.35);
+    transition: transform 0.1s ease, filter 0.15s ease;
+    -webkit-appearance: none;
+  }
+  .oferta-copy-btn:hover { filter: brightness(1.08); }
+  .oferta-copy-btn:active { transform: scale(0.98); }
+  .oferta-copy-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+  .oferta-copy-btn.copied {
+    color: var(--green);
+    border-color: var(--green);
+    background: rgba(0,214,133,0.1);
   }
   .oferta-total {
     background: var(--bg-2);
@@ -848,10 +956,14 @@
         currentTeam = team;
       }
       const available = _isAvailable(id);
-      const cellCls = available ? 'cell rep' : 'cell sold';
+      // Solo las disponibles son seleccionables. Default = selected (asumimos
+      // que al vecino le interesa todo lo que se ofrece, deselecciona lo que no).
+      // Las "sold" salen tachadas y no son tappables.
+      const cellCls = available ? 'cell rep selected' : 'cell sold';
       const isLongId = id.indexOf('FWC') === 0;
       const styleAttr = isLongId ? ' style="font-size:8px;"' : '';
-      gridHtml += '<div class="' + cellCls + '"' + styleAttr + '>' + _ofertaDisplayNum(id) + '</div>';
+      const tap = available ? ' data-oferta-id="' + id + '"' : '';
+      gridHtml += '<div class="' + cellCls + '"' + tap + styleAttr + '>' + _ofertaDisplayNum(id) + '</div>';
     });
     if (currentGroup !== null) gridHtml += '</div>';
 
@@ -865,21 +977,141 @@
             (nVendidas > 0 ? ' <span class="oferta-vendidas">· ' + nVendidas + ' ya no disponible' + (nVendidas === 1 ? '' : 's') + '</span>' : '') +
             ' · ' + fechaHoy +
           '</div>' +
+          '<div class="oferta-hint">Tap a las bolitas para seleccionar / deseleccionar. Cuando termines, copia tu selección y envíasela de vuelta.</div>' +
         '</div>' +
         '<div class="oferta-grid">' + gridHtml + '</div>' +
-        '<div class="oferta-total">' +
-          '<div class="oferta-total-row main">' +
-            '<span>Total estimado</span>' +
-            '<b>$' + fmtMoney(valorEstimado) + '</b>' +
-          '</div>' +
-          '<div class="oferta-total-sub">Precio base por categoría · cambios y volumen negociables</div>' +
-        '</div>' +
         '<a class="oferta-cta" href="' + SHARE_URL + '">Ver inventario completo →</a>' +
+        '<div class="oferta-sticky-spacer"></div>' +
+        '<div class="oferta-sticky-bar">' +
+          '<div class="oferta-sticky-stats">' +
+            '<div class="oferta-stat-count">' +
+              '<b id="oferta-selected-count">' + nDisponibles + '</b>' +
+              '<small>de ' + nDisponibles + ' seleccionada' + (nDisponibles === 1 ? '' : 's') + '</small>' +
+            '</div>' +
+            '<div class="oferta-stat-price">' +
+              '<b id="oferta-selected-price">$' + fmtMoney(valorEstimado) + '</b>' +
+              '<small>total estimado</small>' +
+            '</div>' +
+          '</div>' +
+          '<button class="oferta-copy-btn" id="oferta-copy-btn" type="button">Copiar mi selección</button>' +
+        '</div>' +
       '</div>';
 
     document.getElementById('content').innerHTML = html;
     document.getElementById('subtitle').textContent =
       'Oferta de ' + totalIds + ' láminas · ' + fechaHoy;
+
+    // === Interactividad: toggle por chip + actualización en vivo ===
+    const availableIds = [];
+    sortedIds.forEach(id => { if (_isAvailable(id)) availableIds.push(id); });
+    const selected = new Set(availableIds); // por default: todas seleccionadas
+
+    function updateOfertaTotals() {
+      let priceSum = 0;
+      selected.forEach(id => { priceSum += priceForId(id, precios, especiales); });
+      const countEl = document.getElementById('oferta-selected-count');
+      const priceEl = document.getElementById('oferta-selected-price');
+      const copyBtn = document.getElementById('oferta-copy-btn');
+      if (countEl) countEl.textContent = selected.size;
+      if (priceEl) priceEl.textContent = '$' + fmtMoney(priceSum);
+      if (copyBtn) {
+        if (selected.size === 0) {
+          copyBtn.setAttribute('disabled', 'disabled');
+        } else {
+          copyBtn.removeAttribute('disabled');
+        }
+      }
+    }
+
+    document.querySelectorAll('[data-oferta-id]').forEach(el => {
+      el.onclick = () => {
+        const id = el.dataset.ofertaId;
+        if (selected.has(id)) {
+          selected.delete(id);
+          el.classList.remove('selected');
+          el.classList.add('unselected');
+        } else {
+          selected.add(id);
+          el.classList.add('selected');
+          el.classList.remove('unselected');
+        }
+        updateOfertaTotals();
+      };
+    });
+
+    // Botón "Copiar mi selección" → mensaje formateado para WhatsApp
+    const copyBtn = document.getElementById('oferta-copy-btn');
+    if (copyBtn) {
+      copyBtn.onclick = () => {
+        if (selected.size === 0) return;
+        // Construir lista agrupada por equipo en orden del álbum
+        const selectedSorted = Array.from(selected).sort((a, b) => {
+          function key(id) {
+            if (id === '00') return [0, 0, 0];
+            if (id.indexOf('FWC') === 0) {
+              const n = parseInt(id.replace('FWC', ''), 10);
+              return [n <= 8 ? 0 : 9999, 0, n];
+            }
+            const parts = id.split('-');
+            if (parts.length === 2) {
+              const idx = teamIdx[parts[0]] != null ? teamIdx[parts[0]] + 1 : 9998;
+              return [idx, parseInt(parts[1], 10) || 0, 0];
+            }
+            return [9999, 9999, 0];
+          }
+          const ka = key(a), kb = key(b);
+          for (let i = 0; i < ka.length; i++) {
+            if (ka[i] !== kb[i]) return ka[i] - kb[i];
+          }
+          return 0;
+        });
+        const byTeam = {};
+        const teamOrder = [];
+        selectedSorted.forEach(id => {
+          const team = _ofertaTeamCode(id);
+          if (!byTeam[team]) { byTeam[team] = []; teamOrder.push(team); }
+          byTeam[team].push(_ofertaDisplayNum(id));
+        });
+        let priceSum = 0;
+        selected.forEach(id => { priceSum += priceForId(id, precios, especiales); });
+        const lines = [
+          'Me interesan estas ' + selected.size + ' láminas de tu oferta:',
+          ''
+        ];
+        teamOrder.forEach(t => {
+          lines.push(t + ': ' + byTeam[t].join(', '));
+        });
+        lines.push('');
+        lines.push('Total estimado: $' + fmtMoney(priceSum));
+        lines.push('');
+        lines.push('¿Las cerramos?');
+        const msg = lines.join('\n');
+        // Copy al clipboard con fallback de textarea
+        const done = () => {
+          copyBtn.textContent = '✓ Copiado · pégalo en WhatsApp';
+          copyBtn.classList.add('copied');
+          setTimeout(() => {
+            copyBtn.textContent = 'Copiar mi selección';
+            copyBtn.classList.remove('copied');
+          }, 2800);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(msg).then(done, () => fallback(msg));
+        } else {
+          fallback(msg);
+        }
+        function fallback(text) {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); } catch(e) {}
+          document.body.removeChild(ta);
+          done();
+        }
+      };
+    }
+    updateOfertaTotals();
   }
 
   function render(state, equipos, precios, especiales) {
