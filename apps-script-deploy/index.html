@@ -6709,16 +6709,16 @@
 
 <footer>
   <button type="button" id="doggos-mini-btn" class="doggos-mini" aria-label="Ver perros espaciales">
-    <img src="https://juank4835.github.io/panini-pacho-2026/doggos.jpg" alt="">
+    <img src="https://juank4835.github.io/panini-sandbox-2026/doggos.jpg" alt="">
   </button>
-  <span>Hecho por Juan Camilo · <a href="https://github.com/juank4835/reportes-financieros">repo</a> · <a href="https://juank4835.github.io/panini-pacho-2026/arquitectura/" target="_blank" rel="noopener">arquitectura</a></span>
+  <span>Hecho por Juan Camilo · <a href="https://github.com/juank4835/reportes-financieros">repo</a> · <a href="https://juank4835.github.io/panini-sandbox-2026/arquitectura/" target="_blank" rel="noopener">arquitectura</a></span>
 </footer>
 
 <!-- Modal full-screen de la foto de los doggos espaciales — se abre al
      tocar el mini avatar del footer. Tap en el backdrop o en la imagen
      misma cierra el modal. -->
 <div class="doggos-modal-backdrop" id="doggos-modal-backdrop">
-  <img src="https://juank4835.github.io/panini-pacho-2026/doggos.jpg" alt="" class="doggos-modal-img">
+  <img src="https://juank4835.github.io/panini-sandbox-2026/doggos.jpg" alt="" class="doggos-modal-img">
   <div class="doggos-modal-cap">Stack sats · Paste cromos</div>
 </div>
 
@@ -10067,7 +10067,7 @@
             descuentos: descuentosTiers
           });
           if (r && r.token) {
-            ofertaUrl = 'https://juank4835.github.io/panini-pacho-2026/cambios/?o=' + r.token;
+            ofertaUrl = 'https://juank4835.github.io/panini-sandbox-2026/cambios/?o=' + r.token;
           } else {
             throw new Error('No se devolvió token');
           }
@@ -10104,7 +10104,7 @@
             if (code === lastTeam) compactParts.push(num);
             else { compactParts.push(id); lastTeam = code; }
           });
-          ofertaUrl = 'https://juank4835.github.io/panini-pacho-2026/cambios/?oferta=' + compactParts.join(',');
+          ofertaUrl = 'https://juank4835.github.io/panini-sandbox-2026/cambios/?oferta=' + compactParts.join(',');
         }
 
         btn.removeAttribute('disabled');
@@ -12268,7 +12268,7 @@
     // Compartir el link de la página pública vía Web Share API (o copiar)
     document.querySelectorAll('button[data-share-action="page"]').forEach(btn => {
       btn.onclick = () => {
-        const url = 'https://juank4835.github.io/panini-pacho-2026/cambios/';
+        const url = 'https://juank4835.github.io/panini-sandbox-2026/cambios/';
         const msg = '📒 Mirá mi álbum del Mundial 2030:\n\n' + url;
         shareOrCopy(msg, btn, 'Álbum Panini Mundial 2030');
       };
@@ -12582,7 +12582,7 @@
       alert('La librería para generar QR no se cargó (¿sin internet?). Intenta de nuevo.');
       return;
     }
-    const url = 'https://juank4835.github.io/panini-pacho-2026/cambios/';
+    const url = 'https://juank4835.github.io/panini-sandbox-2026/cambios/';
     // Render como <a> tappable — útil cuando estás viendo el modal en el
     // mismo dispositivo y querés abrir la página sin scanear ni copy/paste.
     urlEl.innerHTML = '<a href="' + url + '" target="_blank" rel="noopener">' + url + '</a>';
