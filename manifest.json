@@ -1,7 +1,7 @@
 {
   "name": "Álbum Panini · Pacho",
   "short_name": "Panini Pacho",
-  "description": "Tracker del álbum Panini Mundial 2026 — instancia de Pacho",
+  "description": "Tracker del álbum Panini Mundial 2030 — instancia de Pacho",
   "start_url": "/panini-sandbox-2026/",
   "scope": "/panini-sandbox-2026/",
   "display": "standalone",
