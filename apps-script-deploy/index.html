@@ -14230,16 +14230,22 @@
     const parts = id.split('-');
     if (parts.length === 2) {
       const eq = equiposOrden.find(e => e.code === parts[0]);
-      return eq && eq.grupo ? eq.grupo : 'OTRO';
+      if (eq && eq.grupo) return eq.grupo;
+      // Equipo no encontrado en catálogo activo (post-migración a un
+      // Mundial nuevo). Usar el código crudo como label para que el
+      // usuario al menos vea de qué equipo era la lámina.
+      return parts[0];
     }
     return 'OTRO';
   }
-  // Orden de grupos para render (intro/hist primero, luego A-L, luego otros)
+  // Orden de grupos para render (intro/hist primero, luego A-L, luego
+  // códigos legacy de Mundiales anteriores, luego 'OTRO' al final).
   function _albumGroupSortKey(g) {
     if (g === 'INTRO') return 0;
     if (g === 'HIST') return 1;
     if (g && g.length === 1 && g >= 'A' && g <= 'L') return 100 + g.charCodeAt(0);
-    return 999;
+    if (g === 'OTRO') return 999;
+    return 500;
   }
   // Set de claves de día ('YYYY-MM-DD') expandidas en el tab Inventario.
   // Empieza vacío = todos los días colapsados a una sola row resumen.
