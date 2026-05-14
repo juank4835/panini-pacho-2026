@@ -1,9 +1,9 @@
 {
   "_comment": "Catálogo activo. Generado por scripts/migrate-mundial.js — editar manualmente si hace falta y re-correr sync-catalog.",
-  "evento": "Mundial 2030",
-  "year": 2030,
+  "evento": "Mundial 2026",
+  "year": 2026,
   "albumPublisher": "Panini",
-  "albumTitle": "Álbum Panini Mundial 2030",
+  "albumTitle": "Álbum Panini Mundial 2026",
   "stickersPorEquipo": 20,
   "totalEquipos": 48,
   "totalLaminasJugadores": 960,
@@ -37,113 +37,108 @@
       },
       {
         "id": "FWC6",
-        "label": "Colombia · Emblema"
+        "label": "Canadá · Emblema"
       },
       {
         "id": "FWC7",
-        "label": "Otro host · Emblema"
+        "label": "México · Emblema"
       },
       {
         "id": "FWC8",
-        "label": "Otro host · Emblema"
+        "label": "USA · Emblema"
       }
     ],
     "history": [
       {
         "id": "FWC9",
-        "label": "Uruguay · 1950"
+        "label": "Italia · 1934"
       },
       {
         "id": "FWC10",
-        "label": "Alemania · 1954"
+        "label": "Uruguay · 1950"
       },
       {
         "id": "FWC11",
-        "label": "Brasil · 1962"
+        "label": "Alemania · 1954"
       },
       {
         "id": "FWC12",
-        "label": "Alemania · 1974"
+        "label": "Brasil · 1962"
       },
       {
         "id": "FWC13",
-        "label": "Argentina · 1986"
+        "label": "Alemania · 1974"
       },
       {
         "id": "FWC14",
-        "label": "Brasil · 1994"
+        "label": "Argentina · 1986"
       },
       {
         "id": "FWC15",
-        "label": "Brasil · 2002"
+        "label": "Brasil · 1994"
       },
       {
         "id": "FWC16",
-        "label": "Italia · 2006"
+        "label": "Brasil · 2002"
       },
       {
         "id": "FWC17",
-        "label": "Alemania · 2014"
+        "label": "Italia · 2006"
       },
       {
         "id": "FWC18",
-        "label": "Argentina · 2022"
+        "label": "Alemania · 2014"
       },
       {
         "id": "FWC19",
-        "label": "Francia · 2026"
+        "label": "Argentina · 2022"
       }
     ]
   },
   "equipos": [
     {
-      "code": "COL",
-      "name": "Colombia",
+      "code": "MEX",
+      "name": "México",
       "grupo": "A"
     },
     {
-      "code": "ECU",
-      "name": "Ecuador",
+      "code": "RSA",
+      "name": "Sudáfrica",
       "grupo": "A"
     },
     {
-      "code": "PER",
-      "name": "Perú",
+      "code": "KOR",
+      "name": "Corea del Sur",
       "grupo": "A"
     },
     {
-      "code": "PAR",
-      "name": "Paraguay",
+      "code": "CZE",
+      "name": "Rep. Checa",
       "grupo": "A"
+    },
+    {
+      "code": "CAN",
+      "name": "Canadá",
+      "grupo": "B"
+    },
+    {
+      "code": "BIH",
+      "name": "Bosnia y Herz.",
+      "grupo": "B"
+    },
+    {
+      "code": "QAT",
+      "name": "Catar",
+      "grupo": "B"
+    },
+    {
+      "code": "SUI",
+      "name": "Suiza",
+      "grupo": "B"
     },
     {
       "code": "BRA",
       "name": "Brasil",
-      "grupo": "B"
-    },
-    {
-      "code": "ARG",
-      "name": "Argentina",
-      "grupo": "B"
-    },
-    {
-      "code": "URU",
-      "name": "Uruguay",
-      "grupo": "B"
-    },
-    {
-      "code": "CHI",
-      "name": "Chile",
-      "grupo": "B"
-    },
-    {
-      "code": "ESP",
-      "name": "España",
-      "grupo": "C"
-    },
-    {
-      "code": "POR",
-      "name": "Portugal",
       "grupo": "C"
     },
     {
@@ -152,28 +147,33 @@
       "grupo": "C"
     },
     {
-      "code": "ARG",
-      "name": "Argelia",
+      "code": "HAI",
+      "name": "Haití",
       "grupo": "C"
     },
     {
-      "code": "FRA",
-      "name": "Francia",
+      "code": "SCO",
+      "name": "Escocia",
+      "grupo": "C"
+    },
+    {
+      "code": "USA",
+      "name": "Estados Unidos",
       "grupo": "D"
     },
     {
-      "code": "ITA",
-      "name": "Italia",
+      "code": "PAR",
+      "name": "Paraguay",
       "grupo": "D"
     },
     {
-      "code": "BEL",
-      "name": "Bélgica",
+      "code": "AUS",
+      "name": "Australia",
       "grupo": "D"
     },
     {
-      "code": "SUI",
-      "name": "Suiza",
+      "code": "TUR",
+      "name": "Turquía",
       "grupo": "D"
     },
     {
@@ -182,53 +182,48 @@
       "grupo": "E"
     },
     {
+      "code": "CUW",
+      "name": "Curazao",
+      "grupo": "E"
+    },
+    {
+      "code": "CIV",
+      "name": "Costa de Marfil",
+      "grupo": "E"
+    },
+    {
+      "code": "ECU",
+      "name": "Ecuador",
+      "grupo": "E"
+    },
+    {
       "code": "NED",
       "name": "Países Bajos",
-      "grupo": "E"
-    },
-    {
-      "code": "DEN",
-      "name": "Dinamarca",
-      "grupo": "E"
-    },
-    {
-      "code": "AUT",
-      "name": "Austria",
-      "grupo": "E"
-    },
-    {
-      "code": "ENG",
-      "name": "Inglaterra",
-      "grupo": "F"
-    },
-    {
-      "code": "WAL",
-      "name": "Gales",
-      "grupo": "F"
-    },
-    {
-      "code": "IRL",
-      "name": "Irlanda",
-      "grupo": "F"
-    },
-    {
-      "code": "SCO",
-      "name": "Escocia",
       "grupo": "F"
     },
     {
       "code": "JPN",
       "name": "Japón",
+      "grupo": "F"
+    },
+    {
+      "code": "SWE",
+      "name": "Suecia",
+      "grupo": "F"
+    },
+    {
+      "code": "TUN",
+      "name": "Túnez",
+      "grupo": "F"
+    },
+    {
+      "code": "BEL",
+      "name": "Bélgica",
       "grupo": "G"
     },
     {
-      "code": "KOR",
-      "name": "Corea del Sur",
-      "grupo": "G"
-    },
-    {
-      "code": "AUS",
-      "name": "Australia",
+      "code": "EGY",
+      "name": "Egipto",
       "grupo": "G"
     },
     {
@@ -237,33 +232,33 @@
       "grupo": "G"
     },
     {
-      "code": "USA",
-      "name": "Estados Unidos",
+      "code": "NZL",
+      "name": "Nueva Zelanda",
+      "grupo": "G"
+    },
+    {
+      "code": "ESP",
+      "name": "España",
       "grupo": "H"
     },
     {
-      "code": "MEX",
-      "name": "México",
+      "code": "CPV",
+      "name": "Cabo Verde",
       "grupo": "H"
     },
     {
-      "code": "CAN",
-      "name": "Canadá",
+      "code": "KSA",
+      "name": "Arabia Saudita",
       "grupo": "H"
     },
     {
-      "code": "CRC",
-      "name": "Costa Rica",
+      "code": "URU",
+      "name": "Uruguay",
       "grupo": "H"
     },
     {
-      "code": "EGY",
-      "name": "Egipto",
-      "grupo": "I"
-    },
-    {
-      "code": "TUN",
-      "name": "Túnez",
+      "code": "FRA",
+      "name": "Francia",
       "grupo": "I"
     },
     {
@@ -272,53 +267,63 @@
       "grupo": "I"
     },
     {
-      "code": "NGA",
-      "name": "Nigeria",
+      "code": "IRQ",
+      "name": "Iraq",
       "grupo": "I"
-    },
-    {
-      "code": "CRO",
-      "name": "Croacia",
-      "grupo": "J"
-    },
-    {
-      "code": "SRB",
-      "name": "Serbia",
-      "grupo": "J"
-    },
-    {
-      "code": "POL",
-      "name": "Polonia",
-      "grupo": "J"
-    },
-    {
-      "code": "CZE",
-      "name": "Rep. Checa",
-      "grupo": "J"
-    },
-    {
-      "code": "TUR",
-      "name": "Turquía",
-      "grupo": "K"
-    },
-    {
-      "code": "SUE",
-      "name": "Suecia",
-      "grupo": "K"
     },
     {
       "code": "NOR",
       "name": "Noruega",
+      "grupo": "I"
+    },
+    {
+      "code": "ARG",
+      "name": "Argentina",
+      "grupo": "J"
+    },
+    {
+      "code": "ALG",
+      "name": "Argelia",
+      "grupo": "J"
+    },
+    {
+      "code": "AUT",
+      "name": "Austria",
+      "grupo": "J"
+    },
+    {
+      "code": "JOR",
+      "name": "Jordania",
+      "grupo": "J"
+    },
+    {
+      "code": "POR",
+      "name": "Portugal",
       "grupo": "K"
     },
     {
-      "code": "FIN",
-      "name": "Finlandia",
+      "code": "COD",
+      "name": "RD Congo",
       "grupo": "K"
     },
     {
-      "code": "RSA",
-      "name": "Sudáfrica",
+      "code": "UZB",
+      "name": "Uzbekistán",
+      "grupo": "K"
+    },
+    {
+      "code": "COL",
+      "name": "Colombia",
+      "grupo": "K"
+    },
+    {
+      "code": "ENG",
+      "name": "Inglaterra",
+      "grupo": "L"
+    },
+    {
+      "code": "CRO",
+      "name": "Croacia",
       "grupo": "L"
     },
     {
@@ -327,13 +332,8 @@
       "grupo": "L"
     },
     {
-      "code": "CIV",
-      "name": "Costa de Marfil",
-      "grupo": "L"
-    },
-    {
-      "code": "CMR",
-      "name": "Camerún",
+      "code": "PAN",
+      "name": "Panamá",
       "grupo": "L"
     }
   ]
