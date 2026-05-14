@@ -718,17 +718,53 @@ function pushOrden(orden) {
 }
 
 /** Resetea TODO el estado del álbum. Acción global. */
+/**
+ * Reset de PROGRESO. Borra:
+ *   - Estado del álbum (STATE_* keys)
+ *   - Movimientos de finanzas (vaciamos el array dentro de FIN_KEY)
+ *   - Ofertas activas (OFERTA_* keys)
+ * Conserva:
+ *   - Precios de categorías (FIN_KEY.precios)
+ *   - Especiales (FIN_KEY.especiales)
+ *   - Descuentos por volumen (FIN_KEY.descuentos)
+ *   - Orden de equipos (__orden)
+ *   - Versión finanzas (__finVersion — bumpeada para que clientes sincronicen)
+ *
+ * Para el reset NUCLEAR (cambio de Mundial), usar resetParaProximoMundial()
+ * desde el editor de Apps Script — ese borra TODO incluso config.
+ */
 function resetAll() {
   const lock = LockService.getScriptLock();
   lock.waitLock(5000);
   try {
     const props = PropertiesService.getScriptProperties();
     const all = props.getProperties();
+    // 1. Borrar estado del álbum (STATE_* + legacy keys)
     Object.keys(all).filter(k =>
       k.indexOf(STATE_PREFIX) === 0 ||
       k.indexOf(LEGACY_CLIENT_PREFIX) === 0 ||
       k === STATE_KEY_LEGACY
     ).forEach(k => props.deleteProperty(k));
+    // 2. Borrar ofertas activas (cada OFERTA_token vive por 30 días, pero
+    //    si estamos reseteando todo lo del progreso, ya no aplican).
+    Object.keys(all).filter(k => k.indexOf('OFERTA_') === 0)
+      .forEach(k => props.deleteProperty(k));
+    // 3. Vaciar movimientos del FIN_KEY, conservando precios/especiales/descuentos.
+    //    Si no existe FIN_KEY (cliente fresh), no hay nada que limpiar.
+    const finRaw = props.getProperty(FIN_KEY);
+    if (finRaw) {
+      try {
+        const fin = JSON.parse(finRaw);
+        if (fin && typeof fin === 'object') {
+          fin.movimientos = [];
+          _writeFinanzas(props, fin);
+          _bumpFinVersion(props);
+        }
+      } catch (_) {
+        // Si el FIN_KEY está corrupto, lo dejamos como estaba — el reset del
+        // álbum es lo crítico, el FIN_KEY queda para que el usuario lo arregle.
+      }
+    }
     const v = _bumpVersion(props);
     return { ok: true, version: v };
   } finally {
@@ -1129,6 +1165,45 @@ function debugDump() {
 function debugReset() {
   PropertiesService.getScriptProperties().deleteAllProperties();
   Logger.log('Reset completo');
+}
+
+/**
+ * Reset selectivo para empezar un Mundial nuevo. Borra el estado del álbum,
+ * finanzas, ofertas y orden de equipos — pero deja propiedades NO relacionadas
+ * (si las hubiera). Más seguro que debugReset() que borra TODO.
+ *
+ * USO: cuando salga el próximo Mundial y querás arrancar fresh:
+ *   1. Hacer backup primero (curl ?action=publica > backup.json)
+ *   2. Editar catalogo.json + los bloques CATALOGO de los HTMLs
+ *   3. Deploy del nuevo código
+ *   4. Ejecutar ESTA función manualmente desde el editor de Apps Script
+ *   5. Resetear localStorage en la app (Finanzas → ⋮ → Reset)
+ *
+ * Ver docs/NUEVO-MUNDIAL.md para el flujo completo.
+ */
+function resetParaProximoMundial() {
+  const props = PropertiesService.getScriptProperties();
+  const allKeys = props.getKeys();
+  const prefixesToWipe = ['STATE_', 'OFERTA_'];
+  const exactKeysToWipe = ['__finanzas', '__version', '__finVersion', '__orden'];
+  let borradas = 0;
+  let conservadas = [];
+  allKeys.forEach(k => {
+    const matchPrefix = prefixesToWipe.some(p => k.indexOf(p) === 0);
+    const matchExact = exactKeysToWipe.indexOf(k) >= 0;
+    if (matchPrefix || matchExact) {
+      props.deleteProperty(k);
+      borradas++;
+    } else {
+      conservadas.push(k);
+    }
+  });
+  const summary = 'Reset para próximo Mundial — ' + borradas + ' keys borradas.' +
+    (conservadas.length > 0
+      ? ' Conservadas (no tocadas): ' + conservadas.join(', ')
+      : ' Storage queda completamente limpio.');
+  Logger.log(summary);
+  return summary;
 }
 
 /** Forzar la migración manualmente (útil después de un cambio de modelo). */

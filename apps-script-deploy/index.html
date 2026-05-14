@@ -6763,8 +6763,8 @@
     <button class="item" data-more-act="reset">
       <span class="item-icon" style="color: var(--danger);">✕</span>
       <span class="item-text" style="color: var(--danger);">
-        Reiniciar todo
-        <div class="item-sub" style="color: var(--text-3);">Borra el progreso del álbum compartido</div>
+        Reiniciar progreso
+        <div class="item-sub" style="color: var(--text-3);">Borra pegadas, repetidas y movimientos. Conserva precios y configuración.</div>
       </span>
     </button>
     <button class="close-btn" data-more-act="close">Cerrar</button>
@@ -6906,92 +6906,128 @@
   // van al backend de Apps Script que las serializa con LockService —
   // cualquiera puede sumar o restar, sin race conditions.
 
-  const introStickers = [
-    { id: '00',   label: 'Logo Panini' },
-    { id: 'FWC1', label: 'Logo Mundial · Sup' },
-    { id: 'FWC2', label: 'Logo Mundial · Inf' },
-    { id: 'FWC3', label: 'Mascotas' },
-    { id: 'FWC4', label: 'Slogan oficial' },
-    { id: 'FWC5', label: 'Balón oficial' },
-    { id: 'FWC6', label: 'Canadá · Emblema' },
-    { id: 'FWC7', label: 'México · Emblema' },
-    { id: 'FWC8', label: 'USA · Emblema' }
-  ];
+  // ═══════════════════════════════════════════════════════════════════
+  // CATÁLOGO DEL MUNDIAL — EDITAR ACÁ PARA UNA NUEVA EDICIÓN
+  //
+  // Espejo del archivo /catalogo.json en la raíz del repo. Para Mundial
+  // 2030 (o el próximo): copiá el contenido completo del catalogo.json
+  // actualizado y reemplazá el objeto CATALOGO de abajo.
+  //
+  // El MISMO bloque debe replicarse en cambios/index.html (página pública).
+  // Mantener los dos sincronizados es crítico: si difieren, la vista pública
+  // y la app van a mostrar datos distintos.
+  //
+  // Ver docs/NUEVO-MUNDIAL.md para el flujo completo de migración.
+  // ═══════════════════════════════════════════════════════════════════
+  const CATALOGO = {
+    evento: 'Mundial 2026',
+    year: 2026,
+    stickersPorEquipo: 20,
+    secciones: {
+      intro: [
+        { id: '00',   label: 'Logo Panini' },
+        { id: 'FWC1', label: 'Logo Mundial · Sup' },
+        { id: 'FWC2', label: 'Logo Mundial · Inf' },
+        { id: 'FWC3', label: 'Mascotas' },
+        { id: 'FWC4', label: 'Slogan oficial' },
+        { id: 'FWC5', label: 'Balón oficial' },
+        { id: 'FWC6', label: 'Canadá · Emblema' },
+        { id: 'FWC7', label: 'México · Emblema' },
+        { id: 'FWC8', label: 'USA · Emblema' }
+      ],
+      history: [
+        { id: 'FWC9',  label: 'Italia · 1934' },
+        { id: 'FWC10', label: 'Uruguay · 1950' },
+        { id: 'FWC11', label: 'Alemania · 1954' },
+        { id: 'FWC12', label: 'Brasil · 1962' },
+        { id: 'FWC13', label: 'Alemania · 1974' },
+        { id: 'FWC14', label: 'Argentina · 1986' },
+        { id: 'FWC15', label: 'Brasil · 1994' },
+        { id: 'FWC16', label: 'Brasil · 2002' },
+        { id: 'FWC17', label: 'Italia · 2006' },
+        { id: 'FWC18', label: 'Alemania · 2014' },
+        { id: 'FWC19', label: 'Argentina · 2022' }
+      ]
+    },
+    equipos: [
+      { code: 'MEX', name: 'México',          grupo: 'A' },
+      { code: 'RSA', name: 'Sudáfrica',       grupo: 'A' },
+      { code: 'KOR', name: 'Corea del Sur',   grupo: 'A' },
+      { code: 'CZE', name: 'Rep. Checa',      grupo: 'A' },
+      { code: 'CAN', name: 'Canadá',          grupo: 'B' },
+      { code: 'BIH', name: 'Bosnia y Herz.',  grupo: 'B' },
+      { code: 'QAT', name: 'Catar',           grupo: 'B' },
+      { code: 'SUI', name: 'Suiza',           grupo: 'B' },
+      { code: 'BRA', name: 'Brasil',          grupo: 'C' },
+      { code: 'MAR', name: 'Marruecos',       grupo: 'C' },
+      { code: 'HAI', name: 'Haití',           grupo: 'C' },
+      { code: 'SCO', name: 'Escocia',         grupo: 'C' },
+      { code: 'USA', name: 'Estados Unidos',  grupo: 'D' },
+      { code: 'PAR', name: 'Paraguay',        grupo: 'D' },
+      { code: 'AUS', name: 'Australia',       grupo: 'D' },
+      { code: 'TUR', name: 'Turquía',         grupo: 'D' },
+      { code: 'GER', name: 'Alemania',        grupo: 'E' },
+      { code: 'CUW', name: 'Curazao',         grupo: 'E' },
+      { code: 'CIV', name: 'Costa de Marfil', grupo: 'E' },
+      { code: 'ECU', name: 'Ecuador',         grupo: 'E' },
+      { code: 'NED', name: 'Países Bajos',    grupo: 'F' },
+      { code: 'JPN', name: 'Japón',           grupo: 'F' },
+      { code: 'SWE', name: 'Suecia',          grupo: 'F' },
+      { code: 'TUN', name: 'Túnez',           grupo: 'F' },
+      { code: 'BEL', name: 'Bélgica',         grupo: 'G' },
+      { code: 'EGY', name: 'Egipto',          grupo: 'G' },
+      { code: 'IRN', name: 'Irán',            grupo: 'G' },
+      { code: 'NZL', name: 'Nueva Zelanda',   grupo: 'G' },
+      { code: 'ESP', name: 'España',          grupo: 'H' },
+      { code: 'CPV', name: 'Cabo Verde',      grupo: 'H' },
+      { code: 'KSA', name: 'Arabia Saudita',  grupo: 'H' },
+      { code: 'URU', name: 'Uruguay',         grupo: 'H' },
+      { code: 'FRA', name: 'Francia',         grupo: 'I' },
+      { code: 'SEN', name: 'Senegal',         grupo: 'I' },
+      { code: 'IRQ', name: 'Iraq',            grupo: 'I' },
+      { code: 'NOR', name: 'Noruega',         grupo: 'I' },
+      { code: 'ARG', name: 'Argentina',       grupo: 'J' },
+      { code: 'ALG', name: 'Argelia',         grupo: 'J' },
+      { code: 'AUT', name: 'Austria',         grupo: 'J' },
+      { code: 'JOR', name: 'Jordania',        grupo: 'J' },
+      { code: 'POR', name: 'Portugal',        grupo: 'K' },
+      { code: 'COD', name: 'RD Congo',        grupo: 'K' },
+      { code: 'UZB', name: 'Uzbekistán',      grupo: 'K' },
+      { code: 'COL', name: 'Colombia',        grupo: 'K' },
+      { code: 'ENG', name: 'Inglaterra',      grupo: 'L' },
+      { code: 'CRO', name: 'Croacia',         grupo: 'L' },
+      { code: 'GHA', name: 'Ghana',           grupo: 'L' },
+      { code: 'PAN', name: 'Panamá',          grupo: 'L' }
+    ]
+  };
 
-  const historyStickers = [
-    { id: 'FWC9',  label: 'Italia · 1934' },
-    { id: 'FWC10', label: 'Uruguay · 1950' },
-    { id: 'FWC11', label: 'Alemania · 1954' },
-    { id: 'FWC12', label: 'Brasil · 1962' },
-    { id: 'FWC13', label: 'Alemania · 1974' },
-    { id: 'FWC14', label: 'Argentina · 1986' },
-    { id: 'FWC15', label: 'Brasil · 1994' },
-    { id: 'FWC16', label: 'Brasil · 2002' },
-    { id: 'FWC17', label: 'Italia · 2006' },
-    { id: 'FWC18', label: 'Alemania · 2014' },
-    { id: 'FWC19', label: 'Argentina · 2022' }
-  ];
-
-  const ordenInicial = [
-    { code: 'MEX', name: 'México', grupo: 'A' },
-    { code: 'RSA', name: 'Sudáfrica', grupo: 'A' },
-    { code: 'KOR', name: 'Corea del Sur', grupo: 'A' },
-    { code: 'CZE', name: 'Rep. Checa', grupo: 'A' },
-    { code: 'CAN', name: 'Canadá', grupo: 'B' },
-    { code: 'BIH', name: 'Bosnia y Herz.', grupo: 'B' },
-    { code: 'QAT', name: 'Catar', grupo: 'B' },
-    { code: 'SUI', name: 'Suiza', grupo: 'B' },
-    { code: 'BRA', name: 'Brasil', grupo: 'C' },
-    { code: 'MAR', name: 'Marruecos', grupo: 'C' },
-    { code: 'HAI', name: 'Haití', grupo: 'C' },
-    { code: 'SCO', name: 'Escocia', grupo: 'C' },
-    { code: 'USA', name: 'Estados Unidos', grupo: 'D' },
-    { code: 'PAR', name: 'Paraguay', grupo: 'D' },
-    { code: 'AUS', name: 'Australia', grupo: 'D' },
-    { code: 'TUR', name: 'Turquía', grupo: 'D' },
-    { code: 'GER', name: 'Alemania', grupo: 'E' },
-    { code: 'CUW', name: 'Curazao', grupo: 'E' },
-    { code: 'CIV', name: 'Costa de Marfil', grupo: 'E' },
-    { code: 'ECU', name: 'Ecuador', grupo: 'E' },
-    { code: 'NED', name: 'Países Bajos', grupo: 'F' },
-    { code: 'JPN', name: 'Japón', grupo: 'F' },
-    { code: 'SWE', name: 'Suecia', grupo: 'F' },
-    { code: 'TUN', name: 'Túnez', grupo: 'F' },
-    { code: 'BEL', name: 'Bélgica', grupo: 'G' },
-    { code: 'EGY', name: 'Egipto', grupo: 'G' },
-    { code: 'IRN', name: 'Irán', grupo: 'G' },
-    { code: 'NZL', name: 'Nueva Zelanda', grupo: 'G' },
-    { code: 'ESP', name: 'España', grupo: 'H' },
-    { code: 'CPV', name: 'Cabo Verde', grupo: 'H' },
-    { code: 'KSA', name: 'Arabia Saudita', grupo: 'H' },
-    { code: 'URU', name: 'Uruguay', grupo: 'H' },
-    { code: 'FRA', name: 'Francia', grupo: 'I' },
-    { code: 'SEN', name: 'Senegal', grupo: 'I' },
-    { code: 'IRQ', name: 'Iraq', grupo: 'I' },
-    { code: 'NOR', name: 'Noruega', grupo: 'I' },
-    { code: 'ARG', name: 'Argentina', grupo: 'J' },
-    { code: 'ALG', name: 'Argelia', grupo: 'J' },
-    { code: 'AUT', name: 'Austria', grupo: 'J' },
-    { code: 'JOR', name: 'Jordania', grupo: 'J' },
-    { code: 'POR', name: 'Portugal', grupo: 'K' },
-    { code: 'COD', name: 'RD Congo', grupo: 'K' },
-    { code: 'UZB', name: 'Uzbekistán', grupo: 'K' },
-    { code: 'COL', name: 'Colombia', grupo: 'K' },
-    { code: 'ENG', name: 'Inglaterra', grupo: 'L' },
-    { code: 'CRO', name: 'Croacia', grupo: 'L' },
-    { code: 'GHA', name: 'Ghana', grupo: 'L' },
-    { code: 'PAN', name: 'Panamá', grupo: 'L' }
-  ];
+  // Derivamos las variables que el resto del código ya usa, desde el CATALOGO.
+  // No tocar — modificar el CATALOGO arriba si querés cambiar algo del álbum.
+  const introStickers = CATALOGO.secciones.intro;
+  const historyStickers = CATALOGO.secciones.history;
+  const ordenInicial = CATALOGO.equipos;
 
   let equiposOrden = null;
   try {
     const saved = localStorage.getItem(ORDER_KEY);
     if (saved) {
       const arr = JSON.parse(saved);
-      if (Array.isArray(arr) && arr.length === 48) equiposOrden = arr;
+      if (Array.isArray(arr) && arr.length === CATALOGO.equipos.length) equiposOrden = arr;
     }
   } catch(e) {}
   if (!equiposOrden) equiposOrden = ordenInicial.slice();
+
+  // Nombre canónico del evento, derivado de CATALOGO. Para Mundial 2030,
+  // basta cambiar `evento` en el bloque CATALOGO arriba — toda la UI
+  // dinámica (h1, document.title, share titles, copy headers) se actualiza.
+  // Los strings estáticos del HTML (<title>, manifest.json, etc.) hay que
+  // editarlos a mano — ver docs/NUEVO-MUNDIAL.md Fase 4.5.
+  const EVENTO_FULL_NAME = 'Álbum Panini ' + CATALOGO.evento;
+  try {
+    document.title = EVENTO_FULL_NAME + ' · Tracker';
+    const heroH1 = document.querySelector('.hero h1') || document.querySelector('h1');
+    if (heroH1) heroH1.textContent = EVENTO_FULL_NAME;
+  } catch (_) {}
 
   function saveOrden() {
     try { localStorage.setItem(ORDER_KEY, JSON.stringify(equiposOrden)); } catch(e) {}
@@ -7009,8 +7045,10 @@
 
     equiposOrden.forEach((eq, idx) => {
       const items = [];
-      // Convención Panini Mundial 2026: 1 = Escudo, 13 = Equipo, resto = jugadores
-      for (let i = 1; i <= 20; i++) {
+      // Convención Panini Mundial 2026: 1 = Escudo, 13 = Equipo, resto = jugadores.
+      // El total de stickers por equipo viene del CATALOGO — si Panini cambia
+      // el formato (ej. de 20 a 22 por equipo en 2030), actualizar CATALOGO.
+      for (let i = 1; i <= CATALOGO.stickersPorEquipo; i++) {
         let label;
         if (i === 1) label = 'Escudo';
         else if (i === 13) label = 'Equipo';
@@ -8015,7 +8053,7 @@
   async function shareOrCopy(text, btn, title) {
     if (navigator.share) {
       try {
-        await navigator.share({ title: title || 'Álbum Panini Mundial 2026', text: text });
+        await navigator.share({ title: title || EVENTO_FULL_NAME, text: text });
         if (btn) {
           const orig = btn.textContent;
           btn.textContent = '✓ Compartido';
@@ -8084,7 +8122,7 @@
       return expanded.join(', ');
     };
 
-    const lines = ['🎴 Álbum Panini Mundial 2026', ''];
+    const lines = ['🎴 ' + EVENTO_FULL_NAME, ''];
 
     if (totalFalt > 0) {
       lines.push('📋 ME FALTAN (' + totalFalt + '):');
@@ -11506,7 +11544,7 @@
     const totalF = introF.length + histF.length +
       Object.values(equipos).reduce((a, arr) => a + arr.length, 0);
 
-    const lines = ['🔴 Me faltan · Panini Mundial 2026', ''];
+    const lines = ['🔴 Me faltan · Panini ' + CATALOGO.evento, ''];
     if (totalF === 0) {
       lines.push('🎉 ¡Ninguna! Tengo el álbum completo.');
     } else {
@@ -11521,7 +11559,7 @@
       lines.push('');
       lines.push('💬 ¿Tienes alguna repetida de estas?');
     }
-    shareOrCopy(lines.join('\n'), btn, 'Me faltan · Panini 2026');
+    shareOrCopy(lines.join('\n'), btn, 'Me faltan · Panini ' + CATALOGO.evento);
   }
 
   // Compartir mis sueltas — láminas con p=0, s>=1 (en mano sin pegar).
@@ -13048,13 +13086,44 @@
   }
 
   function triggerReset() {
-    if (!confirm('¿Borrar TODO el progreso del álbum? Esto afecta a TODOS los usuarios — el orden de equipos se mantiene.')) return;
+    const msg = '¿Reiniciar progreso?\n\n' +
+      'BORRA:\n' +
+      '  · Pegadas, repetidas y faltantes del álbum\n' +
+      '  · Movimientos de finanzas (compras, ventas, intercambios, ajustes)\n' +
+      '  · Ofertas compartidas activas\n\n' +
+      'CONSERVA:\n' +
+      '  · Precios de categorías\n' +
+      '  · Especiales (overrides por id)\n' +
+      '  · Descuentos por volumen\n' +
+      '  · Orden de equipos\n\n' +
+      'Afecta a TODOS los usuarios. No se puede deshacer.';
+    if (!confirm(msg)) return;
     gsRun('resetAll').then(r => {
       if (r && r.version != null) lastSeenVersion = r.version;
+      // 1. Estado del álbum: limpiar memoria + localStorage
       estado = {};
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(estado)); } catch(e) {}
+      // 2. Movimientos de finanzas: limpiar memoria + localStorage (el backend
+      //    ya borró su lado en resetAll; acá replicamos en local). Precios,
+      //    especiales y descuentos se conservan — solo vaciamos movimientos.
+      if (finanzasState && Array.isArray(finanzasState.movimientos)) {
+        finanzasState.movimientos = [];
+        if (typeof _finSave === 'function') _finSave();
+      }
+      // 3. Cola de pushes pendientes: ya no aplica tras reset, limpiar también
+      //    para evitar que se reintroduzcan movs viejos via retry.
+      try {
+        if (typeof _finPending !== 'undefined' && _finPending) {
+          Object.keys(_finPending).forEach(id => { delete _finPending[id]; });
+        }
+        if (typeof STORAGE_FIN_PENDING_KEY !== 'undefined') {
+          localStorage.removeItem(STORAGE_FIN_PENDING_KEY);
+        }
+      } catch(e) {}
+      // 4. Refresh UI
       renderStats();
       renderContenido();
+      if (typeof _finRefreshDashboard === 'function') _finRefreshDashboard();
       setSyncStatus('ok', 'Reseteado ' + new Date().toLocaleTimeString());
     }).catch(e => {
       setSyncStatus('error', e.message || 'Error reset');
