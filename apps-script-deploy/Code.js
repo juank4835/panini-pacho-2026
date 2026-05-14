@@ -728,7 +728,7 @@ function pushOrden(orden) {
  *   - Especiales (FIN_KEY.especiales)
  *   - Descuentos por volumen (FIN_KEY.descuentos)
  *   - Orden de equipos (__orden)
- *   - Versión finanzas (__finVersion — bumpeada para que clientes sincronicen)
+ *   - Versión finanzas (__fin_version — bumpeada para que clientes sincronicen)
  *
  * Para el reset NUCLEAR (cambio de Mundial), usar resetParaProximoMundial()
  * desde el editor de Apps Script — ese borra TODO incluso config.
@@ -1185,7 +1185,7 @@ function resetParaProximoMundial() {
   const props = PropertiesService.getScriptProperties();
   const allKeys = props.getKeys();
   const prefixesToWipe = ['STATE_', 'OFERTA_'];
-  const exactKeysToWipe = ['__finanzas', '__version', '__finVersion', '__orden'];
+  const exactKeysToWipe = [FIN_KEY, VERSION_KEY, FIN_VERSION_KEY, ORDEN_KEY, STATE_KEY_LEGACY];
   let borradas = 0;
   let conservadas = [];
   allKeys.forEach(k => {

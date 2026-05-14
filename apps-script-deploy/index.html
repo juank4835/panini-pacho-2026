@@ -14162,10 +14162,11 @@
       // desde el modal de Descuentos en Finanzas.
       // Ej: [{ minQty: 50, descuento: 10 }, { minQty: 100, descuento: 20 }]
       descuentos: [],
-      movimientos: [
-        { id: 'm_seed_album', tipo: 'compra', subtipo: 'album', qty: 1, precio: 50000, fecha: '2026-04-15', nota: 'Compra inicial' },
-        { id: 'm_seed_cajas', tipo: 'compra', subtipo: 'caja', qty: 2, precio: 520000, fecha: '2026-04-20', nota: 'Compra inicial' },
-      ],
+      // Sin movimientos por defecto — el usuario los registra a medida que
+      // va comprando. Antes había 2 seeds (m_seed_album, m_seed_cajas) con
+      // fechas hardcoded de 2026 que quedaban viejas al migrar a un Mundial
+      // nuevo. Mejor arrancar vacío que con fechas mentirosas.
+      movimientos: [],
     };
   }
   function _finLoad() {
