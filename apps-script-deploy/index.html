@@ -14504,11 +14504,22 @@
 
     // ═══════════ FINANZAS PRO v2 — render redesigned ═══════════
 
-    // Métricas derivadas para el hero / KPIs
+    // Métricas derivadas para el hero / KPIs.
+    // Costo neto actual = lo que el álbum me ha salido a la fecha = lo
+    //   invertido menos lo que ya recuperé en ventas reales. Es la métrica
+    //   más accionable día a día ("cuánto va salido").
+    // Recuperación proyectada = lo que recibiría si vendo todo a precio
+    //   actual = vendido_real + stock_a_precio (para el progress bar).
+    const costoNetoActual = Math.max(0, totalInvertido - totalRecuperado);
     const recuperacionProyectada = totalRecuperado + valorEstimado;
     const pctProyectado = totalInvertido > 0 ? Math.round(recuperacionProyectada / totalInvertido * 100) : 0;
     const pctRealRecuperado = totalInvertido > 0 ? Math.round(totalRecuperado / totalInvertido * 100) : 0;
-    const sobrecostoNeto = totalInvertido - recuperacionProyectada; // positivo = falta; negativo = ganancia
+    const pctCostoNeto = totalInvertido > 0 ? Math.round(costoNetoActual / totalInvertido * 100) : 0;
+    const sobrecostoNeto = totalInvertido - recuperacionProyectada; // positivo = falta; negativo = ganancia (proyectado)
+    // Faltaría por recuperar para no quedar con sobrecosto al cierre real:
+    //   recuperaciónFaltante = costoNetoActual − valorEstimado (en stock)
+    // Si negativo → vas a ganar; si positivo → vas a perder ese tanto.
+    const recuperacionFaltante = costoNetoActual - valorEstimado;
 
     // Total de láminas en el catálogo (para sub-line del header)
     const movCount = finanzasState.movimientos.length;
@@ -14629,26 +14640,35 @@
       '</div>';
     }
 
-    // Hero metric — recuperación proyectada
+    // Hero metric — costo neto actual ("cuánto me ha salido el álbum hoy").
+    // Esta es la cifra accionable día a día: lo invertido menos lo que ya
+    // recuperaste de ventas reales. El "/ $invertido" mantiene el contexto
+    // total para que veas en qué proporción de la inversión vas.
+    // Trend: la flecha verde con monto = lo vendido esta semana.
     const trendCls = trendPct >= 0 ? '' : 'neg';
     const trendArrow = trendPct >= 0 ? '▲' : '▼';
     const trendAbsStr = Math.abs(thisWeekAmt - lastWeekAmt);
+    // Pct extra: estado proyectado (si vendés todo) — verde si ganas, rojo si pierdes.
     const pctCls = sobrecostoNeto > 0 ? 'neg' : 'pos';
-    const pctSign = sobrecostoNeto > 0 ? '−' : '+';
-    const pctLabel = sobrecostoNeto > 0 ? 'sobrecosto' : 'ganancia';
+    const pctLabel = sobrecostoNeto > 0
+      ? 'aún por recuperar'
+      : 'ganancia proyectada';
+    const pctSign = sobrecostoNeto > 0 ? '' : '+';
     html += '<div class="fin-hero">' +
       (movCount > 0
         ? '<div class="fin-hero-trend ' + trendCls + '">' + trendArrow + ' ' +
           (trendAbsStr > 0 ? '' + _finFmt(trendAbsStr) : '0') + '</div>'
         : '') +
-      '<div class="fin-hero-label">Recuperación proyectada</div>' +
-      '<div class="fin-hero-number">' + _finFmt(recuperacionProyectada) +
-        ' <span class="of">/ ' + _finFmt(totalInvertido) + '</span></div>' +
+      '<div class="fin-hero-label">Costo neto del álbum a hoy</div>' +
+      '<div class="fin-hero-number">' + _finFmt(costoNetoActual) +
+        ' <span class="of">/ ' + _finFmt(totalInvertido) + ' invertido</span></div>' +
       '<div class="fin-hero-meta">' +
-        '<span>' + pctProyectado + '% del costo total</span>' +
-        '<span class="pct ' + pctCls + '">' + pctSign + '' + _finFmt(Math.abs(sobrecostoNeto)) + ' ' + pctLabel + '</span>' +
+        '<span>' + pctCostoNeto + '% sin recuperar todavía</span>' +
+        '<span class="pct ' + pctCls + '">' + pctSign + _finFmt(Math.abs(sobrecostoNeto)) + ' ' + pctLabel + '</span>' +
       '</div>' +
       '<div class="fin-hero-progress">' +
+        // Barra verde = lo ya recuperado (vendido real). Barra ámbar = lo que
+        // se proyecta recuperar si vendés todo el stock al precio actual.
         '<div class="fin-hero-progress-fill-pyto" style="width: ' + Math.min(100, pctProyectado) + '%"></div>' +
         '<div class="fin-hero-progress-fill-real" style="width: ' + Math.min(100, pctRealRecuperado) + '%"></div>' +
       '</div>' +
