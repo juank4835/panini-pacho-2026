@@ -4726,6 +4726,58 @@
   }
   .fin-mov-row-pro .mov-ids-toggle:hover { color: var(--text); }
 
+  /* Grupo de chips por grupo de álbum (A-L, INTRO, HIST). El label es un
+     mini header con la letra del grupo, y los chips del grupo van debajo.
+     Útil para reconciliar txs contra el álbum físico, página por página. */
+  .fin-mov-row-pro .mov-ids-byalbum {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .fin-mov-row-pro .mov-ids-byalbum-grp {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+  .fin-mov-row-pro .mov-ids-byalbum-label {
+    font-family: "JetBrains Mono", Menlo, monospace;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--text-3);
+    background: var(--bg-2);
+    border: 0.5px solid var(--border);
+    padding: 2px 6px;
+    border-radius: 100px;
+    letter-spacing: 0.4px;
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+  /* Toggle "Agrupar por grupo" en el header del panel de movs. */
+  .fin-movs-grouptoggle {
+    background: transparent;
+    border: 0.5px solid var(--border);
+    color: var(--text-3);
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 4px 9px;
+    border-radius: 100px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    margin-left: 8px;
+  }
+  .fin-movs-grouptoggle:hover { color: var(--text-2); }
+  .fin-movs-grouptoggle.active {
+    color: var(--amber);
+    border-color: var(--amber);
+    background: rgba(239,159,39,0.08);
+    text-shadow: 0 0 4px rgba(239,159,39,0.4);
+  }
+
   /* Quick actions footer */
   .fin-quick-actions {
     display: grid; grid-template-columns: 1fr 1fr;
@@ -14088,6 +14140,37 @@
   //   'todo'         → log completo, una row por mov
   // Persistido en memoria — cada sesión arranca en "Plata" (la vista financiera real).
   let _finMovsTab = 'plata';
+  // "Agrupar por grupo de álbum" en los chips de cada movimiento. Sirve
+  // para reconciliar transacciones físicas contra el álbum (cuando vas
+  // página por página). Persistente entre sesiones via localStorage.
+  let _finMovsGroupedView = false;
+  try { _finMovsGroupedView = localStorage.getItem('panini_movs_grouped') === '1'; } catch (_) {}
+  function _setFinMovsGroupedView(v) {
+    _finMovsGroupedView = !!v;
+    try { localStorage.setItem('panini_movs_grouped', _finMovsGroupedView ? '1' : '0'); } catch (_) {}
+  }
+  // Helper: devuelve el "grupo del álbum" de un id de lámina.
+  // Retorna: 'INTRO' (00 + FWC1-8), 'HIST' (FWC9-19), o una letra 'A'-'L'
+  // según equiposOrden. 'OTRO' como fallback.
+  function _idAlbumGroup(id) {
+    if (!id) return 'OTRO';
+    if (id === '00') return 'INTRO';
+    const fwc = id.match(/^FWC(\d+)$/);
+    if (fwc) return parseInt(fwc[1], 10) <= 8 ? 'INTRO' : 'HIST';
+    const parts = id.split('-');
+    if (parts.length === 2) {
+      const eq = equiposOrden.find(e => e.code === parts[0]);
+      return eq && eq.grupo ? eq.grupo : 'OTRO';
+    }
+    return 'OTRO';
+  }
+  // Orden de grupos para render (intro/hist primero, luego A-L, luego otros)
+  function _albumGroupSortKey(g) {
+    if (g === 'INTRO') return 0;
+    if (g === 'HIST') return 1;
+    if (g && g.length === 1 && g >= 'A' && g <= 'L') return 100 + g.charCodeAt(0);
+    return 999;
+  }
   // Set de claves de día ('YYYY-MM-DD') expandidas en el tab Inventario.
   // Empieza vacío = todos los días colapsados a una sola row resumen.
   const _finExpandedDayKeys = new Set();
@@ -14822,22 +14905,52 @@
         }
         return 0;
       }
+      // Agrupa ids por grupo de álbum (A-L, INTRO, HIST). Cada grupo viene
+      // como { label, ids: [] } ordenado por _albumGroupSortKey.
+      function _idsByAlbumGroup(sortedIds) {
+        const buckets = {};
+        sortedIds.forEach(id => {
+          const g = _idAlbumGroup(id);
+          if (!buckets[g]) buckets[g] = [];
+          buckets[g].push(id);
+        });
+        return Object.keys(buckets)
+          .map(g => ({ label: g, ids: buckets[g], sortKey: _albumGroupSortKey(g) }))
+          .sort((a, b) => a.sortKey - b.sortKey);
+      }
       function _renderIdsChips(ids, tipoCls, expanded) {
         if (!ids || !Array.isArray(ids) || ids.length === 0) return '';
         const sortedIds = ids.slice().sort(_albumSortIdCmp);
         const total = sortedIds.length;
         const showAll = expanded || total <= CHIPS_PREVIEW_LIMIT;
         const visible = showAll ? sortedIds : sortedIds.slice(0, CHIPS_PREVIEW_LIMIT);
-        let chips = visible.map(id =>
+        const togglerBtn = !showAll
+          ? '<button type="button" class="mov-ids-toggle" data-mov-ids-expand>+' +
+              (total - CHIPS_PREVIEW_LIMIT) + ' más</button>'
+          : (total > CHIPS_PREVIEW_LIMIT
+              ? '<button type="button" class="mov-ids-toggle" data-mov-ids-collapse>ocultar</button>'
+              : '');
+        // Vista AGRUPADA: chips agrupados por grupo de álbum. Mucho más
+        // fácil para reconciliar txs grandes contra el álbum físico.
+        if (_finMovsGroupedView) {
+          const groups = _idsByAlbumGroup(visible);
+          const groupsHtml = groups.map(g => {
+            const chips = g.ids.map(id => '<span class="mov-id-chip">' + id + '</span>').join('');
+            return '<div class="mov-ids-byalbum-grp">' +
+              '<span class="mov-ids-byalbum-label">' + g.label + '</span>' +
+              chips +
+            '</div>';
+          }).join('');
+          return '<div class="mov-ids ' + tipoCls + '" data-mov-ids-host>' +
+            '<div class="mov-ids-byalbum">' + groupsHtml + '</div>' +
+            (togglerBtn ? '<div style="margin-top:4px;">' + togglerBtn + '</div>' : '') +
+          '</div>';
+        }
+        // Vista PLANA (default histórico)
+        const chipsHtml = visible.map(id =>
           '<span class="mov-id-chip">' + id + '</span>'
         ).join('');
-        if (!showAll) {
-          chips += '<button type="button" class="mov-ids-toggle" data-mov-ids-expand>+' +
-            (total - CHIPS_PREVIEW_LIMIT) + ' más</button>';
-        } else if (total > CHIPS_PREVIEW_LIMIT) {
-          chips += '<button type="button" class="mov-ids-toggle" data-mov-ids-collapse>ocultar</button>';
-        }
-        return '<div class="mov-ids ' + tipoCls + '" data-mov-ids-host>' + chips + '</div>';
+        return '<div class="mov-ids ' + tipoCls + '" data-mov-ids-host>' + chipsHtml + togglerBtn + '</div>';
       }
       function _movTipoMeta(m) {
         // Devuelve { isVenta, isCompra, isIntercambio, isAjuste, icon, iconCls, amountCls, amountSign, tipoLabel, chipsCls }
@@ -14901,17 +15014,32 @@
         // orden de almacenamiento del mov.
         const givenIds = invOps.filter(op => op.delta < 0).map(op => op.id).sort(_albumSortIdCmp);
         const receivedIds = invOps.filter(op => op.delta > 0).map(op => op.id).sort(_albumSortIdCmp);
+        // Render helper que respeta el toggle de "agrupar por grupo".
+        function _renderChipBag(ids) {
+          if (_finMovsGroupedView) {
+            const groups = _idsByAlbumGroup(ids);
+            return '<div class="mov-ids-byalbum">' +
+              groups.map(g =>
+                '<div class="mov-ids-byalbum-grp">' +
+                  '<span class="mov-ids-byalbum-label">' + g.label + '</span>' +
+                  g.ids.map(id => '<span class="mov-id-chip">' + id + '</span>').join('') +
+                '</div>'
+              ).join('') +
+            '</div>';
+          }
+          return ids.map(id => '<span class="mov-id-chip">' + id + '</span>').join('');
+        }
         let html = '<div class="mov-ids-split">';
         if (givenIds.length) {
           html += '<div class="mov-ids-group given">' +
             '<span class="mov-ids-label">↑ Diste · ' + givenIds.length + '</span>' +
-            givenIds.map(id => '<span class="mov-id-chip">' + id + '</span>').join('') +
+            _renderChipBag(givenIds) +
           '</div>';
         }
         if (receivedIds.length) {
           html += '<div class="mov-ids-group received">' +
             '<span class="mov-ids-label">↓ Recibiste · ' + receivedIds.length + '</span>' +
-            receivedIds.map(id => '<span class="mov-id-chip">' + id + '</span>').join('') +
+            _renderChipBag(receivedIds) +
           '</div>';
         }
         html += '</div>';
@@ -15048,10 +15176,15 @@
                          _finMovsTab === 'inventario' ? 'Ajustes de inventario' :
                          'Movimientos';
       const panelMeta = filteredMovs.length + ' ' + (filteredMovs.length === 1 ? 'mov' : 'movs');
+      const groupToggleBtn = '<button type="button" class="fin-movs-grouptoggle' +
+        (_finMovsGroupedView ? ' active' : '') +
+        '" data-fin-movs-grouptoggle title="Agrupa los chips por grupo de álbum para facilitar reconciliación física">' +
+        (_finMovsGroupedView ? '✓ Por grupo' : 'Por grupo') +
+        '</button>';
       html += '<div class="fin-pro-panel">' +
         '<div class="fin-pro-head">' +
           '<span class="fin-pro-title">' + panelTitle + '</span>' +
-          '<span class="fin-pro-meta">' + panelMeta + '</span>' +
+          '<span class="fin-pro-meta">' + panelMeta + groupToggleBtn + '</span>' +
         '</div>' +
         tabsHtml +
         movHtml +
@@ -15094,6 +15227,14 @@
         // Reset expansiones al cambiar de tab — evita que un día expandido en
         // 'inventario' siga "abierto" si vuelves después.
         _finExpandedDayKeys.clear();
+        if (typeof _finRefreshDashboard === 'function') _finRefreshDashboard();
+      };
+    });
+    // Toggle "Por grupo" — agrupa los chips de cada mov por grupo del álbum
+    // para facilitar reconciliación física.
+    document.querySelectorAll('[data-fin-movs-grouptoggle]').forEach(btn => {
+      btn.onclick = () => {
+        _setFinMovsGroupedView(!_finMovsGroupedView);
         if (typeof _finRefreshDashboard === 'function') _finRefreshDashboard();
       };
     });
